@@ -1,0 +1,48 @@
+{
+
+  "templates" : [
+     {
+      "id" : "base",
+      "timeout" : 100000,
+      "gzip" : true,
+      "template" : "templates/bp-2-column-base.html",
+      "scripts" : {
+        "combine" : true,
+        "libs" : [
+          { "url" : "jmaki.js" }
+        ]
+       },       
+      "styles" : {
+        "combine" : true,
+        "libs" : [
+           { "url" : "lib/reset.css" },
+           { "url" : "lib/typography.css" },
+           { "url" : "lib/plugins/fancy-type/fancy-type.css" },
+           { "id" : "blueprint", "url" : "lib/liquid.css" },
+           { "test" : "MSIE", "url" : "lib/ie.css" }
+         ]
+      },
+      "properties" : {
+          "title" :  { "type" : "string", "value" : "Welcome to Spindle View"},
+          "header" : { "type" : "include", "value" : "/header.html" },
+          "body" : {  "type" : "include", "value" : "/blueprints.html" },
+          "sidebar" : { "type" : "include", "value" : "/sidebar.html" },
+          "footer" : { "type" : "include", "value" : "/footer.html" } 
+      }
+    },
+    {
+       "id" : "base-fixed",
+       "extends" : "base",
+       "styles" : {
+           "libs" : [
+               { "id" : "blueprint", "url" : "lib/grid.css" }    
+           ]
+       },
+       "properties" : {
+           "title" : {"type" : "string", "value" : "Welcome to the Fixed Blueprint Templates"},
+           "body" : { "type" : "include", "value" : "/blueprints.html" }
+       }
+    }
+
+  ]
+}

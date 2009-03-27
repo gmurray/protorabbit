@@ -1,0 +1,46 @@
+{
+
+  "templates" : [
+    {
+       "id" : "about",
+       "extends" : "base",
+       "styles" : {
+           "libs" : [
+               { "url" : "resources/blueprint/foo.css" }   
+           ]
+       },
+      "scripts" : {
+        "combine" : true,
+        "libs" : [
+          { "url" : "jquery.js" }
+        ]
+       },       
+       "properties" : {
+           "title" : {"type" : "string", "value" : "About"},
+           "body" : { "type" : "include", "value" : "/about.html" }
+       }
+    },
+    
+    {
+     "id" : "welcome",
+     "extends" : "base",
+       "properties" : {
+           "title" : {"type" : "string", "value" : "Welcome to Spindle View"},
+           "body" : { "type" : "include", "value" : "/main.html" }
+       }     
+    },
+    {
+     "id" : "jsp",
+     "timeout" : 5000,
+     "styles" : {
+       "combineResources": true
+     },
+     "extends" : "base",
+       "properties" : {
+           "title" : {"type" : "string", "value" : "JSP Include Test"},
+           "message" : { "type" : "string", "value" : "I'm set to only update every 5 seconds."},
+           "body" : { "type" : "include", "value" : "/main.jsp", "timeout" : 5000 }
+       }     
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+
+  "templates" : [
+
+    {
+       "id" : "etsuko",
+       "extends" : "base",    
+       "properties" : {
+           "title" : {"type" : "string", "value" : "Etsuko"},
+           "body" : { "type" : "include", "value" : "/etsuko.html" },
+           "sidebar" : { "type" : "include", "value" : "/kitty.html" },
+           "message" : { "type" : "string", "value" : "I can do it!" }
+       }
+    } ,   
+
+    {
+       "id" : "kitty",
+       "extends" : "etsuko",    
+       "properties" : {
+           "title" : {"type" : "string", "value" : "Kitty"},
+           "sidebar" : { "type" : "include", "value" : "/etsuko.html" },
+           "body" : { "type" : "include", "value" : "/kitty.html" },
+           "message" : { "type" : "string", "value" : "Meow meow meow mix." }
+       }
+    }     
+  ]
+}
