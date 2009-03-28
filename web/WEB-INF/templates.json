@@ -25,7 +25,7 @@
      "id" : "welcome",
      "extends" : "base",
        "properties" : {
-           "title" : {"type" : "string", "value" : "Welcome to Spindle View"},
+           "title" : {"type" : "string", "value" : "Welcome to ProtoRabbit"},
            "body" : { "type" : "include", "value" : "/main.html" }
        }     
     },

@@ -5,35 +5,35 @@
      <context-param>
       <description> Template Definitions - Order only matters in that the templates further
        to the left will override properties defined to those to the right.</description>
-      <param-name>spv-templates</param-name>
+      <param-name>prt-templates</param-name>
       <param-value>/WEB-INF/last.json, /WEB-INF/templates.json,/resources/blueprint/blueprint-templates.json</param-value>
     </context-param>
     
    <context-param>
       <description>Turn on development mode. Files will reload on save in this mode.</description>
-      <param-name>spv-dev-mode</param-name>
+      <param-name>prt-dev-mode</param-name>
       <param-value>true</param-value>
     </context-param>
     
 
   <servlet>
-    <servlet-name>SpindleView Servlet</servlet-name>
-    <servlet-class>org.spv.servlet.SpindleViewServlet</servlet-class>
+    <servlet-name>ProtoRabbitTemplate Servlet</servlet-name>
+    <servlet-class>org.protorabbit.servlet.ProtoRabbitTemplateServlet</servlet-class>
     <load-on-startup>1</load-on-startup>
   </servlet>
   
   <servlet-mapping>
-    <servlet-name>SpindleView Servlet</servlet-name>
-    <url-pattern>*.spv</url-pattern>
+    <servlet-name>ProtoRabbitTemplate Servlet</servlet-name>
+    <url-pattern>*.prt</url-pattern>
   </servlet-mapping>
   
     <servlet-mapping>
-    <servlet-name>SpindleView Servlet</servlet-name>
-    <url-pattern>/spv</url-pattern>
+    <servlet-name>ProtoRabbitTemplate Servlet</servlet-name>
+    <url-pattern>/prt</url-pattern>
   </servlet-mapping>
   
   <welcome-file-list>
-    <welcome-file>/welcome.spv</welcome-file>
+    <welcome-file>/welcome.prt</welcome-file>
   </welcome-file-list>
 
 </web-app>
