@@ -1,0 +1,51 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<title>Proto Rabbit</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF8" />
+</head>
+
+<body>
+
+<h1>Proto Rabbit</h1>
+
+<h2>What is it?</h2>
+
+<p>
+Proto Rabbit is a CSS based templating and Ajax optimization framework.
+</p>
+
+<h2>Why templating and Ajax optimization in one framework?</h2>
+
+
+<p>
+Ajax optimization and page templating work hand in hand as a good page template will be based on CSS for managing page layout and typography.  The elements used in a template may have different JavaScript and CSS requirements such as your website theme, and JavaScript libraries such as jQuery. Proto Rabbit makes sure that the assets are rendered in the must optimized order. Proto Rabbit out of the box uses the BluePrint CSS framework. You can easily substitute for extend the underlying framework.
+</p>
+
+
+<h2>What does it do?</h2>
+
+<p>
+Proto Rabbit templates are defined in JSON (JavaScript Object Notation) format. Each template points to a HTML based template that has properties that can be substituted with strings or the contents of a file. Each template may specify the underlying HTML template, cache time for the template, scripts, CSS links, properties (such as page titles or pages that make up the template).  A template may extend any number of other templates with the child properties taking precedence over it's ancestors when the page is rendered.
+
+<p>
+The Proto Rabbit Engine loads a template and renders the content. Individual portions of a template may be cached for varying intervals. The Proto Rabbit Engine will sets the correct headers, combines CSS and JavaScript assets (if specified), and gzips those resources as the page is rendered. The surrounding final pages are also cached and gzipped for as long as you specify in your template. Different templates may override the cache times of their parents or just inherit them.
+</p>
+
+<h2>Why use it? Why not just write it myself?</h2>
+
+<p>
+Today's application contain a lot of JavaScript and CSS resources. More than likely you have many developers working on a project that spans many pages. Having a consistent template for your pages, along with a consistent way of describing page asset dependencies can be very valuable.  An experienced developer could implement all the features we do under the covers however we believe there is true value in picking up a framework designed to solve today's needs. 
+</p>
+
+
+<p>
+ Enabling optimization can take your yslow scores from a 76 to a 99 (out of 100) will little effort. ProtoRabbit allows you to cache individual parts of a template for different intervals. The framework is meant to be very fast and efficient.
+
+</p> 
+
+</body>
+
+</html>
