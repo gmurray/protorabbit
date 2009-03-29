@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project name="jmaki-communicator" default="java" basedir=".">
+<project name="protorabbit" default="compile" basedir=".">
 
-  <property file="../samples.properties"/>
   <property file="build.properties"/>
   <property file="${user.home}/build.properties"/>
 
@@ -11,48 +10,40 @@
   <property name="build.dir" value="${basedir}/build"/>
   <property name="war.build.dir" value="${build.dir}/war"/>  
 
-  <target name="java"> 
-    <mkdir dir="${build.dir}/war"/>
+  <target name="compile" depends="clean">
+  	<mkdir dir="build/classes" />
+  	<javac srcdir="src"
+  		destdir="build/classes"
+  		classpath="build/classes:lib/servlet-api-2.4.jar:web/WEB-INF/lib/org.json-0.0.2.jar"
+  		source="1.5"
+  		debug="on">
+  	</javac>
    
-    <!--Copy in core jMaki Java includes -->
-  	<ant  inheritAll="false" target="addJavaCore" antfile="../build.xml">
-       <property name="dest.dir" value="${build.dir}/war" />
-    </ant>
-  	
-  
-    <!-- Add the jmaki widgets -->
-  	<ant  inheritAll="false" target="addWidgets" antfile="../build.xml">
-       <property name="dest.dir" value="${build.dir}/war" />
-       <property name="widget.lib" value="${jmaki}" />
-    </ant>
-    	    
-    
-    <!-- Copy in the web -->
-    <copy todir="${build.dir}/war">
-      <fileset dir="web" />     
-    </copy>
-
-    <mkdir dir="${dist.dir}"/>
-    <jar destfile="${dist.dir}/${ant.project.name}.war" >
-        <fileset dir="${build.dir}/war" />
-    </jar>
-    <zip destfile="${dist.dir}/${ant.project.name}-java-${version}.zip" >
-        <fileset dir="dist" includes="${ant.project.name}.war"/>
-        <fileset dir="" includes="README"/>
-    </zip>   
   </target>
   
-  <target name="deploy-java" depends="deploy"/>
+  <target name="deploy" depends="deploy-check"/>
   
-  <target name="deploy" depends="java">
+  <target name="deploy-check" depends="compile">
        <ant  inheritAll="false" target="deploy-java" antfile="../build.xml">
         <property name="target.war" value="${dist.dir}/${ant.project.name}.war" />
       </ant>
   </target>
     
  <target name="clean">
-   <delete dir="dist" />
    <delete dir="build" />
   </target>
-  
+	
+  <target name="test-welcome" depends="compile">
+  	<java classname="org.protorabbit.Engine"
+  		fork="true"
+  		classpath="build/classes:lib/org.json-0.0.2.jar">
+  		<arg value="-template"/>
+  		<arg value="web/resources/blueprint/blueprint-templates.json" />
+  		<arg value="-documentRoot"/>
+  		<arg value="web/"/>
+  		<arg value="base" />
+  	</java>
+  </target>
+
+	
 </project>

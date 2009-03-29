@@ -35,8 +35,13 @@ public class ProtoRabbitTemplateServlet extends HttpServlet {
 	private Config jcfg;
 	private boolean isDevMode = false;
 	private HashMap<String, Long> lastUpdated;
-	private String defaultTemplateURI = "/WEB-INF/templates.json";
+
 	private String[] templates = null;
+
+    // defaults 	
+	private String defaultTemplateURI = "/WEB-INF/templates.json";	
+	private String serviceURI = "prt";
+	private long maxAge = 1225000;
 
 	public void init(ServletConfig cfg) {
 		try {
@@ -47,7 +52,18 @@ public class ProtoRabbitTemplateServlet extends HttpServlet {
 				isDevMode = ("true".equals(ctx.getInitParameter(
 						"prt-dev-mode").toLowerCase()));
 			}
-
+			if (ctx.getInitParameter("prt-service-uri") != null) {
+				serviceURI = ctx.getInitParameter("prt-dev-mode");
+			}
+			
+			if (ctx.getInitParameter("prt-max-timeout") != null) {
+				String maxTimeoutString =  ctx.getInitParameter("prt-max-timeout");
+				try {
+				    maxAge = (new Long(maxTimeoutString)).longValue();
+				} catch (Exception e) {
+    			    System.err.println("Non-fatal: Error processing configuration : prt-service-uri must be a long.");	
+				}
+			}
 			if (ctx.getInitParameter("prt-templates") != null) {
 				String tString = ctx.getInitParameter("prt-templates");
 				// clean up the templates string
@@ -93,7 +109,7 @@ public class ProtoRabbitTemplateServlet extends HttpServlet {
 		}
 
 		if ((jcfg == null || needsUpdate) && templates.length > 0) {
-			jcfg = new Config();
+			jcfg = new Config(serviceURI, maxAge);
 			for (int i = 0; i < templates.length; i++) {
 				JSONObject base = JSONUtil.loadFromInputStream(this.ctx
 						.getResourceAsStream(templates[i]));

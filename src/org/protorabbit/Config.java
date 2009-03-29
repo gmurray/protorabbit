@@ -46,11 +46,11 @@ public class Config {
 		return gzip;
 	}
 	
-	public Config(long maxAge) {
+	public Config(String serviceURI, long maxAge ) {
 		init();
 		this.maxAge = maxAge;
 	    crm = new CombinedResourceManager(this,
-                "spv",
+                serviceURI,
                 getMaxAge());
 	}
 

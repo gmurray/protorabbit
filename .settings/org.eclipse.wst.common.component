@@ -3,7 +3,7 @@
 <wb-module deploy-name="protorabbit">
 <wb-resource deploy-path="/" source-path="/web"/>
 <wb-resource deploy-path="/WEB-INF/classes" source-path="/src"/>
-<property name="context-root" value="protorabbit"/>
 <property name="java-output-path"/>
+<property name="context-root" value="protorabbit"/>
 </wb-module>
 </project-modules>

@@ -1,5 +1,6 @@
 package org.protorabbit;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -73,44 +74,65 @@ public class Engine {
 	 * @throws IOException 
 	 */
 	public static void main(String[] args) throws IOException {
+		if (args.length < 1) {
+			System.out.println("Usage: --template [template name] templateId");
+			System.exit(0);
+		}
 		
 		long startTime = (new Date()).getTime();
 
-		Config cfg = new Config();
+
 		
-		FileSystemContext ctx = new FileSystemContext(cfg, "/Users/gmurray/Documents/jmaki/jt/web/");
-		long postConfigTime = (new Date()).getTime();
+		ArrayList<String> cTemplates = new ArrayList<String>();
+		
+		String documentRoot = "";
 
-		String[] fileNames = {
-				 "/Users/gmurray/Documents/jmaki/jt/web/resources/blueprint/blueprint-templates.json",
-				 "/Users/gmurray/Documents/jmaki/jt/web/WEB-INF/templates.json",
-				 "/Users/gmurray/Documents/jmaki/jt/web/WEB-INF/last.json"
-		};
-
-            
-		    try {
-		    	JSONObject jo = JSONUtil.loadFromFile(fileNames[0]);
-				cfg.registerTemplates(jo.getJSONArray("templates"), "/Users/gmurray/Documents/jmaki/jt/web/resources/blueprint/");
-
-		    	JSONObject jo1 = JSONUtil.loadFromFile(fileNames[1]);
-				cfg.registerTemplates(jo1.getJSONArray("templates"), "/Users/gmurray/Documents/jmaki/jt/web/");
-				
-		    	JSONObject jo2 = JSONUtil.loadFromFile(fileNames[2]);
-				cfg.registerTemplates(jo2.getJSONArray("templates"), "/Users/gmurray/Documents/jmaki/jt/web/");				
-				
-			} catch (JSONException e) {
-				e.printStackTrace();
+		for (int i=0; i <= args.length - 1; i++) {
+			System.out.println("Processing " + args[i]);
+            if ("-template".equals(args[i])) {
+            	cTemplates.add(args[i + 1]);
+            	i+=1;
+            } else if ("-documentRoot".equals(args[i])) {
+            	documentRoot = args[i+1];
+            	i+=1;       	
+            }
+		}
+		Config cfg = new Config();	
+		FileSystemContext ctx = new FileSystemContext(cfg, documentRoot);		
+		
+		if (cTemplates.size() == 0) {
+			System.out.println("Error: You need to specify at least 1 template file.");
+			System.exit(0);
+		}
+		Iterator<String> it = cTemplates.iterator();
+		while (it.hasNext()) {
+			String ctemplate = it.next();
+			int lastSep = ctemplate.lastIndexOf(File.separator);
+			String cBase = "";
+			if (lastSep != -1) {
+				cBase = ctemplate.substring(0, lastSep + 1);
 			}
+			try {
+                JSONObject jo = JSONUtil.loadFromFile(ctemplate);
+			    cfg.registerTemplates(jo.getJSONArray("templates"), cBase);
+			    System.out.println("Registered template " + ctemplate + " with baseDir=" + cBase);
+			} catch (Exception e) {
+				
+			}	
+		}
 		
-		System.out.println("** Config Processing Time : " + (postConfigTime -  startTime));
+		long postConfigTime = (new Date()).getTime();
+				
+		// last item is the target;
+		String targetTemplate = args[args.length -1];
+			
+		System.out.println("** Config Processing Time : " + (postConfigTime -  startTime) + "\n\n");
+		
+		renderTemplate(targetTemplate, cfg, System.out, ctx);
 
-		
-		renderTemplate("about", cfg, System.out, ctx);
-		renderTemplate("base", cfg, System.out, ctx);
-		renderTemplate("main-fixed", cfg, System.out,ctx);
 		long stopTime = (new Date()).getTime();
 		
-		System.out.println(" Render time for 3 templates=" + (stopTime - postConfigTime) + "ms");
+		System.out.println("\n\nRender time for 3 templates=" + (stopTime - postConfigTime) + "ms");
 	}
 	
 	/*
