@@ -1,0 +1,30 @@
+{
+  "templates" : [
+    {
+     "id" : "welcome",
+     "template" : "page-templates/base-page.html",     
+     "extends" : "blueprints-css",
+     "properties" : {
+           "title" : {"type" : "string", "value" : "Hello Proto Rabbit"},
+           "body" : { "type" : "include", "value" : "/main.html" }
+       }     
+    },  
+    {
+       "id" : "about",
+       "extends" : "welcome",      
+       "properties" : {
+           "title" : {"type" : "string", "value" : "About"},
+           "body" : { "type" : "include", "value" : "/about.html" }
+       }
+    },
+    {
+     "id" : "jsp",
+     "extends" : "welcome",     
+     "timeout" : 5000,
+     "properties" : {
+           "title" : {"type" : "string", "value" : "JSP Include Test"},
+           "body" : { "type" : "include", "value" : "/main.jsp", "timeout" : 0 }
+       }     
+    }
+  ]
+}
