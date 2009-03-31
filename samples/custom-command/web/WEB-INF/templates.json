@@ -1,0 +1,15 @@
+{
+  "templates" : [
+    {
+     "timeout" : 0,
+     "id" : "welcome",
+     "template" : "page-templates/base-page.html",     
+     "extends" : "blueprints-css",
+     "properties" : {
+           "title" : {"type" : "string", "value" : "Proto Rabbit Custom Command"},
+           "body" : { "type" : "include", "value" : "/main.html" }
+       }     
+    }
+
+  ]
+}
