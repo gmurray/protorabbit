@@ -8,7 +8,6 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import org.protorabbit.json.JSONUtil;
@@ -16,13 +15,12 @@ import org.protorabbit.model.ICommand;
 import org.protorabbit.model.IContext;
 import org.protorabbit.model.ITemplate;
 import org.protorabbit.model.impl.FileSystemContext;
-import org.protorabbit.model.impl.IncludeCommand;
-import org.protorabbit.model.impl.IncludeReferencesCommand;
-import org.protorabbit.model.impl.InsertCommand;
+
 
 public class Engine {
 
 	public static void renderTemplate(String tid, Config cfg, OutputStream out, IContext ctx) {
+		
 		long startTime = (new Date()).getTime();
 
 		try {
@@ -42,6 +40,7 @@ public class Engine {
 	
 					// output everything before the first command
 					out.write(buff.substring(index, c.getStartIndex()).getBytes());
+					
 					try {
 						c.doProcess(out);
 					} catch (IOException e) {
@@ -68,12 +67,12 @@ public class Engine {
 		}
 	}
 	
-	
 	/**
 	 * @param args
 	 * @throws IOException 
 	 */
 	public static void main(String[] args) throws IOException {
+		
 		if (args.length < 1) {
 			System.out.println("Usage: --template [template name] templateId");
 			System.exit(0);
@@ -81,8 +80,6 @@ public class Engine {
 		
 		long startTime = (new Date()).getTime();
 
-
-		
 		ArrayList<String> cTemplates = new ArrayList<String>();
 		
 		String documentRoot = "";
@@ -167,43 +164,45 @@ public class Engine {
 		    if (paramStart != -1 && paramEnd != -1 && paramEnd > paramStart) {
 		       
 		       // get commandType
-		    	String commandTypeString = exp.substring(0,paramStart).toLowerCase().trim();
-		    	int commandType = ICommand.UNKNOWN;
+		    	String commandTypeString = exp.substring(0,paramStart).trim();
 		    	
-		    	if ("include".equals(commandTypeString)) {
-		    		commandType = ICommand.INCLUDE;
-		    	} else if ("insert".equals(commandTypeString)) {
-		    		commandType = ICommand.INSERT;
-		    	}
-		    	
-		    	// get the params
-		    	String paramsString = exp.substring(paramStart +1, paramEnd);
-		    	String[] params = paramsString.split(",");
-		    	// clean up the params
-		    	for (int i=0; i < params.length; i++) {
-		    		params[i] = params[i].trim();
-		    		String[] sparams = params[i].split("\'");    		
-		    		// take the middle value that was between the quotes
-		    		if (sparams.length >0) {
-		    			params[i] = sparams[1];
-		    		}
-		    	}
+                ICommand cmd = cfg.getCommand(commandTypeString);
 
-		    	if (commandType == ICommand.INCLUDE && params.length > 0) {
-		    		// special case
-		    		ICommand cmd = null;
-		    		if ("scripts".equals(params[0]) ||
-		    			"styles".equals(params[0])) {
-		    			cmd = new IncludeReferencesCommand(commandType, index, end + 2, params);   			
-		    		} else {
-			    		cmd = new IncludeCommand(commandType, index, end + 2, params);
+                if (cmd != null) {
+			    	// get the params
+			    	String paramsString = exp.substring(paramStart +1, paramEnd);
+			    	String[] params = paramsString.split(",");
+			    	
+			    	if (params != null) {
+				    	// clean up the params
+				    	for (int i=0; i < params.length; i++) {
+				    		params[i] = params[i].trim();
+				    		String[] sparams = params[i].split("\'");    		
+				    		// take the middle value that was between the quotes
+				    		if (sparams != null && sparams.length > 0) {
+				    			params[i] = sparams[1];
+				    		}
+				    	}
+				    	cmd.setParams(params);		    	
+			    	}
+	                
+			    	cmd.setStartIndex(index);		    	
+	                cmd.setEndIndex(end + 2);
 
-		    		}
-		    		commands.add(cmd);
-		    	} else if (commandType == ICommand.INSERT  && params.length > 0) {
-		    		commands.add(new InsertCommand(commandType, index, end + 2, params));
-		    	}
-		    	
+			    	if ("include".equals(commandTypeString) && params.length > 0) {
+			    		if ("scripts".equals(params[0]) ||
+			    			"styles".equals(params[0])) {
+			    			cmd.setType(ICommand.INCLUDE_REFERENCES);
+			    		} else {
+			    			cmd.setType(ICommand.INCLUDE);
+			    		}
+			    	} else if ("insert".equals(commandTypeString)) {
+			    		cmd.setType(ICommand.INSERT);
+			    	} else {
+			    		cmd.setType(ICommand.CUSTOM);
+			    	}
+			    	commands.add(cmd);
+		        }
 		    }
 			// start the process over
 			index = end + 2;

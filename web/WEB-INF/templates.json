@@ -3,18 +3,7 @@
   "templates" : [
     {
        "id" : "about",
-       "extends" : "base",
-       "styles" : {
-           "libs" : [
-               { "url" : "resources/blueprint/foo.css" }   
-           ]
-       },
-      "scripts" : {
-        "combine" : true,
-        "libs" : [
-          { "url" : "jquery.js" }
-        ]
-       },       
+       "extends" : "blueprints-css",      
        "properties" : {
            "title" : {"type" : "string", "value" : "About"},
            "body" : { "type" : "include", "value" : "/about.html" }
@@ -23,7 +12,7 @@
     
     {
      "id" : "welcome",
-     "extends" : "base",
+     "extends" : "blueprints-css",
        "properties" : {
            "title" : {"type" : "string", "value" : "Welcome to ProtoRabbit"},
            "body" : { "type" : "include", "value" : "/main.html" }
@@ -31,12 +20,12 @@
     },
     {
      "id" : "jsp",
+     "extends" : "blueprints-css",     
      "timeout" : 5000,
      "styles" : {
        "combineResources": true
      },
-     "extends" : "base",
-       "properties" : {
+     "properties" : {
            "title" : {"type" : "string", "value" : "JSP Include Test"},
            "message" : { "type" : "string", "value" : "I'm set to only update every 5 seconds."},
            "body" : { "type" : "include", "value" : "/main.jsp", "timeout" : 5000 }

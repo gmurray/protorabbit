@@ -22,6 +22,7 @@
   <target name="war" depends="dependencies">
   	
 	<mkdir dir="${web.lib}"/>
+  	<mkdir dir="${dist.dir}"/>
   	
   	<copy file="${protorabbit.lib}" todir="${war.lib}"/>
   	<copy file="${json.lib}" todir="${war.lib}"/>
@@ -33,7 +34,6 @@
 	<jar destfile="${war.file}"
 	         basedir="${war.build.dir}"
 	/>
-	  	
 
   </target>	
 	

@@ -7,10 +7,6 @@ import java.io.OutputStream;
 
 public class InsertCommand extends BaseCommand {
 
-	public InsertCommand( int commandType, int start, int end, String... params) {
-		super(commandType, start, end, params);
-	}
-
 	@Override
 	public void doProcess(OutputStream out) throws IOException {
 		Config cfg = ctx.getConfig();

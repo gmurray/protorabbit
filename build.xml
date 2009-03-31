@@ -5,6 +5,7 @@
   <property file="build.properties"/>
   <property file="${user.home}/build.properties"/>
 
+  <property name="version" value="0.5.0"/>
   <property name="src.web" value="${basedir}/web"/>
   <property name="dist.dir" value="${basedir}/dist"/>
   <property name="build.dir" value="${basedir}/build"/>
@@ -21,6 +22,13 @@
    
   </target>
   
+  <target name="dist" depends="compile">
+  	<mkdir dir="${dist.dir}"/>
+    <jar destfile="${dist.dir}/protorabbit-${version}.jar"
+         basedir="${build.dir}/classes"
+    />
+  </target>
+	
   <target name="deploy" depends="deploy-check"/>
   
   <target name="deploy-check" depends="compile">

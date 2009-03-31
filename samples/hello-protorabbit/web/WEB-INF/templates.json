@@ -1,6 +1,7 @@
 {
   "templates" : [
     {
+     "timeout" : 0,
      "id" : "welcome",
      "template" : "page-templates/base-page.html",     
      "extends" : "blueprints-css",

@@ -7,10 +7,6 @@ import org.protorabbit.Config;
 
 public class IncludeCommand extends BaseCommand {
 
-	public IncludeCommand(int commandType, int start, int end, String... params) {
-		super(commandType, start, end, params);
-	}
-
 	@Override
 	public void doProcess(OutputStream out) throws IOException {
 		Config cfg = ctx.getConfig();

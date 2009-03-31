@@ -11,6 +11,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import org.protorabbit.accelerator.CombinedResourceManager;
+import org.protorabbit.model.ICommand;
 import org.protorabbit.model.IContext;
 import org.protorabbit.model.IProperty;
 import org.protorabbit.model.ITemplate;
@@ -28,9 +29,11 @@ public class Config {
 	String encoding = "UTF-8";
 
 	String defaultMediaType = "screen, projection";
+	String commandBase = "";
 
-	HashMap<String, ITemplate> tmap = null;
-	HashMap<String, IncludeFile> includeFiles;
+	Map<String, ITemplate> tmap = null;
+	Map<String, IncludeFile> includeFiles = null;
+	Map<String, String> commandMap = null;
 	
 	boolean gzip = true;
 	boolean devMode = false;
@@ -42,10 +45,7 @@ public class Config {
 	// in seconds 
 	private long maxAge = 1225000;
 	
-	public boolean getGzip() {
-		return gzip;
-	}
-	
+
 	public Config(String serviceURI, long maxAge ) {
 		init();
 		this.maxAge = maxAge;
@@ -58,7 +58,18 @@ public class Config {
 	    init();
 	    crm = new CombinedResourceManager(this,
 	    		                         "spv",
-	    		                         getMaxAge());
+	    		                         getMaxAge());	    
+	}
+	
+	void init() {
+		
+		commandMap = new HashMap<String, String>();
+		commandMap.put("insert", "org.protorabbit.model.impl.InsertCommand");
+		commandMap.put("include", "org.protorabbit.model.impl.IncludeCommand");
+		commandMap.put("includeReferences", "org.protorabbit.model.impl.IncludeReferencesCommand");
+		
+		tmap = new HashMap<String, ITemplate>();
+		includeFiles = new HashMap<String, IncludeFile>();
 	}
 	
 	public void setDevMode(boolean devMode) {
@@ -69,10 +80,57 @@ public class Config {
 		return devMode;
 	}
 	
-	void init() {
-		tmap = new HashMap<String, ITemplate>();
-		includeFiles = new HashMap<String, IncludeFile>();
-	}	
+	public boolean getGzip() {
+		return gzip;
+	}
+	
+	public void setCommandBase(String commandBase) {
+		this.commandBase = commandBase;
+	}
+	
+	public ICommand getCommand(String name) {
+		String className = commandMap.get(name);
+		
+		Class<?> clazz = null;
+		
+		// look for custom commands
+		if (className == null) {
+			try {
+				clazz = Class.forName(commandBase + name + "Command");			
+			} catch (ClassNotFoundException cnfe) {
+			    System.err.println("Error locating class impementation for command " + name + ".");
+			    return null;
+			}
+		} else {
+			try {
+			    clazz = Class.forName(className);
+			} catch (ClassNotFoundException cnfe) {
+				System.out.println("Could not find class " + className);
+				return null;
+			}
+
+		}
+
+		try {
+
+			Object o = clazz.newInstance();
+			if (o instanceof ICommand) {
+				ICommand ic = (ICommand)o;
+				return ic;
+			} else {
+				System.err.println("Error creating instance of " + className + ". The command needs to implement org.protorabbit.model.Command");
+			}
+            
+
+		} catch (InstantiationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
 	
 	public boolean hasTemplate(String id, IContext ctx) {
 	    ITemplate t = getTemplate(id);

@@ -2,16 +2,10 @@
 
   "templates" : [
      {
-      "id" : "base",
+      "id" : "blueprints-css",
       "timeout" : 100000,
       "gzip" : true,
-      "template" : "templates/bp-2-column-base.html",
-      "scripts" : {
-        "combine" : true,
-        "libs" : [
-          { "url" : "jmaki.js" }
-        ]
-       },       
+      "template" : "templates/bp-2-column-base.html",   
       "styles" : {
         "combine" : true,
         "libs" : [
@@ -31,8 +25,8 @@
       }
     },
     {
-       "id" : "base-fixed",
-       "extends" : "base",
+       "id" : "blueprints-css-fixed",
+       "extends" : "blueprints-css",
        "styles" : {
            "libs" : [
                { "id" : "blueprint", "url" : "lib/grid.css" }    
@@ -43,6 +37,5 @@
            "body" : { "type" : "include", "value" : "/blueprints.html" }
        }
     }
-
   ]
 }

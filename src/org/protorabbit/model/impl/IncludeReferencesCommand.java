@@ -11,10 +11,6 @@ import org.protorabbit.model.ResourceURI;
 
 public class IncludeReferencesCommand extends BaseCommand {
 
-	public IncludeReferencesCommand(int commandType, int start, int end, String... params) {
-		super(commandType, start, end, params);
-	}
-
 	@Override
 	public void doProcess(OutputStream out) throws IOException {
 		if (params == null || params.length < 1) {
