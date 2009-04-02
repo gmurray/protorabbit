@@ -3,21 +3,18 @@
   "templates" : [
      {
       "id" : "blueprints-css",
-      "timeout" : 100000,
-      "gzip" : true,
       "template" : "templates/bp-2-column-base.html",   
       "styles" : {
-        "combine" : true,
         "libs" : [
            { "url" : "lib/reset.css" },
            { "url" : "lib/typography.css" },
            { "url" : "lib/plugins/fancy-type/fancy-type.css" },
-           { "id" : "blueprint", "url" : "lib/liquid.css" },
+           { "id" : "blueprint", "url" : "lib/grid.css" } ,
            { "test" : "MSIE", "url" : "lib/ie.css" }
          ]
       },
       "properties" : {
-          "title" :  { "type" : "string", "value" : "Welcome to Spindle View"},
+          "title" :  { "type" : "string", "value" : "Welcome to Proto Rabbit"},
           "header" : { "type" : "include", "value" : "/header.html" },
           "body" : {  "type" : "include", "value" : "/blueprints.html" },
           "sidebar" : { "type" : "include", "value" : "/sidebar.html" },
@@ -25,15 +22,15 @@
       }
     },
     {
-       "id" : "blueprints-css-fixed",
+       "id" : "blueprints-css-liquid",
        "extends" : "blueprints-css",
        "styles" : {
            "libs" : [
-               { "id" : "blueprint", "url" : "lib/grid.css" }    
+               { "id" : "blueprint", "url" : "lib/liquid.css" }                             
            ]
        },
        "properties" : {
-           "title" : {"type" : "string", "value" : "Welcome to the Fixed Blueprint Templates"},
+           "title" : {"type" : "string", "value" : "Welcome to the Liquid Blueprint Templates"},
            "body" : { "type" : "include", "value" : "/blueprints.html" }
        }
     }

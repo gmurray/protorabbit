@@ -8,11 +8,11 @@ import org.protorabbit.accelerator.CacheableResource;
 
 public interface ITemplate {
 
+	public boolean requiresRefresh(IContext ctx);
+	
 	public String getBaseURI();
 	
 	public boolean combineResources();
-	
-	public boolean gzipResources();
 
 	public String getId();
 	
@@ -62,4 +62,11 @@ public interface ITemplate {
 
 	public void setTemplateResource(CacheableResource cr);
 	public CacheableResource getTemplateResource();
+
+	public void setGzipTemplate(boolean gzip);
+	public void setGzipScripts(boolean gzip);
+	public void setGzipStyles(boolean gzip);
+	public boolean gzipTemplate();
+	public boolean gzipScripts();
+	public boolean gzipStyles();
 }

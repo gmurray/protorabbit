@@ -11,6 +11,7 @@ import java.util.List;
 import org.protorabbit.Config;
 import org.protorabbit.IOUtil;
 import org.protorabbit.model.IContext;
+import org.protorabbit.model.ITemplate;
 import org.protorabbit.model.ResourceURI;
 
 /**
@@ -169,6 +170,10 @@ public class CombinedResourceManager {
             } else {
                 csr = getStyles(styleResources,ctx);
             }
+			boolean gzip = true;
+			ITemplate t = ctx.getConfig().getTemplate(ctx.getTemplateId());
+			gzip = t.gzipStyles();
+			csr.setGzipResources(gzip);            
             combinedResources.put(hash, csr);
             String uri = "<link rel=\"stylesheet\" type=\"text/css\" href=\"" +
                          getResourceService() + "?id=" + hash + 
@@ -182,10 +187,15 @@ public class CombinedResourceManager {
     
     public String processScripts(List<ResourceURI>scriptResources, IContext ctx, OutputStream out) throws java.io.IOException {
     	
-		CacheableResource csr;
+    	if (scriptResources.size() == 0 ) {
+    		return null;
+    	}
+
+    	CacheableResource csr;
 		String hash = getHash(scriptResources);
 
 		if (combinedResources.get(hash) != null) {
+			
 			csr = combinedResources.get(hash);
 
 			if (csr.getCacheContext().isExpired()) {
@@ -195,10 +205,14 @@ public class CombinedResourceManager {
 		} else {
 			csr = getScripts(scriptResources,ctx);
 		}
+		boolean gzip = true;
+		ITemplate t = ctx.getConfig().getTemplate(ctx.getTemplateId());
+		gzip = t.gzipScripts();
+		csr.setGzipResources(gzip);		
 		combinedResources.put(hash, csr);
-		String uri = "<script src=\"" +
-		            getResourceService() + "?id=" + hash + 
-				    ".js\"></script>";
+		String uri = "<script src=\"" + 
+		             getResourceService() + "?id=" + hash + 
+				     ".js\"></script>";
 		out.write(uri.getBytes());
 		return hash;
 	}

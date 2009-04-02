@@ -36,6 +36,7 @@ public class Config {
 	Map<String, String> commandMap = null;
 	
 	boolean gzip = true;
+	boolean defaultCombineResources = false;
 	boolean devMode = false;
 	
 	CombinedResourceManager crm = null;
@@ -108,7 +109,6 @@ public class Config {
 				System.out.println("Could not find class " + className);
 				return null;
 			}
-
 		}
 
 		try {
@@ -118,15 +118,14 @@ public class Config {
 				ICommand ic = (ICommand)o;
 				return ic;
 			} else {
-				System.err.println("Error creating instance of " + className + ". The command needs to implement org.protorabbit.model.Command");
+				System.err.println("Error creating instance of " + className +
+						           ". The command needs to implement org.protorabbit.model.Command");
 			}
             
 
 		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
@@ -206,6 +205,7 @@ public class Config {
 	
 	@SuppressWarnings("unchecked")
 	public void registerTemplates(JSONArray templates, String baseURI) {
+		
 		for (int i=0; i < templates.length(); i++) {
 		    JSONObject t;
 			try {
@@ -220,17 +220,33 @@ public class Config {
 			   		templateTimeout = t.getLong("timeout");
 				   	temp.setTimeout(templateTimeout);			   		
 			   	}
-
-			   	boolean combineResources = false;
+			   	
+			   	boolean tgzip = gzip;
+			   	
+			   	if (t.has("gzip")) {
+			   		tgzip = t.getBoolean("gzip");
+				   	temp.setGzipStyles(tgzip);
+				   	temp.setGzipScripts(tgzip);
+				   	temp.setGzipTemplate(tgzip);
+			   	}
+			   
+			   	boolean combineResources = defaultCombineResources;
+			    
+			   	// template overrides default combineResources
 			   	if (t.has("combineResources")) {
 			   		combineResources = t.getBoolean("combineResources");
-			   	}			   	
+			   		temp.setCombineScripts(combineResources);
+			   		temp.setCombineStyles(combineResources);
+			   	}
+			   	
 			   	temp.setTimeout(templateTimeout);
-                if (t.has("template")) {
+			   	
+                if (t.has("template")) {      	
                 	String turi = t.getString("template");
                 	ResourceURI templateURI = new ResourceURI(turi, baseURI, ResourceURI.TEMPLATE);
                 	temp.setTemplateURI(templateURI);
                 }
+                
 			    if (t.has("extends")) {
 	                List<String> ancestors = null;
 					String base = t.getString("extends");
@@ -254,10 +270,13 @@ public class Config {
 
 
 			    if (t.has("scripts")) {
+			    	
 				    List<ResourceURI> scripts = null;			    	
 			    	scripts = new ArrayList<ResourceURI>();
 			    	JSONObject bsjo = t.getJSONObject("scripts");
+			    	
 			    	if (bsjo.has("combineResources")) {
+			    		
 						JSONArray ja = bsjo.getJSONArray("libs");
 						for (int j=0; j < ja.length(); j++) {				
 							// TODO : Do a user agent check on the test attribute if found
@@ -273,15 +292,23 @@ public class Config {
 				    if (bsjo.has("combineResources")) {
 				    	combine = bsjo.getBoolean("combineResources");
 				    } 
-			    	temp.setCombineScripts(combine);					
+			    	temp.setCombineScripts(combine);
+				    boolean lgzip = tgzip;
+				    if (bsjo.has("gzip")) {
+				    	lgzip = bsjo.getBoolean("gzip");
+				    } 
+			    	temp.setGzipScripts(lgzip);				    	
 				    temp.setScripts(scripts);
 			    }
 
 			    if (t.has("styles")) {
+			    	
 				    List<ResourceURI> styles = null;			    	
 			    	styles = new ArrayList<ResourceURI>();
 			    	JSONObject bsjo = t.getJSONObject("styles");
+			    	
 				    if (bsjo.has("libs")) {
+				    	
 						JSONArray ja = bsjo.getJSONArray("libs");
 						for (int j=0; j < ja.length(); j++) {
 							// TODO : Do a user agent check on the test attribute if found
@@ -299,20 +326,29 @@ public class Config {
 				    	combine = bsjo.getBoolean("combineResources");
 				    } 
 			    	temp.setCombineStyles(combine);
+				    boolean lgzip = tgzip;
+				    if (bsjo.has("gzip")) {
+				    	lgzip = bsjo.getBoolean("gzip");
+				    } 
+			    	temp.setGzipStyles(lgzip);				    	
 			    }
 
 			    if (t.has("properties")) {
-				    Map<String,IProperty> properties = null;
+				    
+			    	Map<String,IProperty> properties = null;
 			    	JSONObject po = t.getJSONObject("properties");
 			    	properties = new  HashMap<String,IProperty>();
+			    	
 					Iterator<String> jit =  po.keys();
 					while(jit.hasNext()) {
+						
 						String name = jit.next();
 						JSONObject so = po.getJSONObject(name);
 						int type = IProperty.STRING;
 						String value = so.getString("value");
 						
 						if (so.has("type")) {
+							
 							String typeString = so.getString("type");
 							if ("string".equals(typeString.toLowerCase())) {
 								type = IProperty.STRING;
@@ -333,7 +369,9 @@ public class Config {
 			    }
 
 			   tmap.put(id, temp);
+			   
 			   System.out.println("Added template definition :  " + id);
+			   
 			} catch (JSONException e) {
 				e.printStackTrace();
 			}

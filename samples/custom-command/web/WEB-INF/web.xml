@@ -7,7 +7,7 @@
 		<description> Template Definitions - Order only matters in that the templates further
        to the left will override properties defined to those to the right.</description>
 		<param-name>prt-templates</param-name>
-		<param-value>/WEB-INF/templates.json,/resources/blueprint/templates.json</param-value>
+		<param-value>/WEB-INF/templates.json,/resources/blueprint/blueprint-templates.json</param-value>
 	</context-param>
 
 	<context-param>
@@ -17,18 +17,18 @@
 	</context-param>
 
 	<servlet>
-		<servlet-name>ProtoRabbitTemplate Servlet</servlet-name>
-		<servlet-class>org.protorabbit.servlet.ProtoRabbitTemplateServlet</servlet-class>
+		<servlet-name>ProtoRabbit Servlet</servlet-name>
+		<servlet-class>org.protorabbit.servlet.ProtoRabbitServlet</servlet-class>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
 
 	<servlet-mapping>
-		<servlet-name>ProtoRabbitTemplate Servlet</servlet-name>
+		<servlet-name>ProtoRabbit Servlet</servlet-name>
 		<url-pattern>*.prt</url-pattern>
 	</servlet-mapping>
 
 	<servlet-mapping>
-		<servlet-name>ProtoRabbitTemplate Servlet</servlet-name>
+		<servlet-name>ProtoRabbit Servlet</servlet-name>
 		<url-pattern>/prt</url-pattern>
 	</servlet-mapping>
 

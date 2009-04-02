@@ -14,9 +14,10 @@ public class CacheableResource {
     protected StringBuffer content;
     protected String contentType;
     protected CacheContext cc = null;
+    protected boolean gzip = true;
 
-    String hash;
-    String contentHash;
+    protected String hash;
+    protected String contentHash;
 
     public CacheableResource(String contentType,
                             long maxAge,
@@ -26,7 +27,15 @@ public class CacheableResource {
         this.content = new StringBuffer();
         this.contentHash = hash;
         cc = new CacheContext(maxAge, hash);        
-    }  
+    }
+    
+    public boolean gzipResources() {
+    	return gzip;
+    }
+
+    public void setGzipResources(boolean gzip) {
+    	this.gzip = gzip;
+    }
     
     public void reset() {
         this.content = new StringBuffer();

@@ -30,7 +30,9 @@ public class TemplateImpl implements ITemplate {
     private List<ResourceURI> styles = null;
 	private String baseURI = null;
 	private boolean combineResources;
-	private boolean gzipResources;
+	private boolean gzip = true;
+	private boolean gzipStyles = true;
+	private boolean gzipScripts = true;	
 	private Config config = null;
 	private long lastUpdate;
 	private long timeout = 0;
@@ -52,22 +54,13 @@ public class TemplateImpl implements ITemplate {
 
 	public StringBuffer getContent(IContext ctx) {
 			ResourceURI tri = getTemplateURI();
-			long now = (new Date()).getTime();
 
 			if (tri == null) {
 				
 				String message = "Unable to locate template for " + id;
 				return new StringBuffer(message);
 			} else {
-				boolean needsUpdate = false;
-				boolean isUpdated = false;
-				if (ctx.getConfig().getDevMode()) {
-					isUpdated = ctx.isUpdated(tri.getBaseURI() + tri.getUri(), lastUpdate);
-				}
-				if (now - lastUpdate > timeout)  {
-					needsUpdate = true;
-				}
-                if (needsUpdate || isUpdated) {
+                if (requiresRefresh(ctx)) {
 					try {
 						contents = ctx.getResource(tri.getBaseURI(), tri.getUri());
 						lastUpdate = (new Date()).getTime();
@@ -251,10 +244,6 @@ public class TemplateImpl implements ITemplate {
 		return baseURI;
 	}
 
-	public boolean gzipResources() {
-		return gzipResources;
-	}
-
 	public void setScripts(List<ResourceURI> scripts) {
 		this.scripts = scripts;		
 	}
@@ -272,8 +261,7 @@ public class TemplateImpl implements ITemplate {
 	}
 
 	public void setTimeout(long timeout) {
-		this.timeout = timeout;
-		
+		this.timeout = timeout;	
 	}
 	
 	public long getTimeout() {
@@ -304,4 +292,45 @@ public class TemplateImpl implements ITemplate {
 	public CacheableResource getTemplateResource() {
 		return templateResource;
 	}
+
+	public boolean requiresRefresh(IContext ctx) {
+		ResourceURI tri = getTemplateURI();
+		long now = (new Date()).getTime();
+		boolean needsUpdate = false;
+		boolean isUpdated = false;
+		// check against the file resource
+		if (ctx.getConfig().getDevMode()) {
+		    isUpdated = ctx.isUpdated(tri.getBaseURI() + tri.getUri(), lastUpdate);
+		}
+		// check against the timeout
+		if (now - lastUpdate > timeout)  {
+		     needsUpdate = true;
+		}	
+        return needsUpdate || isUpdated;
+	}
+
+	public void setGzipScripts(boolean gzip) {
+		gzipScripts = gzip;		
+	}
+
+	public void setGzipStyles(boolean gzip) {
+		gzipStyles = gzip;		
+	}
+
+	public boolean gzipScripts() {
+		return gzipScripts;
+	}
+
+	public boolean gzipStyles() {
+		return gzipStyles;
+	}
+	
+	public boolean gzipTemplate() {
+		return gzip;
+	}
+	
+	public void setGzipTemplate(boolean gzip) {
+		this.gzip = gzip;
+	}
+	
 }

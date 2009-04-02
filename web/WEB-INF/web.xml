@@ -14,26 +14,25 @@
       <param-name>prt-dev-mode</param-name>
       <param-value>true</param-value>
     </context-param>
-    
 
-  <servlet>
-    <servlet-name>ProtoRabbitTemplate Servlet</servlet-name>
-    <servlet-class>org.protorabbit.servlet.ProtoRabbitTemplateServlet</servlet-class>
-    <load-on-startup>1</load-on-startup>
-  </servlet>
-  
-  <servlet-mapping>
-    <servlet-name>ProtoRabbitTemplate Servlet</servlet-name>
-    <url-pattern>*.prt</url-pattern>
-  </servlet-mapping>
-  
-    <servlet-mapping>
-    <servlet-name>ProtoRabbitTemplate Servlet</servlet-name>
-    <url-pattern>/prt</url-pattern>
-  </servlet-mapping>
-  
-  <welcome-file-list>
-    <welcome-file>/welcome.prt</welcome-file>
-  </welcome-file-list>
+	<servlet>
+		<servlet-name>ProtoRabbit Servlet</servlet-name>
+		<servlet-class>org.protorabbit.servlet.ProtoRabbitServlet</servlet-class>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>ProtoRabbit Servlet</servlet-name>
+		<url-pattern>*.prt</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>ProtoRabbit Servlet</servlet-name>
+		<url-pattern>/prt</url-pattern>
+	</servlet-mapping>
+
+	<welcome-file-list>
+		<welcome-file>/welcome.prt</welcome-file>
+	</welcome-file-list>
 
 </web-app>
