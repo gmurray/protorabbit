@@ -52,7 +52,7 @@ public class ProtoRabbitServlet extends HttpServlet {
 				isDevMode = ("true".equals(ctx.getInitParameter("prt-dev-mode").toLowerCase()));
 			}
 			if (ctx.getInitParameter("prt-service-uri") != null) {
-				serviceURI = ctx.getInitParameter("prt-dev-mode");
+				serviceURI = ctx.getInitParameter("prt-service-uri");
 			}
 			
 			if (ctx.getInitParameter("prt-max-timeout") != null) {
@@ -105,7 +105,7 @@ public class ProtoRabbitServlet extends HttpServlet {
 			}
 		}
 
-		if ((jcfg == null || needsUpdate) && templates.length > 0) {
+ 		if ((jcfg == null || needsUpdate) && templates.length > 0) {
 			jcfg = new Config(serviceURI, maxAge);
 			for (int i = 0; i < templates.length; i++) {
 				JSONObject base = JSONUtil.loadFromInputStream(this.ctx
@@ -171,13 +171,17 @@ public class ProtoRabbitServlet extends HttpServlet {
 		if (id != null) {
 			OutputStream out = resp.getOutputStream();
             if (id.length() > 4) {
-            	id = id.substring(0, id.length() - 4);
+            	if(id.endsWith(".js")) {
+                	id = id.substring(0, id.length() - 3);
+            	} else {
+            		id = id.substring(0, id.length() - 4);
+            	}
             }
 			CacheableResource cr = jcfg.getCombinedResourceManager().getResource(id);
 			if (cr == null) {
 				System.out.println("could not find resource " + id);		
 			}
-			if (cr.getContentType() != null) {
+  			if (cr != null && cr.getContentType() != null) {
 				resp.setContentType(cr.getContentType());
 			}
 			
