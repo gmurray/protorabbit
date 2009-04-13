@@ -21,7 +21,7 @@
 	
   <target name="war" depends="dependencies">
   	
-	<mkdir dir="${web.lib}"/>
+	<mkdir dir="${war.lib}"/>
   	<mkdir dir="${dist.dir}"/>
   	
   	<copy file="${protorabbit.lib}" todir="${war.lib}"/>

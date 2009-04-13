@@ -1,18 +1,29 @@
 {
   "templates" : [
     {
-     "timeout" : 0,
-     "id" : "welcome",
+     "timeout" : 30000,
+     "combineResources" : true,
+     "id" : "index",
      "template" : "page-templates/base-page.html",     
      "extends" : "blueprints-css",
      "properties" : {
            "title" : {"type" : "string", "value" : "Hello Proto Rabbit"},
            "body" : { "type" : "include", "value" : "/main.html" }
        }     
-    },  
+    },
+    {
+     "timeout" : 0,
+     "id" : "index-no-optimization",
+     "template" : "page-templates/base-page.html",     
+     "extends" : "blueprints-css",
+     "properties" : {
+           "title" : {"type" : "string", "value" : "Hello Proto Rabbit"},
+           "body" : { "type" : "include", "value" : "/main.html" }
+       }     
+    },     
     {
        "id" : "about",
-       "extends" : "welcome",      
+       "extends" : "index",      
        "properties" : {
            "title" : {"type" : "string", "value" : "About"},
            "body" : { "type" : "include", "value" : "/about.html" }
@@ -20,7 +31,7 @@
     },
     {
      "id" : "jsp",
-     "extends" : "welcome",     
+     "extends" : "index",     
      "timeout" : 5000,
      "properties" : {
            "title" : {"type" : "string", "value" : "JSP Include Test"},

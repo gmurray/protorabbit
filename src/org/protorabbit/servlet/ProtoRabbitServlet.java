@@ -242,13 +242,14 @@ public class ProtoRabbitServlet extends HttpServlet {
 			resp.sendError(HttpServletResponse.SC_NOT_FOUND);
 			return;
 	    }
-		
+
 		// buffer the output steam
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		WebContext wc = new WebContext(jcfg, ctx, req, resp);
 
 		CacheableResource tr = t.getTemplateResource();
-	
+	      
+	    // get the initial content or get the content if it is expired
         if ((t.getTimeout() > 0 && (tr == null ||
         		tr.getCacheContext().isExpired() )) ||
         		t.requiresRefresh(wc)) {
@@ -270,8 +271,7 @@ public class ProtoRabbitServlet extends HttpServlet {
         	String hash = IOUtil.generateHash(content);
             CacheableResource cr = new CacheableResource("text/html", t.getTimeout(), hash);
         	resp.setHeader("ETag", cr.getContentHash());
-          
-            
+
             cr.setContent(new StringBuffer(content));
             t.setTemplateResource(cr);
 
@@ -308,25 +308,29 @@ public class ProtoRabbitServlet extends HttpServlet {
     			resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
     			return;
     		} 
+    		
     		resp.setContentType(tr.getContentType());
-    		resp.setContentLength(tr.getGZippedContent().length);
+
         	resp.setHeader("ETag", etag);
     		resp.setHeader("Expires", tr.getCacheContext().getExpires());
     		resp.setHeader("Cache-Control", "public,max-age=" + tr.getCacheContext().getMaxAge());
-    		canGzip = true;
-    		
+
         	if (canGzip) {
-        		
+
+    		    OutputStream out = resp.getOutputStream();    	   
         		resp.setHeader("Content-Encoding", "gzip");
+        		resp.setHeader("Vary", "Accept-Encoding");
 				byte[] bytes = tr.getGZippedContent();
-				resp.setContentLength(bytes.length);
-				OutputStream out = resp.getOutputStream();
+
 				if (bytes != null) {
+				    resp.setContentLength(bytes.length);
 					ByteArrayInputStream bis = new ByteArrayInputStream(
-							bytes);
+			       		bytes);
+
 					IOUtil.writeBinaryResource(bis, out);
 				}   
         	} else {
+
         		OutputStream out = resp.getOutputStream();
         	    byte[] bytes =tr.getContent().toString().getBytes();
         	    resp.setContentLength(bytes.length);
