@@ -1,10 +1,12 @@
 package org.protorabbit.model;
 
-public interface IProperty {
+public interface IProperty extends IUATestable {
 	
     public static final int STRING = 1;
     public static final int INCLUDE = 2;
     
+    public String getUATest();
+    public void setUATest(String test);
     public String getBaseURI();
     public long getTimeout();
     public void setTimeout(long to);

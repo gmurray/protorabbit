@@ -12,13 +12,13 @@
            { "url" : "lib/typography.css" },
            { "url" : "lib/plugins/fancy-type/fancy-type.css" },
            { "id" : "blueprint", "url" : "lib/grid.css" }, 
-           { "test" : "MSIE", "url" : "lib/ie.css" }
+           { "uaTest" : "MSIE", "url" : "lib/ie.css" }
          ]
       },
       "properties" : {
           "title" :  { "type" : "string", "value" : "Welcome to Spindle View"},
           "header" : { "type" : "include", "value" : "/header.html" },
-          "body" : {  "type" : "include", "value" : "/blueprints.html" },
+          "body" : {  "type" : "include", "value" : "/blueprints.html"},
           "sidebar" : { "type" : "include", "value" : "/sidebar.html" },
           "footer" : { "type" : "include", "value" : "/footer.html" } 
       }

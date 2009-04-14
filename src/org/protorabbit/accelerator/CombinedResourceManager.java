@@ -12,7 +12,7 @@ import org.protorabbit.Config;
 import org.protorabbit.IOUtil;
 import org.protorabbit.model.IContext;
 import org.protorabbit.model.ITemplate;
-import org.protorabbit.model.ResourceURI;
+import org.protorabbit.model.impl.ResourceURI;
 
 /**
  * Manage Combined Resources
