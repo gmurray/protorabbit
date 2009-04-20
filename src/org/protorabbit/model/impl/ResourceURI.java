@@ -19,6 +19,8 @@ public class ResourceURI implements IUATestable {
     private String id = null;
     private String mediaType = null;
     private String test = null;
+    private int loadIndex;
+    private boolean defer = false;
 
     public ResourceURI(String uri, int type, boolean isExternal) {
         this.uri = uri;
@@ -30,6 +32,14 @@ public class ResourceURI implements IUATestable {
         this.uri = uri;
         this.baseURI = baseURI;
         this.type = type;
+    }
+    
+    public int getLoadIndex() {
+        return loadIndex;
+    }
+
+    public void setLoadIndex(int index) {
+        this.loadIndex = index;
     }
 
     public boolean isWritten() {
@@ -113,6 +123,14 @@ public class ResourceURI implements IUATestable {
 
     public void setUATest(String test) {
         this.test = test;
+    }
+
+    public void setDefer(boolean defer) {
+        this.defer = defer;
+    }
+
+    public boolean isDefer() {
+        return defer;
     }
 
 }

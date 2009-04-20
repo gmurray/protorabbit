@@ -29,7 +29,7 @@ public class Engine {
 
             StringBuffer buff = template.getContent(ctx);
             List<ICommand> cmds = getCommands(cfg, buff, template.getJSON());
-            int index = 0;            
+            int index = 0;
             if (cmds != null) {
                 Iterator<ICommand> it = cmds.iterator();
 
@@ -39,7 +39,7 @@ public class Engine {
 
                     // output everything before the first command
                     out.write(buff.substring(index, c.getStartIndex()).getBytes());
-                    
+
                     try {
                         c.doProcess(out);
                     } catch (IOException e) {
@@ -65,7 +65,7 @@ public class Engine {
             e.printStackTrace();
         }
     }
-    
+
     /**
      * @param args
      * @throws IOException 
@@ -191,7 +191,7 @@ public class Engine {
                     if ("include".equals(commandTypeString) && params.length > 0) {
                         if ("scripts".equals(params[0]) ||
                             "styles".equals(params[0])) {
-                            cmd.setType(ICommand.INCLUDE_REFERENCES);
+                            cmd.setType(ICommand.INCLUDE_RESOURCES);
                         } else {
                             cmd.setType(ICommand.INCLUDE);
                         }
@@ -206,7 +206,6 @@ public class Engine {
             // start the process over
             index = end + 2;
         }
-
         return commands;
     }
 

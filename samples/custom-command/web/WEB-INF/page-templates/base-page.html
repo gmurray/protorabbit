@@ -3,50 +3,48 @@
 
 <html>
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 
-	<title><% insert('title') %></title>
-    <% includeReferences('styles') %>
+    <title><% insert('title') %></title>
+    <% includeResources('styles') %>
 </head>
 
 <body>
 
 
 <div class="container"> 
-	
-	<div class="block">
-		<div class="column span-24">
-			<div>
-				<h1><% insert('title') %> </h1>
-			</div>
-			<% include('header') %> 
-			<p>			
-			<% mycommand.Hello('Proto Rabbit') %>
-			</p>
-			<p>
-			<% mycommand.Hello('World') %> 
-			</p>  
-		</div>
-	</div>
-	
-	<div class="block">
-		<div class="column span-18 colborder">
+    
+    <div class="block">
+        <div class="column span-24">
+            <div>
+                <h1><% insert('title') %> </h1>
+            </div>
+            <% include('header') %> 
+            <p>            
+            <% mycommand.Hello('Proto Rabbit') %>
+            </p>
+            <p>
+            <% mycommand.Hello('World') %> 
+            </p>  
+        </div>
+    </div>
+    
+    <div class="block">
+        <div class="column span-18 colborder">
           
           <% include('body') %>
 
-		</div>
+        </div>
 
-		<div class="column span-5 last">
-		
+        <div class="column span-5 last">
+        
              <% include('sidebar') %>
              
-		</div>
-	</div>
+        </div>
+    </div>
 
 </div>
-   <% includeReferences('scripts') %>
+   <% includeResources('scripts') %>
 
 </body>
 </html>
-
-

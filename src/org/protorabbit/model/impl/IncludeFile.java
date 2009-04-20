@@ -5,19 +5,23 @@ import java.util.Date;
 import org.protorabbit.model.IContext;
 
 public class IncludeFile {
-    
+
     private String uri;
     private StringBuffer content;
     private long timeout;
     private long lastRefresh;
-    
+    private int loadIndex;
+    private boolean defer = false;
+    private StringBuffer deferContent = null;
+
     public IncludeFile(String uri,
                        StringBuffer content) {
+
         this.content = content;
         this.uri = uri;
         lastRefresh = (new Date()).getTime();
     }
-    
+
     public String getURI() {
         return uri;
     }
@@ -55,6 +59,30 @@ public class IncludeFile {
 
     public void setLastRefresh(long lastRefresh) {
         this.lastRefresh = lastRefresh;
+    }
+
+    public void setLoadIndex(int loadIndex) {
+        this.loadIndex = loadIndex;
+    }
+
+    public int getLoadIndex() {
+        return loadIndex;
+    }
+
+    public void setDefer(boolean defer) {
+        this.defer = defer;
+    }
+
+    public boolean isDefer() {
+        return defer;
+    }
+
+    public void setDeferContent(StringBuffer deferContent) {
+        this.deferContent = deferContent;
+    }
+
+    public StringBuffer getDeferContent() {
+        return deferContent;
     }
 
 }

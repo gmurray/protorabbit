@@ -14,13 +14,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.protorabbit.Config;
+import org.protorabbit.IOUtil;
 import org.protorabbit.json.JSONUtil;
-import org.protorabbit.model.IContext;
+import org.protorabbit.model.impl.BaseContext;
 
-public class WebContext implements IContext {
+public class WebContext extends BaseContext {
 
     private Config cfg;
-    private String templateId;
     private ServletContext sctx;
     private HttpServletRequest req;
     private HttpServletResponse resp;
@@ -38,9 +38,6 @@ public class WebContext implements IContext {
         contextRoot = req.getContextPath();
     }
 
-    public void setTemplateId(String templateId) {
-        this.templateId = templateId;
-    }
     
     public void setServletContext(ServletContext sctx) {
         this.sctx = sctx;
@@ -48,10 +45,6 @@ public class WebContext implements IContext {
 
     public Config getConfig() {
         return cfg;
-    }
-
-    public String getTemplateId() {
-        return templateId;
     }
 
     public boolean resourceExists(String name) {
@@ -78,13 +71,21 @@ public class WebContext implements IContext {
     }
 
     public StringBuffer getResource(String baseDir, String name) throws IOException {
+
+        String resourceName = null;
+
+        if (name.startsWith("/")) {
+            resourceName = name;
+        } else {
+            resourceName = baseDir + name;
+        }
         if (name.endsWith(".jsp")) {
 
                 try {
 
                     ByteArrayOutputStream bos = new ByteArrayOutputStream();
                     BufferedServletResponse br = new BufferedServletResponse(resp, bos);
-                    req.getRequestDispatcher(baseDir + name).include(req, br);
+                    req.getRequestDispatcher(resourceName).include(req, br);
                     br.flushBuffer();
                     StringBuffer buff = new StringBuffer(bos.toString(cfg.getEncoding()));
                     bos.close();
@@ -97,8 +98,10 @@ public class WebContext implements IContext {
 
         } else {
 
-            InputStream is = sctx.getResourceAsStream(baseDir + name);
-            String contents = JSONUtil.loadStringFromInputStream(is);
+            InputStream is = sctx.getResourceAsStream(resourceName);
+            System.err.println("attemping to load " + resourceName);
+            String contents = IOUtil.loadStringFromInputStream(is);
+if (name.endsWith(".js")) System.out.println("contents are " + contents);
             if (contents != null) {
                 return new StringBuffer(contents);
             }

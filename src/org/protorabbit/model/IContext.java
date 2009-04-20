@@ -1,10 +1,17 @@
 package org.protorabbit.model;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.protorabbit.Config;
 
 public interface IContext {
+
+    public Map<String, ?> getAttributes();
+
+    public Object getAttribute(String key);
+
+    public void setAttribute(String key, Object value);
 
     public Config getConfig();
 

@@ -36,11 +36,11 @@ public class CombinedResourceManager {
      * @param ctx
      */
     public CombinedResourceManager (
-    		Config cfg,
+            Config cfg,
             String resourceService,
             long maxTimeout ) {
-    	
-    	this.cfg = cfg;
+        
+        this.cfg = cfg;
         this.resourceService = resourceService;
         this.maxTimeout = maxTimeout;
         combinedResources = new Hashtable<String, CacheableResource>();
@@ -88,7 +88,7 @@ public class CombinedResourceManager {
      */
     public String getHash(List<ResourceURI> uriResources) {
 
-    	Collections.sort(uriResources, new ResourceURIComparator());
+        Collections.sort(uriResources, new ResourceURIComparator());
             
             Iterator<ResourceURI> it = uriResources.iterator();
             String namesString = "";
@@ -101,11 +101,11 @@ public class CombinedResourceManager {
     
     class ResourceURIComparator implements Comparator<ResourceURI> {
 
-		public int compare(ResourceURI o1, ResourceURI o2) {
-			String uri1 = o1.getFullURI();
-			String uri2 = o2.getFullURI();
-			return uri1.compareTo(uri2);
-		}
+        public int compare(ResourceURI o1, ResourceURI o2) {
+            String uri1 = o1.getFullURI();
+            String uri2 = o2.getFullURI();
+            return uri1.compareTo(uri2);
+        }
     }
         
 
@@ -140,21 +140,27 @@ public class CombinedResourceManager {
                 stylesBuffer = replaceRelativeLinks(stylesBuffer, ri.getBaseURI());
                 styles.appendContent(stylesBuffer.toString());
             } catch (Exception ioe) {
-            	System.out.println("Unable to locate resource "  +ri.getUri());
+                System.out.println("Unable to locate resource "  +ri.getUri());
             }
         }
         return styles;
     }
     
     public CacheableResource getResource(String key) {
-    	CacheableResource csr = combinedResources.get(key);
-    	if (csr != null) {
-    		return csr;
-    	}
-    	return null;
+        CacheableResource csr = combinedResources.get(key);
+        if (csr != null) {
+            return csr;
+        }
+        return null;
+    }
+
+    public void putResource(String key, CacheableResource csr) {
+        combinedResources.put(key, csr);
     }
     
-    public String processStyles(List<ResourceURI>styleResources,  IContext ctx, OutputStream out) throws java.io.IOException {
+    public String processStyles(List<ResourceURI>styleResources,
+                                IContext ctx,
+                                OutputStream out) throws java.io.IOException {
 
         CacheableResource csr;
         String hash = getHash(styleResources);
@@ -170,10 +176,11 @@ public class CombinedResourceManager {
             } else {
                 csr = getStyles(styleResources,ctx);
             }
-			boolean gzip = true;
-			ITemplate t = ctx.getConfig().getTemplate(ctx.getTemplateId());
-			gzip = t.gzipStyles();
-			csr.setGzipResources(gzip);            
+            boolean gzip = true;
+            ITemplate t = ctx.getConfig().getTemplate(ctx.getTemplateId());
+            gzip = t.gzipStyles();
+            csr.setGzipResources(gzip);
+
             combinedResources.put(hash, csr);
             String uri = "<link rel=\"stylesheet\" type=\"text/css\" href=\"" +
                          getResourceService() + "?id=" + hash + 
@@ -185,36 +192,35 @@ public class CombinedResourceManager {
         return hash;
     }
     
-    public String processScripts(List<ResourceURI>scriptResources, IContext ctx, OutputStream out) throws java.io.IOException {
-    	
-    	if (scriptResources.size() == 0 ) {
-    		return null;
-    	}
+    public String processScripts(List<ResourceURI>scriptResources,
+                                 IContext ctx, boolean defer) throws java.io.IOException {
 
-    	CacheableResource csr;
-		String hash = getHash(scriptResources);
+        if (scriptResources.size() == 0 ) {
+            return null;
+        }
 
-		if (combinedResources.get(hash) != null) {
-			
-			csr = combinedResources.get(hash);
+        CacheableResource csr;
+        String hash = getHash(scriptResources);
 
-			if (csr.getCacheContext().isExpired()) {
-				csr.reset();
-				csr = getScripts(scriptResources,ctx);
-			}
-		} else {
-			csr = getScripts(scriptResources,ctx);
-		}
-		boolean gzip = true;
-		ITemplate t = ctx.getConfig().getTemplate(ctx.getTemplateId());
-		gzip = t.gzipScripts();
-		csr.setGzipResources(gzip);		
-		combinedResources.put(hash, csr);
-		String uri = "<script src=\"" + 
-		             getResourceService() + "?id=" + hash + 
-				     ".js\"></script>";
-		out.write(uri.getBytes());
-		return hash;
-	}
+        if (combinedResources.get(hash) != null) {
+
+            csr = combinedResources.get(hash);
+
+            if (csr.getCacheContext().isExpired()) {
+                csr.reset();
+                csr = getScripts(scriptResources,ctx);
+            }
+        } else {
+            csr = getScripts(scriptResources,ctx);
+        }
+
+        boolean gzip = true;
+
+        ITemplate t = ctx.getConfig().getTemplate(ctx.getTemplateId());
+        gzip = t.gzipScripts();
+        csr.setGzipResources(gzip);
+        combinedResources.put(hash, csr);
+        return hash;
+    }
 }
 

@@ -15,4 +15,8 @@ public interface IProperty extends IUATestable {
     public String getKey();
     public void setValue(String value);
     public String originalTemplateId();
+    public void setDefer(boolean defer);
+    public void setDeferContent(StringBuffer deferContent);
+    public boolean getDefer();
+    public StringBuffer getDeferContent();
 }

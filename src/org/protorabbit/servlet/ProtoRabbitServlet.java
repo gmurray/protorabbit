@@ -39,7 +39,7 @@ public class ProtoRabbitServlet extends HttpServlet {
     private String[] templates = null;
 
     // defaults     
-    private String defaultTemplateURI = "/WEB-INF/templates.json";    
+    private String defaultTemplateURI = "/WEB-INF/templates.json";
     private String serviceURI = "prt";
     private long maxAge = 1225000;
 
@@ -60,7 +60,7 @@ public class ProtoRabbitServlet extends HttpServlet {
                 try {
                     maxAge = (new Long(maxTimeoutString)).longValue();
                 } catch (Exception e) {
-                    System.err.println("Non-fatal: Error processing configuration : prt-service-uri must be a long.");    
+                   Config.getLogger().warning("Non-fatal: Error processing configuration : prt-service-uri must be a long.");    
                 }
             }
             if (ctx.getInitParameter("prt-templates") != null) {
@@ -108,6 +108,7 @@ public class ProtoRabbitServlet extends HttpServlet {
          if ((jcfg == null || needsUpdate) && templates.length > 0) {
             jcfg = new Config(serviceURI, maxAge);
             for (int i = 0; i < templates.length; i++) {
+
                 JSONObject base = JSONUtil.loadFromInputStream(this.ctx
                         .getResourceAsStream(templates[i]));
                 String baseURI = getTemplateDefDir(templates[i]);
@@ -122,7 +123,6 @@ public class ProtoRabbitServlet extends HttpServlet {
                     e1.printStackTrace();
                 }
             }
-
         }
     }
 
@@ -177,15 +177,17 @@ public class ProtoRabbitServlet extends HttpServlet {
                     id = id.substring(0, id.length() - 4);
                 }
             }
+
             CacheableResource cr = jcfg.getCombinedResourceManager().getResource(id);
+
             if (cr == null) {
                 Config.getLogger().severe("could not find resource " + id);
             }
-              if (cr != null && cr.getContentType() != null) {
-                resp.setContentType(cr.getContentType());
-            }
-            
+
             if (cr != null) {
+                if (cr.getContentType() != null) {
+                    resp.setContentType(cr.getContentType());
+                }
                 CacheContext cc = cr.getCacheContext();
                 String etag = cr.getContentHash();
                 // get the If-None-Match header
@@ -215,11 +217,11 @@ public class ProtoRabbitServlet extends HttpServlet {
                     out.write(cr.getContent().toString().getBytes());
                 }
                 return;
-                
             } else {
                 Config.getLogger().warning("resource " + id
                         + " requested but not found.");
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+                return;
             }
         }
 
@@ -228,22 +230,23 @@ public class ProtoRabbitServlet extends HttpServlet {
 
         if (lastSep != -1 && lastSep < servletPath.length() - 1) {
             int nextDot = servletPath.indexOf(".", lastSep + 1);
-            id = servletPath.substring(lastSep + 1, nextDot);
+            if (nextDot != -1) {
+                id = servletPath.substring(lastSep + 1, nextDot);
+            }
         }
-        
+
         ITemplate t = null;
-        
+
         if (id != null) {
             t = jcfg.getTemplate(id);
         }
-
         if (id == null || t == null) {
             Config.getLogger().warning("template " + id + " requested but not found.");
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
 
-        // buffer the output steam
+        // buffer the output stream
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         WebContext wc = new WebContext(jcfg, ctx, req, resp);
 
@@ -262,12 +265,12 @@ public class ProtoRabbitServlet extends HttpServlet {
 
             resp.setHeader("Expires", IOUtil.getExpires(t.getTimeout()));
             resp.setHeader("Cache-Control", "public,max-age=" + IOUtil.getMaxAge(t.getTimeout()));    
-            
+
             resp.setHeader("Content-Type", "text/html");
-            
+
             // headers after this point do not get written
             Engine.renderTemplate(id, jcfg, bos, wc);
-            
+
             String content = bos.toString("UTF8");
             String hash = IOUtil.generateHash(content);
             CacheableResource cr = new CacheableResource("text/html", t.getTimeout(), hash);
@@ -298,7 +301,7 @@ public class ProtoRabbitServlet extends HttpServlet {
 
             // write out content / gzip or otherwise from the cache
         } else if (t.getTimeout() > 0 && tr != null) {
-      
+
             // if the client has the same resource as the one on the server return a 304
             // get the If-None-Match header
             String etag = tr.getContentHash();
@@ -318,7 +321,7 @@ public class ProtoRabbitServlet extends HttpServlet {
 
             if (canGzip) {
 
-                OutputStream out = resp.getOutputStream();           
+                OutputStream out = resp.getOutputStream();
                 resp.setHeader("Content-Encoding", "gzip");
                 resp.setHeader("Vary", "Accept-Encoding");
                 byte[] bytes = tr.getGZippedContent();
@@ -344,7 +347,7 @@ public class ProtoRabbitServlet extends HttpServlet {
 
         } else {
             OutputStream out = resp.getOutputStream();
-            Engine.renderTemplate(id, jcfg, bos, wc);    
+            Engine.renderTemplate(id, jcfg, bos, wc);
             out.write(bos.toByteArray());
         }
 

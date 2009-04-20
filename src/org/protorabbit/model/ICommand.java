@@ -8,7 +8,7 @@ public interface ICommand {
 	public static int UNKNOWN = 0;
 	public static int INSERT = 1;
 	public static int INCLUDE = 2;
-	public static int INCLUDE_REFERENCES = 3;
+	public static int INCLUDE_RESOURCES = 3;
 	public static int CUSTOM = 4;	
 	
     public void setContext(IContext ctx);

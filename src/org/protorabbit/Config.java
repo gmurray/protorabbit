@@ -33,6 +33,8 @@ public class Config {
         return logger;
     }
 
+    private Map<String, Object> globalAttributes = null;
+    
     public static long DEFAULT_TIMEOUT = 60 * 1000 * 15;
 
     private long resourceTimeout = DEFAULT_TIMEOUT;
@@ -56,6 +58,7 @@ public class Config {
 
     // in seconds 
     private long maxAge = 1225000;
+    private String resourceService =  "prt";
 
     public Config(String serviceURI, long maxAge ) {
         init();
@@ -68,19 +71,31 @@ public class Config {
     public Config() {
         init();
         crm = new CombinedResourceManager(this,
-                                         "spv",
+                                          resourceService,
                                          getMaxAge());
     }
 
     void init() {
-
+        globalAttributes = new HashMap<String, Object>();
         commandMap = new HashMap<String, String>();
         commandMap.put("insert", "org.protorabbit.model.impl.InsertCommand");
         commandMap.put("include", "org.protorabbit.model.impl.IncludeCommand");
-        commandMap.put("includeReferences", "org.protorabbit.model.impl.IncludeReferencesCommand");
+        commandMap.put("includeResources", "org.protorabbit.model.impl.IncludeResourcesCommand");
 
         tmap = new HashMap<String, ITemplate>();
         includeFiles = new HashMap<String, IncludeFile>();
+    }
+
+    public Object getGlobalAttribute(String key) {
+        return globalAttributes.get(key);
+    }
+
+    public void setGlobaAttribute(String key, Object value) {
+        globalAttributes.put(key, value);
+    }
+
+    public void clearGlobalAttributes() {
+        globalAttributes.clear();
     }
 
     public void setDevMode(boolean devMode) {
@@ -167,7 +182,7 @@ public class Config {
         return includeFiles.get(rid);
     }
 
-    public StringBuffer getIncludeFileContent(String tid, String id, IContext ctx) {
+    public IncludeFile getIncludeFileContent(String tid, String id, IContext ctx) {
         try {
             ITemplate template = getTemplate(tid);
             if (template != null && template.getJSON() != null) {
@@ -175,11 +190,11 @@ public class Config {
                 IProperty prop = template.getProperty(id,ctx);
                 if (prop == null) {
                     getLogger().log(Level.SEVERE, "Unable to find Include file for " + id + " in template " + tid);
-                    return new StringBuffer("");
+                    return null;
                 }
                 if (prop.getUATest() != null) {
                     if (ctx.uaTest(prop.getUATest()) == false) {
-                        return new StringBuffer("");
+                        return null;
                     }
                 }
                 String includeFile = prop.getValue();
@@ -193,21 +208,23 @@ public class Config {
                 IncludeFile inc = null;    
                 if (includeFiles.containsKey(uri)) {
                     inc =  includeFiles.get(uri);
-                }        
+                }
                 if (inc == null || (inc != null && inc.isStale(ctx))) {
 
                     StringBuffer buff = ctx.getResource(tBase, includeFile);
                     if (inc == null) {
                         inc = new IncludeFile(uri, buff);
                         inc.setTimeout(prop.getTimeout());
+                        inc.setDefer(prop.getDefer());
+                        inc.setDeferContent(prop.getDeferContent());
                         includeFiles.put(uri, inc);
                     } else {
                         inc.setContent(buff);
                     }
 
-                    return buff;
+                    return inc;
                 } else {
-                    return inc.getContent();
+                    return inc;
                 }
             }
         } catch (Exception e) {
@@ -256,7 +273,7 @@ public class Config {
 
                    temp.setTimeout(templateTimeout);
 
-                if (t.has("template")) {          
+                if (t.has("template")) {
                     String turi = t.getString("template");
                     ResourceURI templateURI = new ResourceURI(turi, baseURI, ResourceURI.TEMPLATE);
                     temp.setTemplateURI(templateURI);
@@ -285,71 +302,25 @@ public class Config {
 
                 if (t.has("scripts")) {
 
-                    List<ResourceURI> scripts = null;
-                    scripts = new ArrayList<ResourceURI>();
                     JSONObject bsjo = t.getJSONObject("scripts");
-
-                    if (bsjo.has("combineResources")) {
-
-                        JSONArray ja = bsjo.getJSONArray("libs");
-                        for (int j=0; j < ja.length(); j++) {
-                            JSONObject so = ja.getJSONObject(j);
-                            ResourceURI ri = new ResourceURI(so.getString("url"), baseURI, ResourceURI.SCRIPT);
-                            if (so.has("id")) {
-                                ri.setId(so.getString("id"));
-                            }
-                            if (so.has("uaTest")) {
-                                ri.setUATest(so.getString("uaTest"));
-                            }
-                            scripts.add(ri);
-                        }
-                    }
-                    boolean combine = combineResources;
-                    if (bsjo.has("combineResources")) {
-                        combine = bsjo.getBoolean("combineResources");
-                    } 
-                    temp.setCombineScripts(combine);
-                    boolean lgzip = tgzip;
-                    if (bsjo.has("gzip")) {
-                        lgzip = bsjo.getBoolean("gzip");
-                    } 
-                    temp.setGzipScripts(lgzip);
-                    temp.setScripts(scripts);
+                    
+                    processURIResources(ResourceURI.SCRIPT,
+                                        bsjo,
+                                        temp,
+                                        baseURI,
+                                        combineResources,
+                                        tgzip);
                 }
 
                 if (t.has("styles")) {
-                    
-                    List<ResourceURI> styles = null;
-                    styles = new ArrayList<ResourceURI>();
                     JSONObject bsjo = t.getJSONObject("styles");
-                    
-                    if (bsjo.has("libs")) {
-                        
-                        JSONArray ja = bsjo.getJSONArray("libs");
-                        
-                        for (int j=0; j < ja.length(); j++) {
-                            JSONObject so = ja.getJSONObject(j);
-                            ResourceURI ri = new ResourceURI(so.getString("url"), baseURI, ResourceURI.SCRIPT);
-                            if (so.has("id")) {
-                                ri.setId(so.getString("id"));
-                            }
-                            if (so.has("uaTest")) {
-                                ri.setUATest(so.getString("uaTest"));
-                            }
-                            styles.add(ri);
-                        }
-                        temp.setStyles(styles);
-                    }
-                    boolean combine = combineResources;
-                    if (bsjo.has("combineResources")) {
-                        combine = bsjo.getBoolean("combineResources");
-                    } 
-                    temp.setCombineStyles(combine);
-                    boolean lgzip = tgzip;
-                    if (bsjo.has("gzip")) {
-                        lgzip = bsjo.getBoolean("gzip");
-                    } 
-                    temp.setGzipStyles(lgzip);
+
+                    processURIResources(ResourceURI.LINK,
+                            bsjo,
+                            temp,
+                            baseURI,
+                            combineResources,
+                            tgzip);
                 }
 
                 if (t.has("properties")) {
@@ -386,7 +357,12 @@ public class Config {
                         if (so.has("uaTest")) {
                             pi.setUATest(so.getString("uaTest"));
                         }
-
+                        if (so.has("defer")) {
+                            pi.setDefer(so.getBoolean("defer"));
+                        }
+                        if (so.has("deferContent")) {
+                            pi.setDeferContent(new StringBuffer(so.getString("deferContent")));
+                        }
                         pi.setTimeout(timeout);
                         properties.put(name, pi);
                     }
@@ -403,6 +379,59 @@ public class Config {
         }
     }
 
+    private void processURIResources(int type,
+                                JSONObject bsjo,
+                                ITemplate temp,
+                                String baseURI,
+                                boolean combineResources,
+                                boolean globalGzip) throws JSONException {
+
+            List<ResourceURI> refs = null;
+            refs = new ArrayList<ResourceURI>();
+
+            if (bsjo.has("libs")) {
+                
+                JSONArray ja = bsjo.getJSONArray("libs");
+                
+                for (int j=0; j < ja.length(); j++) {
+                    JSONObject so = ja.getJSONObject(j);
+                    ResourceURI ri = new ResourceURI(so.getString("url"), baseURI, type);
+                    if (so.has("id")) {
+                        ri.setId(so.getString("id"));
+                    }
+                    if (so.has("uaTest")) {
+                        ri.setUATest(so.getString("uaTest"));
+                    }
+                    if (so.has("defer")) {
+                        ri.setDefer(so.getBoolean("defer"));
+                    }
+                    refs.add(ri);
+                }
+                temp.setStyles(refs);
+            }
+
+            boolean combine = combineResources;
+
+            if (bsjo.has("combineResources")) {
+                combine = bsjo.getBoolean("combineResources");
+            } 
+
+            boolean lgzip = globalGzip;
+            if (bsjo.has("gzip")) {
+                lgzip = bsjo.getBoolean("gzip");
+            }
+
+            if (type == ResourceURI.SCRIPT) {
+                temp.setCombineScripts(combine);
+                temp.setGzipScripts(lgzip);
+                temp.setScripts(refs);
+            } else if (type == ResourceURI.LINK) {
+                temp.setGzipStyles(lgzip);
+                temp.setCombineStyles(combine);
+                temp.setStyles(refs);
+            }
+    }
+    
     public ITemplate getTemplate(String id) {
         if (tmap.containsKey(id)) {
             return tmap.get(id);
@@ -526,6 +555,14 @@ public class Config {
 
     public void setMaxAge(long maxAge) {
         this.maxAge = maxAge;
+    }
+
+    public String getResourceService() {
+        return resourceService;
+    }
+
+    public void setResourceService(String resourceService) {
+        this.resourceService = resourceService;
     }
 
 }

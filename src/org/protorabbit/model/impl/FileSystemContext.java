@@ -5,12 +5,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 import org.protorabbit.Config;
-import org.protorabbit.json.JSONUtil;
-import org.protorabbit.model.IContext;
+import org.protorabbit.IOUtil;
 
-public class FileSystemContext implements IContext {
+public class FileSystemContext extends BaseContext {
+
     Config cfg;
-    private String templateId;
     private String contextRoot = "";
     
     public FileSystemContext(Config cfg, String contextRoot) {
@@ -21,10 +20,6 @@ public class FileSystemContext implements IContext {
     public Config getConfig() {
         return cfg;
     }
-    
-    public String getTemplateId() {
-        return templateId;
-    }
 
     public StringBuffer getResource(String baseDir, String name) throws IOException {
         // / signifies the base directory
@@ -32,15 +27,11 @@ public class FileSystemContext implements IContext {
             name = name.substring(1);
             baseDir = contextRoot;
         }
-        String contents = JSONUtil.loadStringFromInputStream(new FileInputStream(baseDir + name));
+        String contents = IOUtil.loadStringFromInputStream(new FileInputStream(baseDir + name));
         if (contents != null) {
             return new StringBuffer(contents);
         }
         return null;
-    }
-
-    public void setTemplateId(String templateId) {
-        this.templateId = templateId;        
     }
 
     public boolean resourceExists(String name) {
