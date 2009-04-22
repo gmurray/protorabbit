@@ -12,7 +12,7 @@ import java.util.logging.Level;
 
 import org.json.JSONObject;
 import org.protorabbit.Config;
-import org.protorabbit.accelerator.CacheableResource;
+import org.protorabbit.accelerator.ICacheable;
 import org.protorabbit.model.ICommand;
 import org.protorabbit.model.IContext;
 import org.protorabbit.model.IProperty;
@@ -40,7 +40,7 @@ public class TemplateImpl implements ITemplate {
     private long timeout = 0;
     private boolean combineStyles = false;
     private boolean combineScripts = false;
-    private CacheableResource templateResource = null;
+    private ICacheable templateResource = null;
     private Boolean hasUADependencies = null;
 
     public TemplateImpl(String id, String baseURI, JSONObject json, Config cfg) {
@@ -317,12 +317,12 @@ public class TemplateImpl implements ITemplate {
         this.combineStyles = combineResources;
     }
 
-    public void setTemplateResource(CacheableResource cr) {
+    public void setTemplateResource(ICacheable cr) {
         templateResource = cr;
         
     }
 
-    public CacheableResource getTemplateResource() {
+    public ICacheable getTemplateResource() {
         return templateResource;
     }
 

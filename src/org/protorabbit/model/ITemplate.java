@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.List;
 
 import org.json.JSONObject;
-import org.protorabbit.accelerator.CacheableResource;
+import org.protorabbit.accelerator.ICacheable;
 import org.protorabbit.model.impl.ResourceURI;
 
 public interface ITemplate {
@@ -38,8 +38,8 @@ public interface ITemplate {
     public void setCombineStyles(boolean combineResources);
     public boolean getCombineScripts();
     public boolean getCombineStyles();
-    public void setTemplateResource(CacheableResource cr);
-    public CacheableResource getTemplateResource();
+    public void setTemplateResource(ICacheable cr);
+    public ICacheable getTemplateResource();
     public void setGzipTemplate(boolean gzip);
     public void setGzipScripts(boolean gzip);
     public void setGzipStyles(boolean gzip);

@@ -24,7 +24,8 @@ import org.protorabbit.Config;
 import org.protorabbit.Engine;
 import org.protorabbit.IOUtil;
 import org.protorabbit.accelerator.CacheContext;
-import org.protorabbit.accelerator.CacheableResource;
+import org.protorabbit.accelerator.ICacheable;
+import org.protorabbit.accelerator.impl.CacheableResource;
 import org.protorabbit.json.JSONUtil;
 import org.protorabbit.model.ITemplate;
 
@@ -38,10 +39,12 @@ public class ProtoRabbitServlet extends HttpServlet {
 
     private String[] templates = null;
 
-    // defaults     
+    // defaults
     private String defaultTemplateURI = "/WEB-INF/templates.json";
     private String serviceURI = "prt";
     private long maxAge = 1225000;
+    private int maxTries = 100;
+    private long tryTimeout = 20;
 
     public void init(ServletConfig cfg) {
         try {
@@ -154,7 +157,7 @@ public class ProtoRabbitServlet extends HttpServlet {
         if (isDevMode) {
             updateConfig();
         }
-        
+
         boolean canGzip = false;
         // check if client supports gzip
         Enumeration<String> hnum = req.getHeaders("Accept-Encoding");
@@ -165,7 +168,7 @@ public class ProtoRabbitServlet extends HttpServlet {
                 break;
             }
         }
-
+        WebContext wc = new WebContext(jcfg, ctx, req, resp);
         String id = req.getParameter("id");
         
         if (id != null) {
@@ -178,17 +181,34 @@ public class ProtoRabbitServlet extends HttpServlet {
                 }
             }
 
-            CacheableResource cr = jcfg.getCombinedResourceManager().getResource(id);
+            ICacheable cr = jcfg.getCombinedResourceManager().getResource(id);
 
             if (cr == null) {
                 Config.getLogger().severe("could not find resource " + id);
             }
 
             if (cr != null) {
+                CacheContext cc = cr.getCacheContext();
+                if (!cc.isExpired()) {
+                    if (jcfg.getGzip() && canGzip && cr.gzipResources()) {
+                        resp.setHeader("Content-Encoding", "gzip");
+                        cr.refresh(wc);
+                    }
+                }
+
+                // wait for the resource to load
+                int tries = 0;
+                while ((cr.getStatus() != 200) && tries < maxTries) {
+                    try {
+                        Thread.sleep(tryTimeout);
+                    } catch (InterruptedException e) {
+                    }
+                    tries += 1;
+                }
                 if (cr.getContentType() != null) {
                     resp.setContentType(cr.getContentType());
                 }
-                CacheContext cc = cr.getCacheContext();
+
                 String etag = cr.getContentHash();
                 // get the If-None-Match header
                 String ifNoneMatch = req.getHeader("If-None-Match");
@@ -199,13 +219,12 @@ public class ProtoRabbitServlet extends HttpServlet {
                 }
                 if (etag != null) {
                     resp.setHeader("ETag", etag);
-                }      
+                }
                 resp.setHeader("Expires", cc.getExpires());
                 resp.setHeader("Cache-Control", "public,max-age=" + cc.getMaxAge());
 
                 if (jcfg.getGzip() && canGzip && cr.gzipResources()) {
                     resp.setHeader("Content-Encoding", "gzip");
-
                     byte[] bytes = cr.getGZippedContent();
                     if (bytes != null) {
                         ByteArrayInputStream bis = new ByteArrayInputStream(
@@ -248,9 +267,8 @@ public class ProtoRabbitServlet extends HttpServlet {
 
         // buffer the output stream
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        WebContext wc = new WebContext(jcfg, ctx, req, resp);
 
-        CacheableResource tr = t.getTemplateResource();
+        ICacheable tr = t.getTemplateResource();
 
         // get the initial content or get the content if it is expired
         if ((t.getTimeout() > 0 && (tr == null ||
@@ -264,7 +282,7 @@ public class ProtoRabbitServlet extends HttpServlet {
             }
 
             resp.setHeader("Expires", IOUtil.getExpires(t.getTimeout()));
-            resp.setHeader("Cache-Control", "public,max-age=" + IOUtil.getMaxAge(t.getTimeout()));    
+            resp.setHeader("Cache-Control", "public,max-age=" + IOUtil.getMaxAge(t.getTimeout()));
 
             resp.setHeader("Content-Type", "text/html");
 
@@ -273,7 +291,7 @@ public class ProtoRabbitServlet extends HttpServlet {
 
             String content = bos.toString("UTF8");
             String hash = IOUtil.generateHash(content);
-            CacheableResource cr = new CacheableResource("text/html", t.getTimeout(), hash);
+            ICacheable cr = new CacheableResource("text/html", t.getTimeout(), hash);
             resp.setHeader("ETag", cr.getContentHash());
 
             cr.setContent(new StringBuffer(content));
@@ -311,8 +329,8 @@ public class ProtoRabbitServlet extends HttpServlet {
                 ifNoneMatch.equals(etag)) {
                 resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
                 return;
-            } 
-            
+            }
+
             resp.setContentType(tr.getContentType());
 
             resp.setHeader("ETag", etag);
@@ -332,7 +350,7 @@ public class ProtoRabbitServlet extends HttpServlet {
                            bytes);
 
                     IOUtil.writeBinaryResource(bis, out);
-                }   
+                }
             } else {
 
                 OutputStream out = resp.getOutputStream();
@@ -342,7 +360,7 @@ public class ProtoRabbitServlet extends HttpServlet {
                     ByteArrayInputStream bis = new ByteArrayInputStream(
                             bytes);
                     IOUtil.writeBinaryResource(bis, out);
-                }       
+                }
             }
 
         } else {

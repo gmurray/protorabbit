@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.protorabbit.Config;
 import org.protorabbit.IOUtil;
+import org.protorabbit.accelerator.impl.CacheableResource;
 import org.protorabbit.model.IContext;
 import org.protorabbit.model.ITemplate;
 import org.protorabbit.model.impl.ResourceURI;
@@ -146,8 +147,8 @@ public class CombinedResourceManager {
         return styles;
     }
     
-    public CacheableResource getResource(String key) {
-        CacheableResource csr = combinedResources.get(key);
+    public ICacheable getResource(String key) {
+        ICacheable csr = combinedResources.get(key);
         if (csr != null) {
             return csr;
         }

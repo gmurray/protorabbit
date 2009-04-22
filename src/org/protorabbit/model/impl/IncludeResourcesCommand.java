@@ -2,7 +2,6 @@ package org.protorabbit.model.impl;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.protorabbit.Config;
@@ -16,6 +15,7 @@ public class IncludeResourcesCommand extends BaseCommand {
     
     private String protorabbitClient = "resources/protorabbit.js";
 
+    @SuppressWarnings("unchecked")
     @Override
     public void doProcess(OutputStream out) throws IOException {
         if (params == null || params.length < 1) {
@@ -27,7 +27,7 @@ public class IncludeResourcesCommand extends BaseCommand {
 
         ITemplate t = cfg.getTemplate(ctx.getTemplateId());
         CombinedResourceManager crm = cfg.getCombinedResourceManager();
-
+        List<String> deferredScripts = (List<String>)ctx.getAttribute(IncludeCommand.DEFERRED_SCRIPTS);
         if ("scripts".equals(target)) {
 
             boolean hasDeferred = false;
@@ -43,7 +43,7 @@ public class IncludeResourcesCommand extends BaseCommand {
             boolean deferredWritten = (ctx.getAttribute(DEFERRED_WRITTEN) != null &&
                     ctx.getAttribute(DEFERRED_WRITTEN) == Boolean.TRUE);
 
-            if (hasDeferred && !deferredWritten) {
+            if ((hasDeferred  || deferredScripts != null ) && !deferredWritten) {
                 StringBuffer buff = IOUtil.getClasspathResource(cfg, protorabbitClient);
                 if (buff != null) {
                     out.write("<script>".getBytes());
@@ -81,9 +81,8 @@ public class IncludeResourcesCommand extends BaseCommand {
                 String tFile = cfg.getResourceReferences(ctx.getTemplateId(), params[0], ctx);
                 out.write(tFile.getBytes());
             }
-
         }
-        List<String> deferredScripts = (List)ctx.getAttribute(IncludeCommand.DEFERRED_SCRIPTS);
+
         if (deferredScripts != null) {
             for (String s : deferredScripts) {
                 out.write(s.getBytes());

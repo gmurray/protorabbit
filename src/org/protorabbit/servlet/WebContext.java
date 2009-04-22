@@ -15,7 +15,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.protorabbit.Config;
 import org.protorabbit.IOUtil;
-import org.protorabbit.json.JSONUtil;
 import org.protorabbit.model.impl.BaseContext;
 
 public class WebContext extends BaseContext {
@@ -29,7 +28,7 @@ public class WebContext extends BaseContext {
     public WebContext(Config cfg) {
         this.cfg = cfg;
     }
-   
+
     public WebContext(Config cfg, ServletContext sctx, HttpServletRequest req, HttpServletResponse resp) {
         this.cfg = cfg;
         this.sctx = sctx;
@@ -38,7 +37,6 @@ public class WebContext extends BaseContext {
         contextRoot = req.getContextPath();
     }
 
-    
     public void setServletContext(ServletContext sctx) {
         this.sctx = sctx;
     }
@@ -52,6 +50,7 @@ public class WebContext extends BaseContext {
         try {
             url = sctx.getResource(name);
         } catch (MalformedURLException e) {
+            // eat the exception
         }
         return (url != null);
     }
@@ -99,9 +98,9 @@ public class WebContext extends BaseContext {
         } else {
 
             InputStream is = sctx.getResourceAsStream(resourceName);
-            System.err.println("attemping to load " + resourceName);
+
             String contents = IOUtil.loadStringFromInputStream(is);
-if (name.endsWith(".js")) System.out.println("contents are " + contents);
+
             if (contents != null) {
                 return new StringBuffer(contents);
             }

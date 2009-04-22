@@ -205,7 +205,7 @@ public class Config {
                 }
 
                 String uri = tBase + includeFile;
-                IncludeFile inc = null;    
+                IncludeFile inc = null;
                 if (includeFiles.containsKey(uri)) {
                     inc =  includeFiles.get(uri);
                 }
