@@ -189,12 +189,12 @@ public class ProtoRabbitServlet extends HttpServlet {
 
             if (cr != null) {
                 CacheContext cc = cr.getCacheContext();
-                if (cc.isExpired()) {
+                if (cc.isExpired() || cr.getContent() == null) {
                     if (jcfg.getGzip() && canGzip && cr.gzipResources()) {
                         resp.setHeader("Content-Encoding", "gzip");
+                        cr.refresh(wc);
                     }
                 }
-
                 // wait for the resource to load
                 int tries = 0;
                 while ((cr.getStatus() != 200) && tries < maxTries) {

@@ -16,7 +16,6 @@ public class DeferredCallback implements ICallback {
     public void execute() {
         deferredResource.reset();
         deferredResource.setContent(content);
-        deferredResource.setLoaded(true);
         deferredResource.setStatus(200);
     }
 

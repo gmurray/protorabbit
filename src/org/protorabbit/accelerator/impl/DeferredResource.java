@@ -18,7 +18,6 @@ public class DeferredResource extends CacheableResource {
     public DeferredResource(String baseDir, String resource, IContext ctx, long timeout) {
         super();
         cc = new CacheContext(timeout, hash);
-
         callback = new DeferredCallback(this);
         if (resource.startsWith("http")) {
             worker = new AsyncWorkerImpl(resource);
@@ -30,6 +29,7 @@ public class DeferredResource extends CacheableResource {
     }
 
     public void refresh(IContext ctx) {
+
         if (status != DeferredResource.LOADING &&
             status != DeferredResource.LOADED) {
             status = DeferredResource.LOADING;
