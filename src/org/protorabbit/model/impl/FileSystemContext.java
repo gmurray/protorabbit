@@ -27,11 +27,8 @@ public class FileSystemContext extends BaseContext {
             name = name.substring(1);
             baseDir = contextRoot;
         }
-        String contents = IOUtil.loadStringFromInputStream(new FileInputStream(baseDir + name));
-        if (contents != null) {
-            return new StringBuffer(contents);
-        }
-        return null;
+        StringBuffer contents = IOUtil.loadStringFromInputStream(new FileInputStream(baseDir + name), cfg.getEncoding());
+         return contents;
     }
 
     public boolean resourceExists(String name) {

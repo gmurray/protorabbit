@@ -99,11 +99,8 @@ public class WebContext extends BaseContext {
 
             InputStream is = sctx.getResourceAsStream(resourceName);
 
-            String contents = IOUtil.loadStringFromInputStream(is);
-
-            if (contents != null) {
-                return new StringBuffer(contents);
-            }
+            StringBuffer contents = IOUtil.loadStringFromInputStream(is, cfg.getEncoding());
+               return new StringBuffer(contents);
         }
         return null;
     }

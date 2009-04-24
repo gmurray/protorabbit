@@ -53,7 +53,7 @@ public class IncludeCommand extends BaseCommand {
             resourceName = property.getValue();
 
             baseDir = "";
-            if (!resourceName.startsWith("/")) {
+            if (!resourceName.startsWith("/") && !resourceName.startsWith("http")) {
                 baseDir = property.getBaseURI();
             }
 
@@ -69,7 +69,7 @@ public class IncludeCommand extends BaseCommand {
             }
             String hash = "";
             String resourceId = "";
-            
+
             if (useThreadedDefer) {
                 hash  = IOUtil.generateHash(baseDir + resourceName);
                 resourceId = hash;

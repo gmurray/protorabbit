@@ -9,49 +9,52 @@
   <property name="src.web" value="${basedir}/web"/>
   <property name="dist.dir" value="${basedir}/dist"/>
   <property name="build.dir" value="${basedir}/build"/>
+  <property name="build.classes" value="${build.dir}/classes"/>
   <property name="war.build.dir" value="${build.dir}/war"/>  
 
   <target name="compile" depends="clean">
-  	<mkdir dir="build/classes" />
-  	<javac srcdir="src"
-  		destdir="build/classes"
-  		classpath="build/classes:lib/servlet-api-2.4.jar:web/WEB-INF/lib/org.json-0.0.2.jar"
-  		source="1.5"
-  		debug="on">
-  	</javac>
-   
+      <mkdir dir="${build.dir}/classes" />
+      <javac srcdir="src"
+          destdir="${build.classes}"
+          classpath="${build.classes}:lib/servlet-api-2.4.jar:web/WEB-INF/lib/org.json-0.0.2.jar"
+          source="1.5"
+          debug="on">
+      </javac>
+
   </target>
-  
+
   <target name="dist" depends="compile">
-  	<mkdir dir="${dist.dir}"/>
+    <mkdir dir="${dist.dir}"/>
+    <mkdir dir="${build.classes}/org/protorabbit/resources"/>
+    <copy file="src/org/protorabbit/resources/protorabbit.js" todir="${build.classes}/org/protorabbit/resources"/>
     <jar destfile="${dist.dir}/protorabbit-${version}.jar"
-         basedir="${build.dir}/classes"
+         basedir="${build.classes}"
     />
   </target>
-	
+
   <target name="deploy" depends="deploy-check"/>
-  
+
   <target name="deploy-check" depends="compile">
        <ant  inheritAll="false" target="deploy-java" antfile="../build.xml">
         <property name="target.war" value="${dist.dir}/${ant.project.name}.war" />
       </ant>
   </target>
-    
+
  <target name="clean">
    <delete dir="build" />
   </target>
-	
+
   <target name="test-welcome" depends="compile">
-  	<java classname="org.protorabbit.Engine"
-  		fork="true"
-  		classpath="build/classes:lib/org.json-0.0.2.jar">
-  		<arg value="-template"/>
-  		<arg value="web/resources/blueprint/blueprint-templates.json" />
-  		<arg value="-documentRoot"/>
-  		<arg value="web/"/>
-  		<arg value="base" />
-  	</java>
+      <java classname="org.protorabbit.Engine"
+          fork="true"
+          classpath="build/classes:lib/org.json-0.0.2.jar">
+          <arg value="-template"/>
+          <arg value="web/resources/blueprint/blueprint-templates.json" />
+          <arg value="-documentRoot"/>
+          <arg value="web/"/>
+          <arg value="base" />
+      </java>
   </target>
 
-	
+    
 </project>

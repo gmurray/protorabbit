@@ -107,7 +107,7 @@ public class IOUtil {
         return resource;
     }
 
-    public static String loadStringFromInputStream(InputStream in) throws IOException {
+    public static StringBuffer loadStringFromInputStream(InputStream in, String encoding) throws IOException {
         ByteArrayOutputStream out = null;
         try {
 
@@ -120,7 +120,13 @@ public class IOUtil {
                     break;
                 out.write(buffer, 0, read);
             }
-            return out.toString();
+            StringBuffer buff = null;
+            if (encoding == null) {
+                buff = new StringBuffer(out.toString());
+            } else {
+               buff = new StringBuffer(out.toString(encoding));
+            }
+            return buff;
         } finally {
             if (in != null) {
                 in.close();

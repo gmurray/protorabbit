@@ -43,7 +43,7 @@ public class ProtoRabbitServlet extends HttpServlet {
     private String defaultTemplateURI = "/WEB-INF/templates.json";
     private String serviceURI = "prt";
     private long maxAge = 1225000;
-    private int maxTries = 100;
+    private int maxTries = 300;
     private long tryTimeout = 20;
 
     public void init(ServletConfig cfg) {
@@ -189,10 +189,9 @@ public class ProtoRabbitServlet extends HttpServlet {
 
             if (cr != null) {
                 CacheContext cc = cr.getCacheContext();
-                if (!cc.isExpired()) {
+                if (cc.isExpired()) {
                     if (jcfg.getGzip() && canGzip && cr.gzipResources()) {
                         resp.setHeader("Content-Encoding", "gzip");
-                        cr.refresh(wc);
                     }
                 }
 
@@ -204,6 +203,10 @@ public class ProtoRabbitServlet extends HttpServlet {
                     } catch (InterruptedException e) {
                     }
                     tries += 1;
+                }
+                if (cr.getStatus() != 200) {
+                    resp.sendError(HttpServletResponse.SC_REQUEST_TIMEOUT);
+                    return;
                 }
                 if (cr.getContentType() != null) {
                     resp.setContentType(cr.getContentType());

@@ -6,7 +6,7 @@ import org.protorabbit.accelerator.ICallback;
 import org.protorabbit.accelerator.IWorker;
 import org.protorabbit.model.IContext;
 
-public class WorkerImpl implements IWorker, Runnable {
+public class WorkerImpl implements IWorker{
 
     private IContext ctx = null;
     private String baseDir;
@@ -24,6 +24,10 @@ public class WorkerImpl implements IWorker, Runnable {
     public void run(ICallback c) {
         this.callback = c;
         this.run();
+        // In the future we canmake the worker also Implement runnable and spin off a thread for non
+        // web app resources here using an HTTP client
+        //Thread t=new Thread (this);
+        //t. start();
     }
 
     public void run() {
