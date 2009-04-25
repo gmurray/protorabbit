@@ -1,10 +1,19 @@
 /*
+ * Protorabbit
+ *
+ * Copyright (c) 2009 Greg Murray (protorabbit.org)
+ * 
+ * Licensed under the MIT License:
+ * 
+ *  http://www.opensource.org/licenses/mit-license.php
+ *
  *  protorrabit.js
  *
- *  This file contains the client client utitlties to load deferred files
+ *  This file contains the client client utilities to load deferred files
  *  and notify user.
  * 
  */
+
 if (!window.protorabbit) {
     
 window.protorabbit = function() {

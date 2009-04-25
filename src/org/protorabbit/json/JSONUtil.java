@@ -1,5 +1,15 @@
-package org.protorabbit.json;
+/*
+ * Protorabbit
+ *
+ * Copyright (c) 2009 Greg Murray (protorabbit.org)
+ * 
+ * Licensed under the MIT License:
+ * 
+ *  http://www.opensource.org/licenses/mit-license.php
+ *
+ */
 
+package org.protorabbit.json;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
