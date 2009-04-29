@@ -14,12 +14,14 @@ package org.protorabbit.servlet;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -56,10 +58,13 @@ public class ProtoRabbitServlet extends HttpServlet {
     private long maxAge = 1225000;
     private int maxTries = 300;
     private long tryTimeout = 20;
+    
+    private String version = "0.5-dev";
 
     public void init(ServletConfig cfg) {
         try {
             super.init(cfg);
+            Config.getLogger().info("Protorabbit version : " + version);
             lastUpdated = new HashMap<String, Long>();
             this.ctx = cfg.getServletContext();
             if (ctx.getInitParameter("prt-dev-mode") != null) {
@@ -121,10 +126,21 @@ public class ProtoRabbitServlet extends HttpServlet {
 
          if ((jcfg == null || needsUpdate) && templates.length > 0) {
             jcfg = new Config(serviceURI, maxAge);
+            jcfg.setDevMode(isDevMode);
             for (int i = 0; i < templates.length; i++) {
-
-                JSONObject base = JSONUtil.loadFromInputStream(this.ctx
-                        .getResourceAsStream(templates[i]));
+                JSONObject base = null;
+                InputStream is = this.ctx.getResourceAsStream(templates[i]);
+                if (is != null) {
+                    base = JSONUtil.loadFromInputStream(is);
+                } else {
+                    Config.getLogger().log(Level.SEVERE, "Error  loading " + templates[i]);
+                    throw new IOException("Error  loading " + templates[i] + ": Please verify the file exists.");
+                }
+                
+                if (base == null) {
+                    Config.getLogger().log(Level.SEVERE, "Error  loading " + templates[i]);
+                    throw new IOException("Error  loading" + templates[i] + ": Please verify the file is correctly formatted.");
+                }
                 String baseURI = getTemplateDefDir(templates[i]);
                 try {
                     JSONArray templatesArray = base.getJSONArray("templates");
@@ -135,6 +151,8 @@ public class ProtoRabbitServlet extends HttpServlet {
                     Config.getLogger().info("Registered " + templates[i]);
                 } catch (JSONException e1) {
                     e1.printStackTrace();
+                } catch (Exception ex){
+                    Config.getLogger().log(Level.SEVERE, "Error  loading" + templates[i], ex);
                 }
             }
         }
@@ -160,6 +178,11 @@ public class ProtoRabbitServlet extends HttpServlet {
         }
     }
 
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+                        throws IOException, javax.servlet.ServletException {
+        doGet(req,resp);
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -180,7 +203,7 @@ public class ProtoRabbitServlet extends HttpServlet {
             }
         }
         WebContext wc = new WebContext(jcfg, ctx, req, resp);
-        String id = req.getParameter("id");
+        String id = req.getParameter("resourceid");
         
         if (id != null) {
             OutputStream out = resp.getOutputStream();

@@ -93,7 +93,10 @@ public class ResourceURI implements IUATestable {
     }
 
     public boolean isExternal() {
-        return isExternal;
+        if (uri != null) {
+            return uri.startsWith("http");
+        }
+        return false;
     }
 
     public void setGzip(boolean gzip) {

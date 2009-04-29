@@ -19,8 +19,8 @@ public class SerializationFactory {
     private JSONSerializer serializer = null;
     
     public SerializationFactory() {
-    }    
-    
+    }
+
     public SerializationFactory(String factoryClass) {
         this.factoryClass = factoryClass;
     }

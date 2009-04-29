@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -70,9 +71,14 @@ public class WebContext extends BaseContext {
         URL url = null;
         try {
             url = sctx.getResource(name);
-            URLConnection uc = url.openConnection();
-            long lastMod = uc.getLastModified();
-            return (lastMod > lastUpdate);
+            if (url != null) {
+                URLConnection uc = url.openConnection();
+                long lastMod = uc.getLastModified();
+                return (lastMod > lastUpdate);
+            } else {
+                Config.getLogger().warning("Error locating resource : " + name);
+                return true;
+            }
         } catch (MalformedURLException e) {
         } catch (IOException e) {
             e.printStackTrace();
@@ -109,9 +115,14 @@ public class WebContext extends BaseContext {
         } else {
 
             InputStream is = sctx.getResourceAsStream(resourceName);
-
-            StringBuffer contents = IOUtil.loadStringFromInputStream(is, cfg.getEncoding());
-               return new StringBuffer(contents);
+            if (is != null) {
+                StringBuffer contents = IOUtil.loadStringFromInputStream(is, cfg.getEncoding());
+                   return new StringBuffer(contents);
+            } else {
+                // don't throw out the resource name to end user
+                Config.getLogger().log(Level.SEVERE, "Error  loading " + resourceName);
+                throw new IOException("Error  loading resource. Please notify the administrator that there was an issue.");
+            }
         }
         return null;
     }

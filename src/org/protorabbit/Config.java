@@ -181,7 +181,7 @@ public class Config {
      * and you want to add the file.
      * 
      */
-    public void setIncludeFile(String rid, IncludeFile inc) {    
+    public void setIncludeFile(String rid, IncludeFile inc) {
         includeFiles.put(rid, inc);
     }
 
@@ -197,7 +197,7 @@ public class Config {
         try {
             ITemplate template = getTemplate(tid);
             if (template != null && template.getJSON() != null) {
-                
+
                 IProperty prop = template.getProperty(id,ctx);
                 if (prop == null) {
                     getLogger().log(Level.SEVERE, "Unable to find Include file for " + id + " in template " + tid);
@@ -418,7 +418,6 @@ public class Config {
                     }
                     refs.add(ri);
                 }
-                temp.setStyles(refs);
             }
 
             boolean combine = combineResources;
@@ -442,7 +441,7 @@ public class Config {
                 temp.setStyles(refs);
             }
     }
-    
+
     public ITemplate getTemplate(String id) {
         if (tmap.containsKey(id)) {
             return tmap.get(id);
@@ -466,17 +465,22 @@ public class Config {
             if (resources != null) {
                 Iterator<ResourceURI> it = resources.iterator();
                 while (it.hasNext()) {
-                    
+
                     ResourceURI ri = it.next();
                     String resource = ri.getUri();
                     String baseURI =  ctx.getContextRoot();
 
                     if (!ri.isExternal()){
+                        // map to root
+                        if (resource.startsWith("/")) {
+                            baseURI = ctx.getContextRoot();
+                        } else {
                            baseURI +=  ri.getBaseURI();
+                        }
                     } else {
                         baseURI = "";
                     }
-                    if (type== ResourceURI.SCRIPT) {
+                    if (type == ResourceURI.SCRIPT) {
                         buff += "<script type=\"text/javascript\" src=\"" + baseURI + resource + "\"></script>\n";
                     } else if (type == ResourceURI.LINK) {
                         String mediaType = ri.getMediaType();
@@ -534,7 +538,7 @@ public class Config {
         String rtype = pid.toLowerCase();
         if (template != null && "scripts".equals(rtype)) {
             return generateScriptReferences(template, ctx);
-        } if (template != null && "styles".equals(rtype)) {
+        } else if (template != null && "styles".equals(rtype)) {
             return generateStyleReferences(template, ctx);
         }
         return null;

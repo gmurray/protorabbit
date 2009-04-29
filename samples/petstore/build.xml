@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="protorabbit-petstore" default="dist" basedir=".">
+
+  <property file="build.properties"/>
+  <property file="${user.home}/build.properties"/>
+  <property name="protorabbit.home" value="../../"/>
+  <property name="version" value="0.5.0"/>
+  <property name="json.lib" value="${protorabbit.home}/lib/org.json-0.0.2.jar"/>
+  <property name="protorabbit.lib" value="${protorabbit.home}/dist/protorabbit-${version}.jar"/>    
+  <property name="src.web" value="${basedir}/web"/>
+  <property name="dist.dir" value="${basedir}/dist"/>
+  <property name="build.dir" value="${basedir}/build"/>
+  <property name="war.build.dir" value="${build.dir}/war"/> 
+  <property name="war.lib" value="${build.dir}/war/WEB-INF/lib" />
+  <property name="war.file" value="${dist.dir}/protorabbit-petstore.war" />
+    
+  <target name="dependencies">
+     <ant dir="${protorabbit.home}" inheritAll="false" target="dist"></ant>
+  </target>
+    
+  <target name="war" depends="dependencies">
+      
+    <mkdir dir="${war.lib}"/>
+      <mkdir dir="${dist.dir}"/>
+      
+      <copy file="${protorabbit.lib}" todir="${war.lib}"/>
+      <copy file="${json.lib}" todir="${war.lib}"/>
+      
+    <copy todir="${build.dir}/war">
+      <fileset dir="${src.web}" />     
+    </copy>
+
+    <jar destfile="${war.file}"
+             basedir="${war.build.dir}"
+    />
+
+  </target>    
+    
+  <target name="dist" depends="war">
+      <mkdir dir="${dist.dir}"/>
+      
+      <mkdir dir="${dist.dir}"/>
+    <jar destfile="${war.file}"
+         basedir="${war.build.dir}"
+    />
+           
+  </target>
+    
+ 
+  <target name="deploy">
+    <copy file="${war.file}" todir="${autodeploy.dir}" />
+  </target>
+    
+ <target name="clean">
+   <delete dir="${build.dir}" />
+  </target>
+    
+    
+</project>

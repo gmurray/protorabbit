@@ -289,23 +289,23 @@ public class TemplateImpl implements ITemplate {
     }
 
     public void setScripts(List<ResourceURI> scripts) {
-        this.scripts = scripts;        
+        this.scripts = scripts;
     }
 
     public void setStyles(List<ResourceURI> styles) {
-        this.styles = styles;        
+        this.styles = styles;
     }
 
     public void setProperties(Map<String, IProperty> properties) {
-        this.properties = properties;        
+        this.properties = properties;
     }
 
     public void setTemplateURI(ResourceURI ri) {
-        this.templateURI = ri;    
+        this.templateURI = ri;
     }
 
     public void setTimeout(long timeout) {
-        this.timeout = timeout;    
+        this.timeout = timeout;
     }
     
     public long getTimeout() {
@@ -344,7 +344,12 @@ public class TemplateImpl implements ITemplate {
         boolean isUpdated = false;
         // check against the file resource
         if (ctx.getConfig().getDevMode()) {
-            isUpdated = ctx.isUpdated(tri.getBaseURI() + tri.getUri(), lastUpdate);
+            String base = tri.getBaseURI();
+            // if context root then don't include the base
+            if (tri.getUri().startsWith("/")) {
+                base = "";
+            }
+            isUpdated = ctx.isUpdated(base + tri.getUri(), lastUpdate);
         }
         // check against the timeout
         if (now - lastUpdate > timeout)  {

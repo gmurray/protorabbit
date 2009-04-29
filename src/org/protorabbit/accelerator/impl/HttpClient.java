@@ -24,6 +24,8 @@ import org.protorabbit.Config;
        private boolean isProxy = false;
        private HttpURLConnection urlConnection = null;
        private Map<String,String> headers;
+       // fake as IE 8
+       private String defaultUserAgent = "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0)";
 
        public HttpClient(String url)
                throws MalformedURLException {
@@ -156,9 +158,8 @@ import org.protorabbit.Config;
                // if this header has not been set by a request set the user agent.
                if (headers == null ||
                   (headers != null &&  headers.get("user-agent") == null)) {
-                   // set user agent to mimic IE
-                   String ua="Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; .NET CLR 1.1.4322)";
-                   uc.setRequestProperty("user-agent", ua);  
+                   // set user agent
+                   uc.setRequestProperty("user-agent",defaultUserAgent);
                }       
                return uc;
            } catch (MalformedURLException me) {

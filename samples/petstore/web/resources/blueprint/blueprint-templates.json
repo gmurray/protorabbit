@@ -1,0 +1,40 @@
+{
+
+  "templates" : [
+     {
+      "id" : "blueprints-css",
+      "timeout" : 100000,
+      "gzip" : true,
+      "styles" : {
+        "combineResources" : true,
+        "libs" : [
+           { "url" : "lib/reset.css" },
+           { "url" : "lib/typography.css" },
+           { "url" : "lib/plugins/fancy-type/fancy-type.css" },
+           { "id" : "blueprint", "url" : "lib/grid.css" }, 
+           { "test" : "MSIE", "url" : "lib/ie.css" }
+         ]
+      },
+      "properties" : {
+          "title" :  { "type" : "string", "value" : "Welcome to Spindle View"},
+          "header" : { "type" : "include", "value" : "/header.html" },
+          "body" : {  "type" : "include", "value" : "/blueprints.html" },
+          "sidebar" : { "type" : "include", "value" : "/sidebar.html" },
+          "footer" : { "type" : "include", "value" : "/footer.html" } 
+      }
+    },
+    {
+       "id" : "blueprints-css-liquid",
+       "extends" : "blueprints-css",
+       "styles" : {
+           "libs" : [
+               { "id" : "blueprint", "url" : "lib/liquid.css" }
+           ]
+       },
+       "properties" : {
+           "title" : {"type" : "string", "value" : "Welcome to the Fixed Blueprint Templates"},
+           "body" : { "type" : "include", "value" : "/blueprints.html" }
+       }
+    }
+  ]
+}

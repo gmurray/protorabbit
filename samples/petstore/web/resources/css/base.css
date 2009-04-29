@@ -1,0 +1,53 @@
+.banner {
+   font-size : 3em;
+}
+
+.menuLink {
+  color : #000;
+  text-decoration: none;
+}
+
+.menuLink:hover{
+  text-decoration: underline;
+}
+
+.cart table {
+  border : 1px solid #000;
+}
+
+.cart table th {
+  background : #eee;
+}
+
+.cart table tr>td {
+  width : 120px;
+}
+
+.category table {
+  border : 1px solid #000;
+}
+
+.category table th {
+  background : #eee;
+}
+
+.category table tr>td {
+  width : 120px;
+}
+
+.category-title {
+    font-size : 2em;
+    font-style: bold;
+}
+
+.sidebar-list {
+  border:0;
+  margin:0;
+  list-style:none;
+}
+.sidebar-list img {
+  border : 0;
+  cursor : pointer;
+  width : 150px;
+  height : 40px;
+}

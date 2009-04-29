@@ -1,0 +1,84 @@
+{
+  "templates" : [
+    {
+     "timeout" : 30000,
+     "combineResources" : true,
+     "id" : "base",
+     "template" : "/templates/base-page.html",
+     "extends" : "blueprints-css",
+     "styles" :{
+         "libs" : [
+           { "url" : "/resources/css/base.css" }
+         ]
+     },
+     "properties" : {
+           "header" : { "type" : "include", "value" : "/header.html" },
+           "body" : { "type" : "include", "value" : "/main.html" },
+           "sidebar" : { "type" : "include", "value" : "/default-sidebar.html" },
+           "footer" : { "type" : "include", "value" : "/footer.html" }
+       }
+    },
+    {
+      "id" : "main",
+      "extends" : "base",
+      "properties" : {
+           "title" : {"type" : "string", "value" : "Protorabbit Petstore - Welcome"}
+       }
+    },
+
+    {
+      "id" : "category",
+      "extends" : "base",
+      "scripts" : {
+          "libs" : [
+              { "url" : "/resources/js/jquery.js" },
+              { "url" : "/resources/js/common.js" },
+              { "url" : "/resources/js/category.js" }
+          ]
+      },
+      "properties" : {
+          "title" : {"type" : "string", "value" : "Protorabbit Petstore - Category"},
+          "body" : { "type" : "include", "value" : "/category.html" }
+      }
+    },
+    {
+      "id" : "cart",
+      "extends" : "base",
+      "scripts" : {
+          "libs" : [
+              { "url" : "/resources/js/jquery.js" },
+              { "url" : "/resources/js/common.js" },
+              { "url" : "/resources/js/cart.js" }
+          ]
+      },
+      "properties" : {
+          "title" : {"type" : "string", "value" : "Protorabbit Petstore - Cart"},
+          "body" : { "type" : "include", "value" : "/cart.html" }
+      }
+    },
+    {
+       "id" : "checkout",
+       "extends" : "base",
+       "properties" : {
+           "title" : {"type" : "string", "value" : "Protorabbit Petstore - Checkout"},
+           "body" : { "type" : "include", "value" : "/checkout.html" }
+       }
+    },
+    {
+       "id" : "about",
+       "extends" : "base",
+       "properties" : {
+           "title" : {"type" : "string", "value" : "Protorabbit Petstore - About"},
+           "body" : { "type" : "include", "value" : "/about.html" }
+       }
+    },
+    {
+       "id" : "search",
+       "extends" : "base",
+       "properties" : {
+           "title" : {"type" : "string", "value" : "Protorabbit Petstore - Search"},
+           "body" : { "type" : "include", "value" : "/search.html" }
+       }
+    }
+  ]
+}

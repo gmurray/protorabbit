@@ -1,0 +1,55 @@
+{
+
+ "fish" : {
+    "id" : "fish",
+    "label" : "Fish",
+    "items" : [
+     { "id" : "f1", "label" : "Fish 1", "description" : "A cute little fish.", "image" : "images/fish2.gif", "price" : 2.50},
+     { "id" : "f2", "label" : "Fish 2", "description" : "A big fish.", "image" : "images/fish3.gif", "price" : 4.50},
+     { "id" : "f3", "label" : "Fish 2", "description" : "A great fish.", "image" : "images/fish4.gif", "price" : 6.50}
+   ]
+  },
+  "birds" : {
+    "id" : "birds",
+    "label" : "Birds",
+    "items" : [
+     { "id" : "b1", "label" : "Bird 1", "description" : "A cute little bird.", "image" : "images/bird1.gif", "price" : 24.50},
+     { "id" : "b2", "label" : "Bird 2", "description" : "A little bird.", "image" : "images/bird2.gif", "price" : 44.50},
+     { "id" : "b3", "label" : "Bird 3", "description" : "A moody bird.", "image" : "images/bird3.gif", "price" : 136.50},
+     { "id" : "b4", "label" : "Bird 4", "description" : "A creepy bird.", "image" : "images/bird4.gif", "price" : 122.50},
+     { "id" : "b5", "label" : "Bird 5", "description" : "A talkative bird.", "image" : "images/bird5.gif", "price" : 32.50},
+     { "id" : "b6", "label" : "Bird 6", "description" : "Peaceful bird.", "image" : "images/bird6.gif", "price" : 12.50}
+   ]
+  },
+  "cats" : {
+    "id" : "cats",
+    "label" : "Cats",
+    "items" : [
+     { "id" : "c1", "label" : "Cat 1", "description" : "Needy cat.", "image" : "images/cat1.gif", "price" : 72.50},
+     { "id" : "c2", "label" : "Cat 2", "description" : "Super mouser.", "image" : "images/cat2.gif", "price" : 144.50},
+     { "id" : "c3", "label" : "Cat 3", "description" : "A fine friend.", "image" : "images/cat3.gif", "price" : 216.50},
+     { "id" : "c4", "label" : "Cat 4", "description" : "A great companion.", "image" : "images/cat4.gif", "price" : 116.50},
+     { "id" : "c5", "label" : "Cat 5", "description" : "This cat has no image problem.", "image" : "images/cat5.gif", "price" : 9996.50}
+   ]
+  },
+  "dogs" : {
+    "id" : "dogs",
+    "label" : "Dog",
+   "items" : [
+     { "id" : "d1", "label" : "Dog 1", "description" : "Guard dog.", "image" : "images/dog1.gif", "price" : 62.00},
+     { "id" : "d2", "label" : "Dog 2", "description" : "Super dog.", "image" : "images/dog2.gif", "price" : 104.50},
+     { "id" : "d3", "label" : "Dog 3", "description" : "A fine friend.", "image" : "images/dog3.gif", "price" : 26.00},
+     { "id" : "d4", "label" : "Dog 4", "description" : "A enthusiastic friend.", "image" : "images/dog4.gif", "price" : 96.00},
+     { "id" : "d5", "label" : "Dog 5", "description" : "A fine friend.", "image" : "images/dog5.gif", "price" : 66.00},
+     { "id" : "d6", "label" : "Dog 6", "description" : "A enthusiastic friend.", "image" : "images/dog6.gif", "price" : 72.50}
+   ]
+   },
+   "reptiles" : { "id" : "reptiles",
+    "label" : "Reptiles",
+   "items" : [
+     { "id" : "r1", "label" : "Reptiles 1", "description" : "Better than a guard dog.", "image" : "images/lizard1.gif", "price" : 22.00},
+     { "id" : "r2", "label" : "Reptiles 2", "description" : "Super lizard.", "image" : "images/lizard2.gif", "price" : 14.50},
+     { "id" : "r3", "label" : "Reptiles 3", "description" : "A friend to be proud of.", "image" : "images/lizard3.gif", "price" : 126.00}
+   ]
+ }
+}
