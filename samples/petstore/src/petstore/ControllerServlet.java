@@ -7,12 +7,14 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Logger;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -25,6 +27,7 @@ public class ControllerServlet extends HttpServlet {
 
     private static final long serialVersionUID = 5372835715115785622L;
     public static final String CART = "petstore.CART";
+	private static Logger logger;
 
     public JSONObject catalog = null;
 
@@ -85,11 +88,12 @@ public class ControllerServlet extends HttpServlet {
         String command = req.getParameter("command");
         String forwardPage = "/error.prt";
 
+        HttpSession session = req.getSession(true);
         String id = req.getParameter("id");
-        List<CartItem>  cartList = (List<CartItem>)req.getSession().getAttribute(CART);
+        List<CartItem>  cartList = (List<CartItem>)session.getAttribute(CART);
+
         if (cartList == null) {
             cartList = new ArrayList<CartItem>();
-            req.getSession().setAttribute(CART, cartList);
         }
 
         if (command != null && id != null) {
@@ -137,6 +141,7 @@ public class ControllerServlet extends HttpServlet {
             }
             
         }
+        session.setAttribute(CART, cartList);
         try {
             req.getRequestDispatcher(forwardPage).forward(req, resp);
         } catch (ServletException e) {
@@ -168,4 +173,12 @@ public class ControllerServlet extends HttpServlet {
             resp.getWriter().println(category);
         }
     }
+
+    public static Logger getLogger() {
+        if (logger == null) {
+            logger = Logger.getLogger("org.protrabbit");
+        }
+        return logger;
+    }
 }
+
