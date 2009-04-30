@@ -346,11 +346,9 @@ public class TemplateImpl implements ITemplate {
                     }
                 }
                 if (combineScripts == null) {
-                	combineScripts = combineResources();
-                	 System.out.println(" going for the combineResources ");                  	
+                	combineScripts = combineResources();              	
                 }
         }
-        System.out.println(" combine script is " + combineScripts);
         return combineScripts;
     }
     

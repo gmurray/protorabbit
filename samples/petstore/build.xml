@@ -30,7 +30,11 @@
     <copy todir="${build.dir}/war">
       <fileset dir="${src.web}" />
     </copy>
-
+  	
+    <copy todir="${build.dir}/war/WEB-INF/classes">
+      <fileset dir="${build.dir}/classes" />
+    </copy>
+  	
     <jar destfile="${war.file}"
              basedir="${war.build.dir}"
     />

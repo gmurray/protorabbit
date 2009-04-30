@@ -75,7 +75,7 @@ public class IncludeResourcesCommand extends BaseCommand {
 
                 String hash = crm.processScripts(scripts, ctx, hasDeferred);
 
-                if (!hasDeferred) {
+                if (!hasDeferred && hash != null) {
                     String uri = "<script src=\"" + 
                     cfg.getResourceService() + "?resourceid=" + hash +  ".js\"></script>";
                     out.write(uri.getBytes());

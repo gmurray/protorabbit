@@ -1,9 +1,10 @@
 {
   "templates" : [
     {
-     "timeout" : 30000,
-     "combineResources" : true,
+     "timeout" : 300000,
      "id" : "base",
+     "gizp" : false;
+     "combineResources" : true,     
      "template" : "/templates/base-page.html",
      "extends" : "blueprints-css",
      "styles" :{
@@ -19,7 +20,7 @@
        }
     },
     {
-      "id" : "main",
+      "id" : "splash",
       "extends" : "base",
       "properties" : {
            "title" : {"type" : "string", "value" : "Protorabbit Petstore - Welcome"}
