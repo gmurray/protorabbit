@@ -318,9 +318,7 @@ public class Config {
                     processURIResources(ResourceURI.SCRIPT,
                                         bsjo,
                                         temp,
-                                        baseURI,
-                                        combineResources,
-                                        tgzip);
+                                        baseURI);
                 }
 
                 if (t.has("styles")) {
@@ -329,9 +327,7 @@ public class Config {
                     processURIResources(ResourceURI.LINK,
                             bsjo,
                             temp,
-                            baseURI,
-                            combineResources,
-                            tgzip);
+                            baseURI);
                 }
 
                 if (t.has("properties")) {
@@ -393,9 +389,7 @@ public class Config {
     private void processURIResources(int type,
                                 JSONObject bsjo,
                                 ITemplate temp,
-                                String baseURI,
-                                boolean combineResources,
-                                boolean globalGzip) throws JSONException {
+                                String baseURI) throws JSONException {
 
             List<ResourceURI> refs = null;
             refs = new ArrayList<ResourceURI>();
@@ -419,15 +413,12 @@ public class Config {
                     refs.add(ri);
                 }
             }
-
-            boolean combine = combineResources;
-
+            Boolean combine = null;
             if (bsjo.has("combineResources")) {
                 combine = bsjo.getBoolean("combineResources");
             } 
-
-            boolean lgzip = globalGzip;
-            if (bsjo.has("gzip")) {
+            Boolean lgzip = null;
+            if (bsjo.has("gzip")) {            	
                 lgzip = bsjo.getBoolean("gzip");
             }
 
@@ -436,9 +427,9 @@ public class Config {
                 temp.setGzipScripts(lgzip);
                 temp.setScripts(refs);
             } else if (type == ResourceURI.LINK) {
-                temp.setGzipStyles(lgzip);
-                temp.setCombineStyles(combine);
+                temp.setGzipStyles(lgzip);   
                 temp.setStyles(refs);
+                temp.setCombineStyles(combine);                  
             }
     }
 

@@ -18,6 +18,8 @@ import java.util.List;
 import org.protorabbit.Config;
 import org.protorabbit.IOUtil;
 import org.protorabbit.accelerator.CombinedResourceManager;
+import org.protorabbit.accelerator.ICacheable;
+import org.protorabbit.accelerator.impl.CacheableResource;
 import org.protorabbit.model.ITemplate;
 
 public class IncludeResourcesCommand extends BaseCommand {
@@ -57,26 +59,30 @@ public class IncludeResourcesCommand extends BaseCommand {
             if ((hasDeferred  || deferredScripts != null ) && !deferredWritten) {
                 StringBuffer buff = IOUtil.getClasspathResource(cfg, protorabbitClient);
                 if (buff != null) {
-                    out.write("<script>".getBytes());
-                    out.write(buff.toString().getBytes());
-                    out.write("</script>".getBytes());
+                	String hash = IOUtil.generateHash(buff.toString());
+                	ICacheable cr = new CacheableResource("text/javascript", t.getTimeout(), hash);
+                	cfg.getCombinedResourceManager().putResource("protorabbit", cr);     	
+                	cr.setContent(buff);
+                	String uri = "<script src=\"" + 
+                    cfg.getResourceService() + "?resourceid=protorabbit.js\"></script>";
+                    out.write(uri.getBytes());
                     ctx.setAttribute(DEFERRED_WRITTEN, Boolean.TRUE);
                 } else {
                     Config.getLogger().severe("Unable to find protorabbit client script");
                 }
            }
-            if (t.getCombineScripts()) {
+            if (t.getCombineScripts() != null && t.getCombineScripts()) {
 
                 String hash = crm.processScripts(scripts, ctx, hasDeferred);
 
                 if (!hasDeferred) {
                     String uri = "<script src=\"" + 
-                    cfg.getResourceService() + "?id=" + hash +  ".js\"></script>";
+                    cfg.getResourceService() + "?resourceid=" + hash +  ".js\"></script>";
                     out.write(uri.getBytes());
 
                } else if (hash != null){
                    out.write(("<script>protorabbit.addDeferredScript('" + cfg.getResourceService() + 
-                              "?id=" + hash + ".js');</script>").getBytes());
+                              "?resourceid=" + hash + ".js');</script>").getBytes());
                }
 
             } else {
@@ -85,7 +91,7 @@ public class IncludeResourcesCommand extends BaseCommand {
             }
 
         } else if ("styles".equals(target)) {
-            if (t.getCombineStyles()) {
+            if (t.getCombineStyles() != null && t.getCombineStyles()) {
                 List<ResourceURI> styles = t.getAllStyles(ctx);
                 crm.processStyles(styles, ctx, out);
             } else {

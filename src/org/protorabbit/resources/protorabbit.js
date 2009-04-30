@@ -7,7 +7,7 @@
  * 
  *  http://www.opensource.org/licenses/mit-license.php
  *
- *  protorrabit.js
+ *  protorabbit.js
  *
  *  This file contains the client client utilities to load deferred files
  *  and notify user.
@@ -15,7 +15,7 @@
  */
 
 if (!window.protorabbit) {
-    
+
 window.protorabbit = function() {
 
   var ctx = {
@@ -574,7 +574,3 @@ function trim(t) {
 }();
 
 }
-
-protorabbit.subscribe("/protorabbit*", function(message) {
-    protorabbit.log("protorabbit got " + message);
-});

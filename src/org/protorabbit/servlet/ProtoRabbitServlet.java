@@ -58,8 +58,8 @@ public class ProtoRabbitServlet extends HttpServlet {
     private long maxAge = 1225000;
     private int maxTries = 300;
     private long tryTimeout = 20;
-    
-    private String version = "0.5-dev";
+
+    private String version = "0.5-dev a";
 
     public void init(ServletConfig cfg) {
         try {
@@ -204,7 +204,7 @@ public class ProtoRabbitServlet extends HttpServlet {
         }
         WebContext wc = new WebContext(jcfg, ctx, req, resp);
         String id = req.getParameter("resourceid");
-        
+
         if (id != null) {
             OutputStream out = resp.getOutputStream();
             if (id.length() > 4) {
@@ -313,7 +313,7 @@ public class ProtoRabbitServlet extends HttpServlet {
                 t.requiresRefresh(wc) ||
                 t.hasUserAgentDependencies(wc)) {
 
-            if (canGzip && t.gzipTemplate()) {
+            if (canGzip && t.gzipTemplate() != null && t.gzipTemplate()) {
                 resp.setHeader("Vary", "Accept-Encoding");
                 resp.setHeader("Content-Encoding", "gzip");
             }
@@ -334,7 +334,7 @@ public class ProtoRabbitServlet extends HttpServlet {
             cr.setContent(new StringBuffer(content));
             t.setTemplateResource(cr);
 
-            if (canGzip  && t.gzipTemplate()) {
+            if (canGzip  &&  t.gzipTemplate() != null && t.gzipTemplate()) {
                 byte[] bytes = cr.getGZippedContent();
                 resp.setContentLength(bytes.length);
                 OutputStream out = resp.getOutputStream();

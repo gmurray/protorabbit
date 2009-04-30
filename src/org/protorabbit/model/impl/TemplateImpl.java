@@ -36,21 +36,21 @@ public class TemplateImpl implements ITemplate {
     private JSONObject json = null;
     private String id = null;
     private StringBuffer contents = null;
-    private List<ICommand>  commands = null;
+    private List<ICommand> commands = null;
     private List<String> ancestors = null;
     private Map<String, IProperty> properties = null;
     private List<ResourceURI> scripts = null;
     private List<ResourceURI> styles = null;
     private String baseURI = null;
-    private boolean combineResources;
-    private boolean gzip = true;
-    private boolean gzipStyles = true;
-    private boolean gzipScripts = true;    
+    private Boolean combineResources = null;
+    private Boolean gzip = null;
+    private Boolean gzipStyles = null;
+    private Boolean gzipScripts = null;
     private Config config = null;
     private long lastUpdate;
     private long timeout = 0;
-    private boolean combineStyles = false;
-    private boolean combineScripts = false;
+    private Boolean combineStyles = null;
+    private Boolean combineScripts = null;
     private ICacheable templateResource = null;
     private Boolean hasUADependencies = null;
 
@@ -214,7 +214,7 @@ public class TemplateImpl implements ITemplate {
                         return p.getTemplateURI() ;
                     }
                 }
-        }
+            }
         }
         return null;
     }
@@ -223,7 +223,7 @@ public class TemplateImpl implements ITemplate {
         if (ri == null) {
             return false;
         }
-        
+
         // in cases where there is a uaTest on a url test
         boolean includeResource = true;
         if (ri.getUATest() != null) {
@@ -232,7 +232,7 @@ public class TemplateImpl implements ITemplate {
         }
         return includeResource;
     }
-    
+
     public List<ResourceURI> getAllStyles(IContext ctx) {
         HashMap<String, String> existingRefs = new HashMap<String, String> ();
         
@@ -280,7 +280,26 @@ public class TemplateImpl implements ITemplate {
         properties.put(id, property);
     }
 
-    public boolean combineResources() {
+    public void setCombineScripts(Boolean combineScripts) {	
+        this.combineScripts = combineScripts;
+    }
+
+    public Boolean combineResources() {
+
+        if (combineResources == null) {
+            if (ancestors != null) {
+                Iterator<String> it = ancestors.iterator();
+                while (it.hasNext()) {
+                    ITemplate p = config.getTemplate(it.next());
+                    if (p != null) {
+                        if (p.combineResources() != null) {
+                            combineResources = p.combineResources();
+                            break;
+                        }
+                    }
+                }
+            }
+        }
         return combineResources;
     }
 
@@ -312,25 +331,57 @@ public class TemplateImpl implements ITemplate {
         return timeout;
     }
 
-    public void setCombineScripts(boolean combineResources) {
-        this.combineScripts = combineResources;
-    }
-    
-    public boolean getCombineScripts() {
+    public Boolean getCombineScripts() {
+            if (combineScripts == null) {
+                if (ancestors != null) {
+                    Iterator<String> it = ancestors.iterator();
+                    while (it.hasNext()) {
+                        ITemplate p = config.getTemplate(it.next());                      
+                        if (p != null) {
+                            if (p.getCombineScripts() != null) {                            	
+                                combineScripts = p.getCombineScripts();
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (combineScripts == null) {
+                	combineScripts = combineResources();
+                	 System.out.println(" going for the combineResources ");                  	
+                }
+        }
+        System.out.println(" combine script is " + combineScripts);
         return combineScripts;
     }
     
-    public boolean getCombineStyles() {
+    public Boolean getCombineStyles() {
+        if (combineStyles == null) {
+            if (ancestors != null) {
+                Iterator<String> it = ancestors.iterator();
+                while (it.hasNext()) {
+                    ITemplate p = config.getTemplate(it.next());
+                    if (p != null) {
+                        if (p.getCombineStyles() != null) {
+                        	combineStyles = p.getCombineStyles();
+                            break;
+                        }
+                    }
+                }
+            }
+            if (combineStyles == null) {
+            	combineStyles = combineResources();
+            }
+        }
         return combineStyles;
     }
 
-    public void setCombineStyles(boolean combineResources) {
-        this.combineStyles = combineResources;
+
+    public void setCombineStyles(Boolean combineStyles) {
+        this.combineStyles = combineStyles;
     }
 
     public void setTemplateResource(ICacheable cr) {
         templateResource = cr;
-        
     }
 
     public ICacheable getTemplateResource() {
@@ -358,27 +409,69 @@ public class TemplateImpl implements ITemplate {
         return needsUpdate || isUpdated;
     }
 
-    public void setGzipScripts(boolean gzip) {
+    public void setGzipScripts(Boolean gzip) {
         gzipScripts = gzip;
     }
 
-    public void setGzipStyles(boolean gzip) {
+    public void setGzipStyles(Boolean gzip) {
         gzipStyles = gzip;
     }
 
-    public boolean gzipScripts() {
+    public Boolean gzipScripts() {
+        if (gzipScripts == null) {
+            if (ancestors != null) {
+                Iterator<String> it = ancestors.iterator();
+                while (it.hasNext()) {
+                    ITemplate p = config.getTemplate(it.next());
+                    if (p != null) {
+                        if (p.gzipScripts() != null) {
+                        	gzipScripts = p.gzipScripts();
+                            break;
+                        }
+                    }
+                }
+            }
+        }
         return gzipScripts;
     }
 
-    public boolean gzipStyles() {
+    public Boolean gzipStyles() {
+        if (gzipStyles == null) {
+            if (ancestors != null) {
+                Iterator<String> it = ancestors.iterator();
+                while (it.hasNext()) {
+                    ITemplate p = config.getTemplate(it.next());
+                    if (p != null) {
+                        if (p.gzipStyles() != null) {
+                        	gzipStyles = p.gzipStyles();
+                            break;
+                        }
+                    }
+                }
+            }
+        }
         return gzipStyles;
     }
 
-    public boolean gzipTemplate() {
+    public Boolean gzipTemplate() {
+        if (gzip == null) {
+            if (ancestors != null) {
+                Iterator<String> it = ancestors.iterator();
+                while (it.hasNext()) {
+                    ITemplate p = config.getTemplate(it.next());
+                    if (p != null) {
+                        if (p.gzipTemplate() != null) {
+                        	gzip = p.gzipTemplate();
+                            break;
+                        }
+                    }
+                }
+            }
+        }
         return gzip;
     }
 
-    public void setGzipTemplate(boolean gzip) {
+    public void setGzipTemplate(Boolean gzip) {
         this.gzip = gzip;
     }
 

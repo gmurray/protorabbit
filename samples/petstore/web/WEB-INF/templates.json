@@ -37,7 +37,7 @@
           ]
       },
       "properties" : {
-          "title" : {"type" : "string", "value" : "Protorabbit Petstore - Category"},
+          "title" : {"type" : "string", "value" : "Protorabbit Petstore - Category g" },
           "body" : { "type" : "include", "value" : "/category.html" }
       }
     },

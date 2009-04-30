@@ -105,7 +105,7 @@ public class IncludeCommand extends BaseCommand {
             out.write(("<div id='" + resourceId + "'>" + deferContent.toString() + "</div>").getBytes());
 
             String script = "<script>protorabbit.addDeferredFragement({ include : '" + cfg.getResourceService() + 
-                       "?id=" + resourceId + ".htm', elementId : '" + resourceId + "' });</script>";
+                       "?resourceid=" + resourceId + ".htm', elementId : '" + resourceId + "' });</script>";
             deferredScripts.add(script);
             ctx.setAttribute(COUNTER, new Integer(counter + 1));
         } else {

@@ -22,7 +22,6 @@ public interface ITemplate {
 
     public boolean requiresRefresh(IContext ctx);
     public String getBaseURI();
-    public boolean combineResources();
     public String getId();
     public JSONObject getJSON();
     public List<String> getAncestors();
@@ -45,17 +44,18 @@ public interface ITemplate {
     public void setProperties(Map<String, IProperty> properties);
     public void setTimeout(long templateTimeout);
     public long getTimeout();
-    public void setCombineScripts(boolean combineResources);
-    public void setCombineStyles(boolean combineResources);
-    public boolean getCombineScripts();
-    public boolean getCombineStyles();
     public void setTemplateResource(ICacheable cr);
     public ICacheable getTemplateResource();
-    public void setGzipTemplate(boolean gzip);
-    public void setGzipScripts(boolean gzip);
-    public void setGzipStyles(boolean gzip);
-    public boolean gzipTemplate();
-    public boolean gzipScripts();
-    public boolean gzipStyles();
+    public void setGzipTemplate(Boolean gzip);
+    public void setGzipScripts(Boolean gzip);
+    public void setGzipStyles(Boolean gzip);
+    public Boolean combineResources();
+    public void setCombineScripts(Boolean combineResources);
+    public void setCombineStyles(Boolean combineResources);    
+    public Boolean getCombineScripts();
+    public Boolean getCombineStyles();    
+    public Boolean gzipTemplate();
+    public Boolean gzipScripts();
+    public Boolean gzipStyles();
     public boolean hasUserAgentDependencies(IContext ctx);
 }

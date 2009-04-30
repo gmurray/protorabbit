@@ -143,7 +143,7 @@ public class ControllerServlet extends HttpServlet {
             e.printStackTrace();
         }
     }
-    
+
     public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String id = req.getParameter("id");
         if ("cart".equals(id)) {

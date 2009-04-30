@@ -1,15 +1,7 @@
 {
 
   "templates" : [
-    {
-       "id" : "about",
-       "extends" : "blueprints-css-liquid",
-       "properties" : {
-           "title" : {"type" : "string", "value" : "About"},
-           "body" : { "type" : "include", "value" : "/about.html" }
-       }
-    },
-    
+   
     {
      "gzip" : false,
      "combineResources" : true,
@@ -24,6 +16,14 @@
            "title" : {"type" : "string", "value" : "Welcome to ProtoRabbit"},
            "body" : { "type" : "include", "value" : "/main.html", "defer" : true, "deferContent" : "Loading..."}
        }     
+    },
+    {
+       "id" : "about",
+       "extends" : "welcome",
+       "properties" : {
+           "title" : {"type" : "string", "value" : "About"},
+           "body" : { "type" : "include", "value" : "/about.html" }
+       }
     },
     {
      "id" : "jsp",

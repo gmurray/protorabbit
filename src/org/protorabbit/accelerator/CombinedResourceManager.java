@@ -38,7 +38,7 @@ public class CombinedResourceManager {
     
     private Config cfg = null;
 
-    private Hashtable<String, CacheableResource> combinedResources = null; 
+    private Hashtable<String, ICacheable> combinedResources = null; 
 
     // in milliseconds
     private long maxTimeout;
@@ -55,7 +55,7 @@ public class CombinedResourceManager {
         this.cfg = cfg;
         this.resourceService = resourceService;
         this.maxTimeout = maxTimeout;
-        combinedResources = new Hashtable<String, CacheableResource>();
+        combinedResources = new Hashtable<String, ICacheable>();
 
     }
 
@@ -166,7 +166,7 @@ public class CombinedResourceManager {
         return null;
     }
 
-    public void putResource(String key, CacheableResource csr) {
+    public void putResource(String key, ICacheable csr) {
         combinedResources.put(key, csr);
     }
     
@@ -174,7 +174,7 @@ public class CombinedResourceManager {
                                 IContext ctx,
                                 OutputStream out) throws java.io.IOException {
 
-        CacheableResource csr;
+        ICacheable csr;
         String hash = getHash(styleResources);
         if (hash != null) {
 
@@ -188,14 +188,18 @@ public class CombinedResourceManager {
             } else {
                 csr = getStyles(styleResources,ctx);
             }
-            boolean gzip = true;
+            boolean gzip = false;
             ITemplate t = ctx.getConfig().getTemplate(ctx.getTemplateId());
-            gzip = t.gzipStyles();
+            if (t.gzipStyles() != null) {
+            	gzip = t.gzipStyles();
+            } else {
+            	gzip = ctx.getConfig().getGzip();
+            }
             csr.setGzipResources(gzip);
 
             combinedResources.put(hash, csr);
             String uri = "<link rel=\"stylesheet\" type=\"text/css\" href=\"" +
-                         getResourceService() + "?id=" + hash + 
+                         getResourceService() + "?resourceid=" + hash + 
                          ".css\" media=\"" + cfg.mediaType() + "\" />";
             
             out.write(uri.getBytes());
@@ -211,7 +215,7 @@ public class CombinedResourceManager {
             return null;
         }
 
-        CacheableResource csr;
+        ICacheable csr;
         String hash = getHash(scriptResources);
 
         if (combinedResources.get(hash) != null) {
