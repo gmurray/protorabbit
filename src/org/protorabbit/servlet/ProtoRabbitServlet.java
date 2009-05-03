@@ -34,13 +34,14 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.protorabbit.Config;
-import org.protorabbit.Engine;
-import org.protorabbit.IOUtil;
+import org.protorabbit.IEngine;
 import org.protorabbit.accelerator.CacheContext;
 import org.protorabbit.accelerator.ICacheable;
 import org.protorabbit.accelerator.impl.CacheableResource;
+import org.protorabbit.impl.DefaultEngine;
 import org.protorabbit.json.JSONUtil;
 import org.protorabbit.model.ITemplate;
+import org.protorabbit.util.IOUtil;
 
 @SuppressWarnings("serial")
 public class ProtoRabbitServlet extends HttpServlet {
@@ -49,20 +50,22 @@ public class ProtoRabbitServlet extends HttpServlet {
     private Config jcfg;
     private boolean isDevMode = false;
     private HashMap<String, Long> lastUpdated;
+    private IEngine engine;
 
     private String[] templates = null;
 
     // defaults
+    private String engineClassName = "org.protorabbit.impl.DefaultEngine";
     private String defaultTemplateURI = "/WEB-INF/templates.json";
     private String serviceURI = "prt";
     private long maxAge = 1225000;
     private int maxTries = 300;
     private long tryTimeout = 20;
 
-    private String version = "0.5-dev a";
+    private String version = "0.5-dev b";
 
-    public void init(ServletConfig cfg) {
-        try {
+    public void init(ServletConfig cfg) throws ServletException {
+
             super.init(cfg);
             Config.getLogger().info("Protorabbit version : " + version);
             lastUpdated = new HashMap<String, Long>();
@@ -73,13 +76,15 @@ public class ProtoRabbitServlet extends HttpServlet {
             if (ctx.getInitParameter("prt-service-uri") != null) {
                 serviceURI = ctx.getInitParameter("prt-service-uri");
             }
-            
+            if (ctx.getInitParameter("prt-engine-class") != null) {
+                engineClassName = ctx.getInitParameter("prt-engine-class");
+            }
             if (ctx.getInitParameter("prt-max-timeout") != null) {
                 String maxTimeoutString =  ctx.getInitParameter("prt-max-timeout");
                 try {
                     maxAge = (new Long(maxTimeoutString)).longValue();
                 } catch (Exception e) {
-                   Config.getLogger().warning("Non-fatal: Error processing configuration : prt-service-uri must be a long.");    
+                   Config.getLogger().warning("Non-fatal: Error processing configuration : prt-service-uri must be a long.");
                 }
             }
             if (ctx.getInitParameter("prt-templates") != null) {
@@ -91,12 +96,28 @@ public class ProtoRabbitServlet extends HttpServlet {
             } else {
                 templates = new String[] { defaultTemplateURI };
             }
-            updateConfig();
-        } catch (ServletException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+            try {
+                updateConfig();
+                } catch (IOException e) {
+                    Config.getLogger().log(Level.SEVERE, "Fatal Error: Unable to instanciate engine class " + engineClassName, e);
+                    throw new ServletException("Fatal Error: Unable to reading in configuration class " + engineClassName, e);
+                }
+            // initialize the engine
+            Class<IEngine> clazz = null;
+            try {
+                clazz = (Class<IEngine>) Class.forName(engineClassName);
+                engine = clazz.newInstance();
+            } catch (ClassNotFoundException cnfe) {
+                Config.getLogger().severe("Fatal Error: Unable to find engine class " + engineClassName);
+                throw new ServletException("Fatal Error: Unable to find engine class " + engineClassName);
+            } catch (InstantiationException e) {
+                Config.getLogger().log(Level.SEVERE, "Fatal Error: Instantiation exception for engine class " + engineClassName, e);
+                throw new ServletException("Fatal Error: Instantiation exception for engine class " + engineClassName, e);
+            } catch (IllegalAccessException e) {
+                Config.getLogger().log(Level.SEVERE, "Fatal Error: Unable to access engine class " + engineClassName, e);
+                throw new ServletException("Fatal Error: Unable to access engine class " + engineClassName, e);
+            }
+
     }
 
     void updateConfig() throws IOException {
@@ -324,7 +345,7 @@ public class ProtoRabbitServlet extends HttpServlet {
             resp.setHeader("Content-Type", "text/html");
 
             // headers after this point do not get written
-            Engine.renderTemplate(id, jcfg, bos, wc);
+            engine.renderTemplate(id, jcfg, bos, wc);
 
             String content = bos.toString("UTF8");
             String hash = IOUtil.generateHash(content);
@@ -402,7 +423,7 @@ public class ProtoRabbitServlet extends HttpServlet {
 
         } else {
             OutputStream out = resp.getOutputStream();
-            Engine.renderTemplate(id, jcfg, bos, wc);
+            engine.renderTemplate(id, jcfg, bos, wc);
             out.write(bos.toByteArray());
         }
 

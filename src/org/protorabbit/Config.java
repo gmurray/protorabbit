@@ -89,6 +89,8 @@ public class Config {
     void init() {
         globalAttributes = new HashMap<String, Object>();
         commandMap = new HashMap<String, String>();
+
+        // include mappings for the default commands
         commandMap.put("insert", "org.protorabbit.model.impl.InsertCommand");
         commandMap.put("include", "org.protorabbit.model.impl.IncludeCommand");
         commandMap.put("includeResources", "org.protorabbit.model.impl.IncludeResourcesCommand");
@@ -376,6 +378,13 @@ public class Config {
                     temp.setProperties(properties);
                 }
 
+                // force combineResources if under the /WEB-INF
+                if (baseURI.startsWith("/WEB-INF") && combineResources != true) {
+                    getLogger().warning("Template " + baseURI + " is located in a private location without " +
+                                      " combineResouces being set. Enabling combineresources.");
+                    temp.setCombineScripts(true);
+                    temp.setCombineStyles(true);
+                }
                tmap.put(id, temp);
 
                getLogger().info("Added template definition : " + id);
@@ -418,7 +427,7 @@ public class Config {
                 combine = bsjo.getBoolean("combineResources");
             } 
             Boolean lgzip = null;
-            if (bsjo.has("gzip")) {            	
+            if (bsjo.has("gzip")) {
                 lgzip = bsjo.getBoolean("gzip");
             }
 
@@ -427,9 +436,9 @@ public class Config {
                 temp.setGzipScripts(lgzip);
                 temp.setScripts(refs);
             } else if (type == ResourceURI.LINK) {
-                temp.setGzipStyles(lgzip);   
+                temp.setGzipStyles(lgzip);
                 temp.setStyles(refs);
-                temp.setCombineStyles(combine);                  
+                temp.setCombineStyles(combine);
             }
     }
 

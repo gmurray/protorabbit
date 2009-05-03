@@ -9,7 +9,7 @@
  *
  */
 
-package org.protorabbit;
+package org.protorabbit.util;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -23,6 +23,8 @@ import java.util.Date;
 import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.zip.GZIPOutputStream;
+
+import org.protorabbit.Config;
 
 public class IOUtil {
 

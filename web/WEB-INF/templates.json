@@ -27,7 +27,7 @@
     },
     {
      "id" : "jsp",
-     "extends" : "blueprints-css-liquid",
+     "extends" : "blueprints-css",
      "timeout" : 5000,
      "styles" : {
        "combineResources": true,

@@ -2,10 +2,10 @@ package org.protorabbit.accelerator.impl;
 
 import java.io.IOException;
 
-import org.protorabbit.IOUtil;
 import org.protorabbit.accelerator.CacheContext;
 import org.protorabbit.accelerator.ICacheable;
 import org.protorabbit.model.IContext;
+import org.protorabbit.util.IOUtil;
 
 /**
  *  A class for representing combined cacheable resources.

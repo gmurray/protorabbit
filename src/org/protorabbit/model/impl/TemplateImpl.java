@@ -70,7 +70,7 @@ public class TemplateImpl implements ITemplate {
             ResourceURI tri = getTemplateURI();
 
             if (tri == null) {
-                
+
                 String message = "Unable to locate template for " + id;
                 return new StringBuffer(message);
             } else {
@@ -280,7 +280,7 @@ public class TemplateImpl implements ITemplate {
         properties.put(id, property);
     }
 
-    public void setCombineScripts(Boolean combineScripts) {	
+    public void setCombineScripts(Boolean combineScripts) {
         this.combineScripts = combineScripts;
     }
 
@@ -336,9 +336,9 @@ public class TemplateImpl implements ITemplate {
                 if (ancestors != null) {
                     Iterator<String> it = ancestors.iterator();
                     while (it.hasNext()) {
-                        ITemplate p = config.getTemplate(it.next());                      
+                        ITemplate p = config.getTemplate(it.next());
                         if (p != null) {
-                            if (p.getCombineScripts() != null) {                            	
+                            if (p.getCombineScripts() != null) {
                                 combineScripts = p.getCombineScripts();
                                 break;
                             }
@@ -346,7 +346,7 @@ public class TemplateImpl implements ITemplate {
                     }
                 }
                 if (combineScripts == null) {
-                	combineScripts = combineResources();              	
+                    combineScripts = combineResources();
                 }
         }
         return combineScripts;
@@ -360,14 +360,14 @@ public class TemplateImpl implements ITemplate {
                     ITemplate p = config.getTemplate(it.next());
                     if (p != null) {
                         if (p.getCombineStyles() != null) {
-                        	combineStyles = p.getCombineStyles();
+                            combineStyles = p.getCombineStyles();
                             break;
                         }
                     }
                 }
             }
             if (combineStyles == null) {
-            	combineStyles = combineResources();
+                combineStyles = combineResources();
             }
         }
         return combineStyles;
@@ -423,7 +423,7 @@ public class TemplateImpl implements ITemplate {
                     ITemplate p = config.getTemplate(it.next());
                     if (p != null) {
                         if (p.gzipScripts() != null) {
-                        	gzipScripts = p.gzipScripts();
+                            gzipScripts = p.gzipScripts();
                             break;
                         }
                     }
@@ -441,7 +441,7 @@ public class TemplateImpl implements ITemplate {
                     ITemplate p = config.getTemplate(it.next());
                     if (p != null) {
                         if (p.gzipStyles() != null) {
-                        	gzipStyles = p.gzipStyles();
+                            gzipStyles = p.gzipStyles();
                             break;
                         }
                     }
@@ -459,7 +459,7 @@ public class TemplateImpl implements ITemplate {
                     ITemplate p = config.getTemplate(it.next());
                     if (p != null) {
                         if (p.gzipTemplate() != null) {
-                        	gzip = p.gzipTemplate();
+                            gzip = p.gzipTemplate();
                             break;
                         }
                     }

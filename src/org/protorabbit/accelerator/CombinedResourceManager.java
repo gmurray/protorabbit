@@ -20,11 +20,11 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.protorabbit.Config;
-import org.protorabbit.IOUtil;
 import org.protorabbit.accelerator.impl.CacheableResource;
 import org.protorabbit.model.IContext;
 import org.protorabbit.model.ITemplate;
 import org.protorabbit.model.impl.ResourceURI;
+import org.protorabbit.util.IOUtil;
 
 /**
  * Manage Combined Resources
@@ -38,20 +38,20 @@ public class CombinedResourceManager {
     
     private Config cfg = null;
 
-    private Hashtable<String, ICacheable> combinedResources = null; 
+    private Hashtable<String, ICacheable> combinedResources = null;
 
     // in milliseconds
     private long maxTimeout;
 
 
     /**
-     * @param ctx
+     *  CombinedResourceManager - Responsible for combined CSS and Script resources.
      */
     public CombinedResourceManager (
             Config cfg,
             String resourceService,
             long maxTimeout ) {
-        
+
         this.cfg = cfg;
         this.resourceService = resourceService;
         this.maxTimeout = maxTimeout;
@@ -63,14 +63,15 @@ public class CombinedResourceManager {
         return resourceService;
     }
 
-    // TODO : create a flush for unused resources
-    
     /*
-     * This code replaces relative CSS links in a CSS file to abolute paths 
-     * based on the widgetDir 
+     * This code replaces relative CSS links in a CSS file to absolute paths
+     * based on the relative CSS file location.
+     * 
+     * This should also handle remapping of private resources under the /WEB-INF dir
+     * to non app structure revealing names.
      *
      */
-    private StringBuffer replaceRelativeLinks(StringBuffer buffer, String widgetDir) {
+    private StringBuffer replaceRelativeLinks(StringBuffer buffer, String resourceDir, IContext ctx, String resourceName) {
         int index = 0;
         while (true) {
             int start = buffer.indexOf("url(", index);
@@ -78,20 +79,42 @@ public class CombinedResourceManager {
             // around for the "url(" portion if not -1
             if (start == -1 ) break;
             else start += 4;
-            if (start  > buffer.length())break;
+            if (start > buffer.length()) break;
             // find the end of the URL
-            int end = buffer.indexOf(")",start );
+            int end = buffer.indexOf(")", start );
             if (end == -1) break;
+            // The raw contents of what is between the url()
             String url = buffer.substring(start,end);
+            url = url.trim();
+            // trim leading / trailing quotes
+            if (url.startsWith("\"") || url.startsWith("\'")) {
+                url = url.substring(1);
+            }
+            if (url.endsWith("\"") || url.endsWith("\'")) {
+                url = url.substring(url.length() -1);
+            }
+            // don't replace externalized resources
             if (!url.startsWith("http")) {
-                url = widgetDir + "/"+ url; 
+                if ( resourceDir.startsWith("/WEB-INF") && !url.startsWith("/")) {
+                    Config.getLogger().warning("Non Fatal error replacing style references. Reference to url "  + url +
+                                            " in " + resourceName + " is located in a private directory '/WEB-INF'. " + 
+                                            " Place the resource in an accesible location or use a non relative link or place" +
+                                            " the css template in a public directory.");
+                } else {
+                    // make sure "/" resources are mapped to the context root
+                    if (url.startsWith("/")) {
+                        url = "\"" + ctx.getContextRoot() + url + "\"";
+                    } else {
+                        url = "\"" + ctx.getContextRoot() + resourceDir + url + "\"";
+                    }
+                }
             }
             buffer.replace(start,end, url);
             index = start + url.length() + 1;
-        }       
+        }
         return buffer;
     }
-      
+
     /**
      * Calculate the MD5 based hash based on a sorted list of the of the
      * styles or scripts
@@ -119,9 +142,7 @@ public class CombinedResourceManager {
             return uri1.compareTo(uri2);
         }
     }
-        
 
-    
     public CacheableResource getScripts(List<ResourceURI>scriptResources, IContext ctx) throws IOException {
 
         CacheableResource scripts = new CacheableResource("text/javascript", maxTimeout, getHash(scriptResources));
@@ -133,8 +154,9 @@ public class CombinedResourceManager {
             StringBuffer scriptBuffer = ctx.getResource(ri.getBaseURI(), ri.getUri());
             try {
                 scripts.appendContent(scriptBuffer.toString());
+                ri.updateLastUpdated(ctx);
             } catch (Exception ioe) {
-               System.out.println("Unable to locate resource "  +ri.getUri());
+               System.out.println("Unable to locate resource " + ri.getUri());
             }
         }
         return scripts;
@@ -143,21 +165,22 @@ public class CombinedResourceManager {
     public CacheableResource getStyles(List<ResourceURI>styleResources, IContext ctx) throws IOException {
 
         CacheableResource styles = new CacheableResource("text/css", maxTimeout, getHash(styleResources));
-        
+
         Iterator<ResourceURI> it = styleResources.iterator();
         while (it.hasNext()) {
             ResourceURI ri = it.next();
             StringBuffer stylesBuffer = ctx.getResource(ri.getBaseURI(), ri.getUri());
             try {
-                stylesBuffer = replaceRelativeLinks(stylesBuffer, ri.getBaseURI());
+                stylesBuffer = replaceRelativeLinks(stylesBuffer, ri.getBaseURI(), ctx, ri.getFullURI());
                 styles.appendContent(stylesBuffer.toString());
+                ri.updateLastUpdated(ctx);
             } catch (Exception ioe) {
-                System.out.println("Unable to locate resource "  +ri.getUri());
+                Config.getLogger().warning("Non Fatal Error : Unable to locate resource "  +ri.getUri());
             }
         }
         return styles;
     }
-    
+
     public ICacheable getResource(String key) {
         ICacheable csr = combinedResources.get(key);
         if (csr != null) {
@@ -169,18 +192,32 @@ public class CombinedResourceManager {
     public void putResource(String key, ICacheable csr) {
         combinedResources.put(key, csr);
     }
-    
+
     public String processStyles(List<ResourceURI>styleResources,
                                 IContext ctx,
                                 OutputStream out) throws java.io.IOException {
 
         ICacheable csr;
         String hash = getHash(styleResources);
+        // check if any of the combined resources are expired if dev mode
+        if (ctx.getConfig().getDevMode()) {
+            boolean requiresRefresh = false;
+            for (ResourceURI item : styleResources) {
+                if (item.isUpdated(ctx)) {
+                    requiresRefresh = true;
+                    break;
+                }
+            }
+            // remove the hash
+            if (requiresRefresh && hash != null) {
+                combinedResources.remove(hash);
+            }
+        }
         if (hash != null) {
 
             if (combinedResources.get(hash) != null) {
                 csr = combinedResources.get(hash);
-                
+
                 if (csr.getCacheContext().isExpired()) {
                     csr.reset();
                     csr = getStyles(styleResources,ctx);
@@ -191,9 +228,9 @@ public class CombinedResourceManager {
             boolean gzip = false;
             ITemplate t = ctx.getConfig().getTemplate(ctx.getTemplateId());
             if (t.gzipStyles() != null) {
-            	gzip = t.gzipStyles();
+                gzip = t.gzipStyles();
             } else {
-            	gzip = ctx.getConfig().getGzip();
+                gzip = ctx.getConfig().getGzip();
             }
             csr.setGzipResources(gzip);
 
@@ -207,7 +244,7 @@ public class CombinedResourceManager {
         }
         return hash;
     }
-    
+
     public String processScripts(List<ResourceURI>scriptResources,
                                  IContext ctx, boolean defer) throws java.io.IOException {
 
@@ -217,7 +254,20 @@ public class CombinedResourceManager {
 
         ICacheable csr;
         String hash = getHash(scriptResources);
-
+        // check if any of the combined resources are expired if dev mode
+        if (ctx.getConfig().getDevMode()) {
+            boolean requiresRefresh = false;
+            for (ResourceURI item : scriptResources) {
+                if (item.isUpdated(ctx)) {
+                    requiresRefresh = true;
+                    break;
+                }
+            }
+            // remove the hash
+            if (requiresRefresh && hash != null) {
+                combinedResources.remove(hash);
+            }
+        }
         if (combinedResources.get(hash) != null) {
 
             csr = combinedResources.get(hash);
@@ -230,13 +280,21 @@ public class CombinedResourceManager {
             csr = getScripts(scriptResources,ctx);
         }
 
-        boolean gzip = true;
-
         ITemplate t = ctx.getConfig().getTemplate(ctx.getTemplateId());
-        gzip = t.gzipScripts();
-        csr.setGzipResources(gzip);
-        combinedResources.put(hash, csr);
-        return hash;
+        if (t != null) {
+            boolean gzip = false;
+
+            if (t.gzipScripts() == null) {
+                gzip = ctx.getConfig().getGzip();
+            } else {
+                gzip = t.gzipScripts();
+            }
+            csr.setGzipResources(gzip);
+            combinedResources.put(hash, csr);
+            return hash;
+        } else {
+            return null;
+        }
     }
 }
 

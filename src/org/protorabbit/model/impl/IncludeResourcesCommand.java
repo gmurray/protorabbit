@@ -16,11 +16,11 @@ import java.io.OutputStream;
 import java.util.List;
 
 import org.protorabbit.Config;
-import org.protorabbit.IOUtil;
 import org.protorabbit.accelerator.CombinedResourceManager;
 import org.protorabbit.accelerator.ICacheable;
 import org.protorabbit.accelerator.impl.CacheableResource;
 import org.protorabbit.model.ITemplate;
+import org.protorabbit.util.IOUtil;
 
 public class IncludeResourcesCommand extends BaseCommand {
 

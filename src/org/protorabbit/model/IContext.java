@@ -37,6 +37,8 @@ public interface IContext {
     public String getContextRoot();
 
      public boolean isUpdated(String name, long lastUpdate);
+     
+     public long getLastUpdated(String name);
 
      public boolean uaTest(String test);
 }

@@ -14,9 +14,9 @@ package org.protorabbit.accelerator.impl;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.protorabbit.IOUtil;
 import org.protorabbit.accelerator.ICallback;
 import org.protorabbit.accelerator.IWorker;
+import org.protorabbit.util.IOUtil;
 
 public class AsyncWorkerImpl implements IWorker, Runnable{
 

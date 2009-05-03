@@ -18,12 +18,12 @@ import java.util.List;
 import java.util.logging.Level;
 
 import org.protorabbit.Config;
-import org.protorabbit.IOUtil;
 import org.protorabbit.accelerator.CombinedResourceManager;
 import org.protorabbit.accelerator.impl.CacheableResource;
 import org.protorabbit.accelerator.impl.DeferredResource;
 import org.protorabbit.model.IProperty;
 import org.protorabbit.model.ITemplate;
+import org.protorabbit.util.IOUtil;
 
 public class IncludeCommand extends BaseCommand {
 

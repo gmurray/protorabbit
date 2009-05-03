@@ -1,0 +1,25 @@
+{
+
+  "templates" : [
+     {
+      "id" : "private",
+      "template" : "templates/private-template.html",
+      "styles" : {
+        "libs" : [
+           { "url" : "lib/reset.css" },
+           { "url" : "lib/typography.css" },
+           { "url" : "lib/plugins/fancy-type/fancy-type.css" },
+           { "id" : "blueprint", "url" : "lib/grid.css" } ,
+           { "uaTest" : "MSIE", "url" : "lib/ie.css" }
+         ]
+      },
+      "properties" : {
+          "title" :  { "type" : "string", "value" : "Welcome to Private Proto Rabbit"},
+          "header" : { "type" : "include", "value" : "/header.html" },
+          "body" : {  "type" : "include", "value" : "/blueprints.html"},
+          "sidebar" : { "type" : "include", "value" : "/sidebar.html" },
+          "footer" : { "type" : "include", "value" : "/footer.html" } 
+      }
+    }
+  ]
+}

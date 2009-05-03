@@ -9,7 +9,7 @@
  *
  */
 
-package org.protorabbit;
+package org.protorabbit.impl;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,15 +21,24 @@ import java.util.List;
 
 import org.json.JSONObject;
 
+import org.protorabbit.Config;
+import org.protorabbit.IEngine;
 import org.protorabbit.json.JSONUtil;
 import org.protorabbit.model.ICommand;
 import org.protorabbit.model.IContext;
 import org.protorabbit.model.ITemplate;
 import org.protorabbit.model.impl.FileSystemContext;
 
-public class Engine {
+/*
+ *  DefaultEngine.java
+ *  
+ *  This class parses the template file and then calls the corresponding Command Handlers to process
+ *  different portions of the page.
+ * 
+ */
+public class DefaultEngine implements IEngine {
 
-    public static void renderTemplate(String tid, Config cfg, OutputStream out, IContext ctx) {
+    public void renderTemplate(String tid, Config cfg, OutputStream out, IContext ctx) {
 
         long startTime = (new Date()).getTime();
 
@@ -104,7 +113,7 @@ public class Engine {
                 i+=1;
             }
         }
-        Config cfg = new Config();    
+        Config cfg = new Config();
         FileSystemContext ctx = new FileSystemContext(cfg, documentRoot);
         
         if (cTemplates.size() == 0) {
@@ -134,8 +143,8 @@ public class Engine {
         String targetTemplate = args[args.length -1];
 
         Config.getLogger().info("** Config Processing Time : " + (postConfigTime -  startTime) + "\n\n");
-
-        renderTemplate(targetTemplate, cfg, System.out, ctx);
+        IEngine engine = new DefaultEngine();
+        engine.renderTemplate(targetTemplate, cfg, System.out, ctx);
 
         long stopTime = (new Date()).getTime();
 

@@ -11,6 +11,7 @@
 
 package org.protorabbit.model.impl;
 
+import org.protorabbit.model.IContext;
 import org.protorabbit.model.IUATestable;
 
 public class ResourceURI implements IUATestable {
@@ -32,6 +33,7 @@ public class ResourceURI implements IUATestable {
     private String test = null;
     private int loadIndex;
     private boolean defer = false;
+    private long lastUpdated = -1;
 
     public ResourceURI(String uri, int type, boolean isExternal) {
         this.uri = uri;
@@ -147,4 +149,19 @@ public class ResourceURI implements IUATestable {
         return defer;
     }
 
+    public void setLastUpdated(long lastUpdated) {
+        this.lastUpdated = lastUpdated;
+    }
+
+    public long getLastUpdated() {
+        return lastUpdated;
+    }
+
+    public void updateLastUpdated(IContext ctx) {
+        this.lastUpdated = ctx.getLastUpdated(getFullURI());
+    }
+
+    public boolean isUpdated(IContext ctx) {
+        return ctx.isUpdated(getFullURI(), lastUpdated);
+    }
 }

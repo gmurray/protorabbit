@@ -21,19 +21,21 @@ import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.protorabbit.Config;
-import org.protorabbit.IOUtil;
 import org.protorabbit.model.impl.BaseContext;
+import org.protorabbit.util.IOUtil;
 
 public class WebContext extends BaseContext {
 
     private Config cfg;
     private ServletContext sctx;
     private HttpServletRequest req;
+
     private HttpServletResponse resp;
     private String contextRoot = "";
 
@@ -86,6 +88,25 @@ public class WebContext extends BaseContext {
         return true;
     }
 
+    public long getLastUpdated(String name) {
+        URL url = null;
+        try {
+            url = sctx.getResource(name);
+            if (url != null) {
+                URLConnection uc = url.openConnection();
+                long lastMod = uc.getLastModified();
+                return lastMod;
+            } else {
+                Config.getLogger().warning("Error locating resource : " + name);
+                return -1;
+            }
+        } catch (MalformedURLException e) {
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
     public StringBuffer getResource(String baseDir, String name) throws IOException {
 
         String resourceName = null;
@@ -101,7 +122,10 @@ public class WebContext extends BaseContext {
 
                     ByteArrayOutputStream bos = new ByteArrayOutputStream();
                     BufferedServletResponse br = new BufferedServletResponse(resp, bos);
-                    req.getRequestDispatcher(resourceName).include(req, br);
+                    RequestDispatcher rd = req.getRequestDispatcher(resourceName);
+                    if (rd != null) {
+                        rd.include(req, br);
+                    }
                     br.flushBuffer();
                     StringBuffer buff = new StringBuffer(bos.toString(cfg.getEncoding()));
                     bos.close();
@@ -145,5 +169,13 @@ public class WebContext extends BaseContext {
             return m.find();
         }
         return matches;
+    }
+
+    public HttpServletRequest getRequest() {
+        return req;
+    }
+
+    public HttpServletResponse getResponse() {
+        return resp;
     }
 }

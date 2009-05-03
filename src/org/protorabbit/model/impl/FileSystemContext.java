@@ -16,7 +16,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 import org.protorabbit.Config;
-import org.protorabbit.IOUtil;
+import org.protorabbit.util.IOUtil;
 
 public class FileSystemContext extends BaseContext {
 
@@ -55,6 +55,11 @@ public class FileSystemContext extends BaseContext {
         File f = new File(name);
         long lastModified = f.lastModified();
         return (lastUpdate > lastModified);
+    }
+
+    public long getLastUpdated(String name) {
+        File f = new File(name);
+        return f.lastModified();
     }
 
     public boolean uaTest(String test) {
