@@ -62,7 +62,7 @@ public class ProtoRabbitServlet extends HttpServlet {
     private int maxTries = 300;
     private long tryTimeout = 20;
 
-    private String version = "0.5-dev b";
+    private String version = "0.5-dev c";
 
     public void init(ServletConfig cfg) throws ServletException {
 

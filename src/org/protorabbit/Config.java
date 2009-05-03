@@ -380,10 +380,8 @@ public class Config {
 
                 // force combineResources if under the /WEB-INF
                 if (baseURI.startsWith("/WEB-INF") && combineResources != true) {
-                    getLogger().warning("Template " + baseURI + " is located in a private location without " +
-                                      " combineResouces being set. Enabling combineresources.");
-                    temp.setCombineScripts(true);
-                    temp.setCombineStyles(true);
+                    getLogger().warning("Template " + temp.getId() + " is loated in a private directory " + baseURI + " without " +
+                                      "combineResouces being set. It is recommended that you enable combineResouces.");
                 }
                tmap.put(id, temp);
 
@@ -404,12 +402,17 @@ public class Config {
             refs = new ArrayList<ResourceURI>();
 
             if (bsjo.has("libs")) {
-                
+
                 JSONArray ja = bsjo.getJSONArray("libs");
-                
+
                 for (int j=0; j < ja.length(); j++) {
+
                     JSONObject so = ja.getJSONObject(j);
-                    ResourceURI ri = new ResourceURI(so.getString("url"), baseURI, type);
+                    String url = so.getString("url");
+                    if (url.startsWith("/") || url.startsWith("http")) {
+                        baseURI = "";
+                    }
+                    ResourceURI ri = new ResourceURI(url , baseURI, type);
                     if (so.has("id")) {
                         ri.setId(so.getString("id"));
                     }

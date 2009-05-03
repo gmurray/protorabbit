@@ -23,7 +23,6 @@ public class ResourceURI implements IUATestable {
     private String uri = null;
     private String baseURI = null;
 
-    private boolean isExternal = false;
     private boolean written = false;
     private boolean combine = false;
     private boolean gzip = false;
@@ -34,12 +33,6 @@ public class ResourceURI implements IUATestable {
     private int loadIndex;
     private boolean defer = false;
     private long lastUpdated = -1;
-
-    public ResourceURI(String uri, int type, boolean isExternal) {
-        this.uri = uri;
-        this.type = type;
-        this.isExternal = isExternal;
-    }
 
     public ResourceURI(String uri, String baseURI, int type) {
         this.uri = uri;
@@ -88,10 +81,6 @@ public class ResourceURI implements IUATestable {
     }
     public void setType(int type) {
         this.type = type;
-    }
-
-    public void setExternal(boolean isExternal) {
-        this.isExternal = isExternal;
     }
 
     public boolean isExternal() {
