@@ -4,7 +4,7 @@
      "timeout" : 300000,
      "id" : "base",
      "gizp" : false;
-     "combineResources" : true,     
+     "combineResources" : true,
      "template" : "/templates/base-page.html",
      "extends" : "blueprints-css",
      "styles" :{
