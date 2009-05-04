@@ -18,24 +18,25 @@ if (!window.protorabbit) {
 
 window.protorabbit = function() {
 
-  var ctx = {
+ var ctx = {
           MSIE : /MSIE/i.test(navigator.userAgent),
-          count : 0,
+          counter : 0,
           ajaxRequestQueue : [],
           deferredFragments : [],
           deferredScripts : [],
+          deferredStyles : [],
           debug : true
-  };
+ };
 
-  function addDeferredScript(s){
+ function addDeferredScript(s){
       ctx.deferredScripts.push(s);
-  }
+ }
 
-  function isDefined(_target) {
+ function isDefined(_target) {
       return (typeof _target != "undefined");
-  }
+ }
 
-  function namespace(_path, target) {
+ function namespace(_path, target) {
       // get the top level object
       var paths = _path.split('.');
       var _obj = window[paths[0]];
@@ -55,9 +56,9 @@ window.protorabbit = function() {
           _obj = target;
       }
       return _obj;
-  };
+ }
 
- var matchWildcard = function(pattern,topic) {
+  function matchWildcard(pattern,topic) {
 
      var patpos = 0;
      var patlen = pattern.length;
@@ -101,7 +102,7 @@ window.protorabbit = function() {
          if (patpos + i == patlen) {return true;}
      } while(pattern.charAt(patpos + i++)=='*');
      return false;
- };
+ }
 
  function log(message) {
      if (window.console) {
@@ -109,13 +110,13 @@ window.protorabbit = function() {
      }
  }
 
-function genId() {
+ function genId() {
      return "protrabbit_" + (ctx.counter +=1);
-};
+ }
 
-function trim(t) {
+ function trim(t) {
      return  t.replace(/^\s+|\s+$/g, "");
- };
+ }
 
  /**
   *  Unsubscribe a listener
@@ -168,12 +169,12 @@ function trim(t) {
          }
      }
      return true;
- };
+ }
 
 /*
  *
  */
-  function subscribe(l, t) {
+ function subscribe(l, t) {
      if (!isDefined(l)) {
          return null;
      }
@@ -227,7 +228,7 @@ function trim(t) {
          return lis;
      }
      return null;
- };
+ }
 
  /**
   *  Get the XMLHttpRequest object
@@ -246,7 +247,7 @@ function trim(t) {
      } else {
          return null;
      }
- };
+ }
 
  function handleAjaxError(_m, _r, args){
     if (args.onerror) {
@@ -255,9 +256,6 @@ function trim(t) {
       log("Protorabbit ajax error " + _m);
     }
  }
-
- var doAjax;
- var addLibraries;
 
  function updateAjaxQueue() {
      if (ctx.ajaxRequestQueue.length > 0) {
@@ -378,7 +376,6 @@ function trim(t) {
              }, 0);
      }
  };
-
 
  /**
   * Generalized XMLHttpRequest which can be used from evaluated code. Evaluated code is not allowed to make calls.
@@ -506,35 +503,44 @@ function trim(t) {
          }
          updateAjaxQueue();
      }
-  };
+ }
 
-  /**
-   * Loads the style sheet by adding a link element to the DOM
-   * @param target name of style sheet to load
-   */
-  function addStyleLink(target) {
+ /**
+  * Loads the style sheet by adding a link element to the DOM
+  * @param target name of style sheet to load
+  */
+ function addStyleLink(target, media) {
       var styleElement = document.createElement("link");
       styleElement.type = "text/css";
       styleElement.rel="stylesheet";
-      if (target[0] == '/' && ctx.webRoot != '/')  {
-          target = ctx.webRoot + target;
-      }
       styleElement.href = target;
+      if (media) {
+          styleElement.media = media;
+      }
       if (ctx.head === null) {
           var headN = document.createElement("head");
           document.documentElement.insertBefore(headN, document.documentElement.firstChild);
       }
       ctx.head.appendChild(styleElement);
-  };
-  
-  function addDeferredFragement(item) {
+ }
+
+ function addDeferredFragement(item) {
       ctx.deferredFragments.push(item);
-  }
-  
-  var oldOnload = window.onload;
+ }
+
+ function addDeferredStyle(item, media) {
+     ctx.deferredStyles.push({ url : item, media : media});
+ }
+
+ var oldOnload = window.onload;
 
   window.onload = function() {
       ctx.head = document.getElementsByTagName("head")[0];
+      if (ctx.deferredStyles.length > 0) {
+          for (var i=0; i < ctx.deferredStyles.length; i+=1) {
+              addStyleLink(ctx.deferredStyles[i].url, ctx.deferredStyles[i].media);
+          }
+      }
       if (ctx.deferredScripts.length > 0) {
           addLibraries({
              libs : ctx.deferredScripts,
@@ -566,6 +572,7 @@ function trim(t) {
   return {
       addDeferredFragement : addDeferredFragement,
       addDeferredScript : addDeferredScript,
+      addDeferredStyle : addDeferredStyle,
       publish : publish,
       subscribe : subscribe,
       log : log

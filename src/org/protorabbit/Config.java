@@ -28,6 +28,7 @@ import org.protorabbit.model.ICommand;
 import org.protorabbit.model.IContext;
 import org.protorabbit.model.IProperty;
 import org.protorabbit.model.ITemplate;
+import org.protorabbit.model.impl.IncludeCommand;
 import org.protorabbit.model.impl.IncludeFile;
 import org.protorabbit.model.impl.PropertyImpl;
 import org.protorabbit.model.impl.ResourceURI;
@@ -381,7 +382,7 @@ public class Config {
                 // force combineResources if under the /WEB-INF
                 if (baseURI.startsWith("/WEB-INF") && combineResources != true) {
                     getLogger().warning("Template " + temp.getId() + " is loated in a private directory " + baseURI + " without " +
-                                      "combineResouces being set. It is recommended that you enable combineResouces.");
+                                        "combineResouces being set. It is recommended that you enable combineResouces.");
                 }
                tmap.put(id, temp);
 
@@ -459,17 +460,19 @@ public class Config {
 
     public String generateStyleReferences(ITemplate template, IContext ctx) {
         List<ResourceURI> styles = template.getAllStyles(ctx);
-        return generateReferences(template,ctx,styles, ResourceURI.LINK);
+        return generateReferences(template, ctx, styles, ResourceURI.LINK);
     }
 
     public String generateReferences(ITemplate template, IContext ctx, List<ResourceURI> resources, int type) {
         String buff = "";
 
             if (resources != null) {
+                List<String> deferredScripts = (List<String>)ctx.getAttribute(IncludeCommand.DEFERRED_SCRIPTS);
                 Iterator<ResourceURI> it = resources.iterator();
                 while (it.hasNext()) {
 
                     ResourceURI ri = it.next();
+                    if (ri.isWritten()) continue;
                     String resource = ri.getUri();
                     String baseURI =  ctx.getContextRoot();
 
@@ -484,13 +487,36 @@ public class Config {
                         baseURI = "";
                     }
                     if (type == ResourceURI.SCRIPT) {
-                        buff += "<script type=\"text/javascript\" src=\"" + baseURI + resource + "\"></script>\n";
+                        if (ri.isDefer()) {
+                            if (deferredScripts == null) {
+                                deferredScripts = new ArrayList<String>();
+                            }
+                            String fragement = "<script>protorabbit.addDeferredScript('"  +
+                                     baseURI + resource + "');</script>";
+                            deferredScripts.add(fragement);
+                            ri.setWritten(true);
+                            ctx.setAttribute(IncludeCommand.DEFERRED_SCRIPTS, deferredScripts);
+                        } else {
+                            buff += "<script type=\"text/javascript\" src=\"" + baseURI + resource + "\"></script>\n";
+                        }
                     } else if (type == ResourceURI.LINK) {
                         String mediaType = ri.getMediaType();
                         if (mediaType == null){
                             mediaType = defaultMediaType;
                         }
-                        buff += "<link rel=\"stylesheet\" type=\"text/css\"  href=\"" + baseURI + resource + "\" media=\""  + mediaType + "\" />\n";
+                        if (ri.isDefer()) {
+                            if (deferredScripts == null) {
+                                deferredScripts = new ArrayList<String>();
+                            }
+                            String fragement = "<script>protorabbit.addDeferredStyle('" + 
+                                                baseURI + resource  + "', '" + mediaType + "');</script>";
+                            deferredScripts.add(fragement);
+                            ri.setWritten(true);
+                            ctx.setAttribute(IncludeCommand.DEFERRED_SCRIPTS, deferredScripts);
+
+                        } else {
+                            buff += "<link rel=\"stylesheet\" type=\"text/css\"  href=\"" + baseURI + resource + "\" media=\""  + mediaType + "\" />\n";
+                        }
                     }
                 }
             }
@@ -528,7 +554,7 @@ public class Config {
         if (template != null) {
             
             IProperty p = template.getProperty(id, ctx);
-            if (p != null) {            
+            if (p != null) {
                 return p.getValue();
             }
 

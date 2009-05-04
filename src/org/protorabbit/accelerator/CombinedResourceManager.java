@@ -13,6 +13,7 @@ package org.protorabbit.accelerator;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Hashtable;
@@ -23,6 +24,7 @@ import org.protorabbit.Config;
 import org.protorabbit.accelerator.impl.CacheableResource;
 import org.protorabbit.model.IContext;
 import org.protorabbit.model.ITemplate;
+import org.protorabbit.model.impl.IncludeCommand;
 import org.protorabbit.model.impl.ResourceURI;
 import org.protorabbit.util.IOUtil;
 
@@ -146,17 +148,43 @@ public class CombinedResourceManager {
     public CacheableResource getScripts(List<ResourceURI>scriptResources, IContext ctx) throws IOException {
 
         CacheableResource scripts = new CacheableResource("text/javascript", maxTimeout, getHash(scriptResources));
-        
+
+        List<String> deferredScripts = (List<String>)ctx.getAttribute(IncludeCommand.DEFERRED_SCRIPTS);
+
         Iterator<ResourceURI> it = scriptResources.iterator();
         while (it.hasNext()) {
             ResourceURI ri = it.next();
-      
-            StringBuffer scriptBuffer = ctx.getResource(ri.getBaseURI(), ri.getUri());
-            try {
-                scripts.appendContent(scriptBuffer.toString());
-                ri.updateLastUpdated(ctx);
-            } catch (Exception ioe) {
-               System.out.println("Unable to locate resource " + ri.getUri());
+            if (ri.isWritten()) continue;
+            String resource = ri.getUri();
+            String baseURI =  ctx.getContextRoot();
+
+            if (!ri.isExternal()){
+                // map to root
+                if (resource.startsWith("/")) {
+                    baseURI = ctx.getContextRoot();
+                } else {
+                   baseURI +=  ri.getBaseURI();
+                }
+            } else {
+                baseURI = "";
+            }
+            if (ri.isDefer()) {
+                if (deferredScripts == null) {
+                    deferredScripts = new ArrayList<String>();
+                }
+                String fragement = "<script>protorabbit.addDeferredScript('" + 
+                                   baseURI + resource + "');</script>";
+                deferredScripts.add(fragement);
+                ri.setWritten(true);
+                ctx.setAttribute(IncludeCommand.DEFERRED_SCRIPTS, deferredScripts);
+            } else {
+                StringBuffer scriptBuffer = ctx.getResource(ri.getBaseURI(), ri.getUri());
+                try {
+                    scripts.appendContent(scriptBuffer.toString());
+                    ri.updateLastUpdated(ctx);
+                } catch (Exception ioe) {
+                   System.out.println("Unable to locate resource " + ri.getUri());
+                }
             }
         }
         return scripts;
@@ -165,17 +193,46 @@ public class CombinedResourceManager {
     public CacheableResource getStyles(List<ResourceURI>styleResources, IContext ctx) throws IOException {
 
         CacheableResource styles = new CacheableResource("text/css", maxTimeout, getHash(styleResources));
-
+        List<String> deferredScripts = (List<String>)ctx.getAttribute(IncludeCommand.DEFERRED_SCRIPTS);
         Iterator<ResourceURI> it = styleResources.iterator();
         while (it.hasNext()) {
             ResourceURI ri = it.next();
-            StringBuffer stylesBuffer = ctx.getResource(ri.getBaseURI(), ri.getUri());
-            try {
-                stylesBuffer = replaceRelativeLinks(stylesBuffer, ri.getBaseURI(), ctx, ri.getFullURI());
-                styles.appendContent(stylesBuffer.toString());
-                ri.updateLastUpdated(ctx);
-            } catch (Exception ioe) {
-                Config.getLogger().warning("Non Fatal Error : Unable to locate resource "  +ri.getUri());
+            if (ri.isWritten()) continue;
+            String mediaType = ri.getMediaType();
+            String resource = ri.getUri();
+            String baseURI =  ctx.getContextRoot();
+
+            if (!ri.isExternal()){
+                // map to root
+                if (resource.startsWith("/")) {
+                    baseURI = ctx.getContextRoot();
+                } else {
+                   baseURI +=  ri.getBaseURI();
+                }
+            } else {
+                baseURI = "";
+            }
+            if (mediaType == null){
+                mediaType = ctx.getConfig().mediaType();
+            }
+            if (ri.isDefer()) {
+                if (deferredScripts == null) {
+                    deferredScripts = new ArrayList<String>();
+                }
+                String fragement = "<script>protorabbit.addDeferredStyle('" +
+                                    baseURI + resource + "','" + mediaType + "');</script>";
+                deferredScripts.add(fragement);
+                ri.setWritten(true);
+                ctx.setAttribute(IncludeCommand.DEFERRED_SCRIPTS, deferredScripts);
+            } else {
+                StringBuffer stylesBuffer = ctx.getResource(ri.getBaseURI(), ri.getUri());
+                try {
+                    stylesBuffer = replaceRelativeLinks(stylesBuffer, ri.getBaseURI(), ctx, ri.getFullURI());
+                    styles.appendContent(stylesBuffer.toString());
+                    ri.updateLastUpdated(ctx);
+                } catch (Exception ioe) {
+                    Config.getLogger().warning("Non Fatal Error : Unable to locate resource "  +ri.getUri());
+                }
             }
         }
         return styles;
@@ -213,20 +270,20 @@ public class CombinedResourceManager {
                 combinedResources.remove(hash);
             }
         }
-        if (hash != null) {
 
-            if (combinedResources.get(hash) != null) {
-                csr = combinedResources.get(hash);
+        if (combinedResources.get(hash) != null) {
+            csr = combinedResources.get(hash);
 
-                if (csr.getCacheContext().isExpired()) {
-                    csr.reset();
-                    csr = getStyles(styleResources,ctx);
-                }
-            } else {
+            if (csr.getCacheContext().isExpired()) {
+                csr.reset();
                 csr = getStyles(styleResources,ctx);
             }
-            boolean gzip = false;
-            ITemplate t = ctx.getConfig().getTemplate(ctx.getTemplateId());
+        } else {
+            csr = getStyles(styleResources,ctx);
+        }
+        boolean gzip = false;
+        ITemplate t = ctx.getConfig().getTemplate(ctx.getTemplateId());
+        if (t != null) {
             if (t.gzipStyles() != null) {
                 gzip = t.gzipStyles();
             } else {
@@ -235,14 +292,11 @@ public class CombinedResourceManager {
             csr.setGzipResources(gzip);
 
             combinedResources.put(hash, csr);
-            String uri = "<link rel=\"stylesheet\" type=\"text/css\" href=\"" +
-                         getResourceService() + "?resourceid=" + hash + 
-                         ".css\" media=\"" + cfg.mediaType() + "\" />";
-            
-            out.write(uri.getBytes());
-
+           return hash;
+        } else {
+            return null;
         }
-        return hash;
+
     }
 
     public String processScripts(List<ResourceURI>scriptResources,
@@ -282,6 +336,7 @@ public class CombinedResourceManager {
 
         ITemplate t = ctx.getConfig().getTemplate(ctx.getTemplateId());
         if (t != null) {
+
             boolean gzip = false;
 
             if (t.gzipScripts() == null) {

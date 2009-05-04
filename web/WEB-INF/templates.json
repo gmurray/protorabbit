@@ -4,9 +4,9 @@
    
     {
      "gzip" : false,
-     "combineResources" : true,
+     "combineResources" : false,
      "id" : "welcome",
-     "extends" : "blueprints-css-liquid",
+     "extends" : "blueprints-css",
      "scripts" : {
          "libs" : [
            { "url" : "/resources/js/test.js", "defer" : true, "timeout" : 5000 }

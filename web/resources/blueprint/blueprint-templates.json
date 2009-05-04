@@ -9,7 +9,7 @@
            { "url" : "lib/reset.css" },
            { "url" : "lib/typography.css" },
            { "url" : "lib/plugins/fancy-type/fancy-type.css" },
-           { "id" : "blueprint", "url" : "lib/grid.css" } ,
+           { "id" : "blueprint", "url" : "lib/grid.css"} ,
            { "uaTest" : "MSIE", "url" : "lib/ie.css" }
          ]
       },
