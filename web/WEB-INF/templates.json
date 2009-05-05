@@ -13,7 +13,7 @@
          ]
      },
      "properties" : {
-           "title" : {"type" : "string", "value" : "Welcome to ProtoRabbit"},
+           "title" : {"type" : "string", "value" : "Welcome to ProtoRabbit", "defer" : true},
            "body" : { "type" : "include", "value" : "/main.html", "defer" : true, "deferContent" : "Loading..."}
        }     
     },

@@ -40,17 +40,17 @@ public class IncludeCommand extends BaseCommand {
             counter = ((Integer)ctx.getAttribute(COUNTER)).intValue();
         } 
         boolean useThreadedDefer = true;
-        
+
         String tid = ctx.getTemplateId();
         String id = params[0];
-        
+
         String resourceName = null;
         String baseDir = null;
         IProperty property = null;
-        
+
         ITemplate template = cfg.getTemplate(tid);
         if (template != null) {
-            
+
             property = template.getProperty(id,ctx);
             if (property == null) {
                 Config.getLogger().log(Level.SEVERE, "Unable to find Include file for " + id + " in template " + tid);

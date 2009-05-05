@@ -25,6 +25,7 @@ window.protorabbit = function() {
           deferredFragments : [],
           deferredScripts : [],
           deferredStyles : [],
+          deferredProperties : [],
           debug : true
  };
 
@@ -532,6 +533,10 @@ window.protorabbit = function() {
      ctx.deferredStyles.push({ url : item, media : media});
  }
 
+ function addDeferredProperties(item, prefix) {
+     ctx.deferredProperties.push({ url : item, prefix : prefix});
+ }
+ 
  var oldOnload = window.onload;
 
   window.onload = function() {
@@ -564,6 +569,27 @@ window.protorabbit = function() {
               });
           }
       }
+      if (ctx.deferredProperties.length > 0) {
+          for (var k=0; k < ctx.deferredProperties.length; k++) {
+              var propSet = ctx.deferredProperties[k];
+              doAjax( {
+                 url : propSet.url,
+                 callback : function(req) {
+                     var props = eval("(" + req.responseText + ")");
+                     for (var p in props) {
+                         var target = document.getElementById(propSet.prefix + "_" + p);
+                         if (target) {
+                             target.innerHTML = props[p];
+                         }
+                     }
+                     publish("/protorabbit/propertySetLoad", { value :propSet});
+                 },
+                 onerror : function() {
+                     log("Error loading properties from " + propSet.url); 
+                 }
+              });
+          }
+      }
       if (typeof window.oldOnload == 'function') {
           window.oldOnload.apply({},[]);
       }
@@ -573,6 +599,7 @@ window.protorabbit = function() {
       addDeferredFragement : addDeferredFragement,
       addDeferredScript : addDeferredScript,
       addDeferredStyle : addDeferredStyle,
+      addDeferredProperties : addDeferredProperties,
       publish : publish,
       subscribe : subscribe,
       log : log

@@ -463,6 +463,7 @@ public class Config {
         return generateReferences(template, ctx, styles, ResourceURI.LINK);
     }
 
+    @SuppressWarnings("unchecked")
     public String generateReferences(ITemplate template, IContext ctx, List<ResourceURI> resources, int type) {
         String buff = "";
 
@@ -491,7 +492,7 @@ public class Config {
                             if (deferredScripts == null) {
                                 deferredScripts = new ArrayList<String>();
                             }
-                            String fragement = "<script>protorabbit.addDeferredScript('"  +
+                            String fragement = "<script>protorabbit.addDeferredScript('" +
                                      baseURI + resource + "');</script>";
                             deferredScripts.add(fragement);
                             ri.setWritten(true);
@@ -508,14 +509,14 @@ public class Config {
                             if (deferredScripts == null) {
                                 deferredScripts = new ArrayList<String>();
                             }
-                            String fragement = "<script>protorabbit.addDeferredStyle('" + 
+                            String fragement = "<script>protorabbit.addDeferredStyle('" +
                                                 baseURI + resource  + "', '" + mediaType + "');</script>";
                             deferredScripts.add(fragement);
                             ri.setWritten(true);
                             ctx.setAttribute(IncludeCommand.DEFERRED_SCRIPTS, deferredScripts);
 
                         } else {
-                            buff += "<link rel=\"stylesheet\" type=\"text/css\"  href=\"" + baseURI + resource + "\" media=\""  + mediaType + "\" />\n";
+                            buff += "<link rel=\"stylesheet\" type=\"text/css\"  href=\"" + baseURI + resource + "\" media=\"" + mediaType + "\" />\n";
                         }
                     }
                 }
@@ -549,13 +550,13 @@ public class Config {
         return null;
     }
 
-    public String getContent(String tid, String id, IContext ctx) {
+    public IProperty getContent(String tid, String id, IContext ctx) {
         ITemplate template = getTemplate(tid);
         if (template != null) {
             
             IProperty p = template.getProperty(id, ctx);
             if (p != null) {
-                return p.getValue();
+                return p;
             }
 
         }

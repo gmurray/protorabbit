@@ -38,7 +38,6 @@ import org.protorabbit.IEngine;
 import org.protorabbit.accelerator.CacheContext;
 import org.protorabbit.accelerator.ICacheable;
 import org.protorabbit.accelerator.impl.CacheableResource;
-import org.protorabbit.impl.DefaultEngine;
 import org.protorabbit.json.JSONUtil;
 import org.protorabbit.model.ITemplate;
 import org.protorabbit.util.IOUtil;
@@ -64,6 +63,7 @@ public class ProtoRabbitServlet extends HttpServlet {
 
     private String version = "0.5-dev c";
 
+    @SuppressWarnings("unchecked")
     public void init(ServletConfig cfg) throws ServletException {
 
             super.init(cfg);
@@ -228,12 +228,9 @@ public class ProtoRabbitServlet extends HttpServlet {
 
         if (id != null) {
             OutputStream out = resp.getOutputStream();
-            if (id.length() > 4) {
-                if(id.endsWith(".js")) {
-                    id = id.substring(0, id.length() - 3);
-                } else {
-                    id = id.substring(0, id.length() - 4);
-                }
+            int lastDot = id.lastIndexOf(".");
+            if (lastDot != -1) {
+                id = id.substring(0, lastDot);
             }
 
             ICacheable cr = jcfg.getCombinedResourceManager().getResource(id);

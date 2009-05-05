@@ -38,8 +38,6 @@ public class CombinedResourceManager {
 
     private String resourceService;
     
-    private Config cfg = null;
-
     private Hashtable<String, ICacheable> combinedResources = null;
 
     // in milliseconds
@@ -54,7 +52,6 @@ public class CombinedResourceManager {
             String resourceService,
             long maxTimeout ) {
 
-        this.cfg = cfg;
         this.resourceService = resourceService;
         this.maxTimeout = maxTimeout;
         combinedResources = new Hashtable<String, ICacheable>();
@@ -145,6 +142,7 @@ public class CombinedResourceManager {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public CacheableResource getScripts(List<ResourceURI>scriptResources, IContext ctx) throws IOException {
 
         CacheableResource scripts = new CacheableResource("text/javascript", maxTimeout, getHash(scriptResources));
@@ -172,7 +170,7 @@ public class CombinedResourceManager {
                 if (deferredScripts == null) {
                     deferredScripts = new ArrayList<String>();
                 }
-                String fragement = "<script>protorabbit.addDeferredScript('" + 
+                String fragement = "<script>protorabbit.addDeferredScript('" +
                                    baseURI + resource + "');</script>";
                 deferredScripts.add(fragement);
                 ri.setWritten(true);
@@ -190,7 +188,8 @@ public class CombinedResourceManager {
         return scripts;
     }
 
-    public CacheableResource getStyles(List<ResourceURI>styleResources, IContext ctx) throws IOException {
+    @SuppressWarnings("unchecked")
+	public CacheableResource getStyles(List<ResourceURI>styleResources, IContext ctx) throws IOException {
 
         CacheableResource styles = new CacheableResource("text/css", maxTimeout, getHash(styleResources));
         List<String> deferredScripts = (List<String>)ctx.getAttribute(IncludeCommand.DEFERRED_SCRIPTS);

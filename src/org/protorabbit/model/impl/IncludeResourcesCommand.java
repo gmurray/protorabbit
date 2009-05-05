@@ -14,11 +14,15 @@ package org.protorabbit.model.impl;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.Map;
 
+import org.json.JSONObject;
 import org.protorabbit.Config;
 import org.protorabbit.accelerator.CombinedResourceManager;
 import org.protorabbit.accelerator.ICacheable;
 import org.protorabbit.accelerator.impl.CacheableResource;
+import org.protorabbit.json.JSONSerializer;
+import org.protorabbit.json.SerializationFactory;
 import org.protorabbit.model.ITemplate;
 import org.protorabbit.util.IOUtil;
 
@@ -65,6 +69,7 @@ public class IncludeResourcesCommand extends BaseCommand {
 
             List<ResourceURI> scripts = t.getAllScripts(ctx);
             List<String> deferredScripts = (List<String>)ctx.getAttribute(IncludeCommand.DEFERRED_SCRIPTS);
+            Map<String, String> deferredProperties = (Map<String, String>)ctx.getAttribute(InsertCommand.DEFERRED_PROPERTIES);
             boolean hasDeferredScripts = false;
 
             if (!deferredWritten) {
@@ -75,7 +80,7 @@ public class IncludeResourcesCommand extends BaseCommand {
                     }
                 }
 
-                if ((hasDeferredScripts  || deferredScripts != null )) {
+                if ((hasDeferredScripts  || deferredScripts != null || deferredProperties != null)) {
                     writeDeferred(cfg, out, t);
                 }
            }
@@ -101,6 +106,18 @@ public class IncludeResourcesCommand extends BaseCommand {
                for (String s : deferredScripts) {
                    out.write(s.getBytes());
                }
+           }
+           if (deferredProperties != null) {
+               SerializationFactory factory = new SerializationFactory();
+               JSONSerializer js = factory.getInstance();
+               JSONObject jo = (JSONObject)js.serialize(deferredProperties);
+               String content = jo.toString();
+               String hash = IOUtil.generateHash(content);
+               CacheableResource cr = new CacheableResource("text/html", cfg.getResourceTimeout(), hash);
+               cr.setContent( new StringBuffer(content) );
+               crm.putResource(hash, cr);
+               out.write(("<script>protorabbit.addDeferredProperties('" + cfg.getResourceService() +
+                       "?resourceid=" + hash + ".json', '" + ctx.getTemplateId() +"');</script>").getBytes());
            }
         } else if ("styles".equals(target)) {
 
@@ -129,7 +146,7 @@ public class IncludeResourcesCommand extends BaseCommand {
                      out.write(uri.getBytes());
                } else if (hash != null){
                    String uri = "<script>protorabbit.addDeferredStyle('" + 
-                   cfg.getResourceService() + "?resourceid=" + hash +  ".css')</script>";
+                   cfg.getResourceService() + "?resourceid=" + hash + ".css')</script>";
                    out.write(uri.getBytes());
                }
             } else {

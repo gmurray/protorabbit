@@ -82,6 +82,7 @@ public class ControllerServlet extends HttpServlet {
       return null;
         
     }
+    @SuppressWarnings("unchecked")
     public void doPost(HttpServletRequest req, HttpServletResponse resp)
         throws IOException, javax.servlet.ServletException {
 
@@ -149,6 +150,7 @@ public class ControllerServlet extends HttpServlet {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String id = req.getParameter("id");
         if ("cart".equals(id)) {
