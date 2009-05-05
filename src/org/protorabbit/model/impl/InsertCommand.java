@@ -36,10 +36,10 @@ public class InsertCommand extends BaseCommand {
             }
             deferredProperties.put(p.getKey(),p.getValue());
             ctx.setAttribute(DEFERRED_PROPERTIES, deferredProperties);
-            String div = "<div id=\"" + ctx.getTemplateId() + "_" + p.getKey() + "\">" +
+            String span = "<span id=\"" + ctx.getTemplateId() + "_" + p.getKey() + "\">" +
                 ((p.getDeferContent() != null) ? p.getDeferContent().toString() : "") + 
-            "</div>"; 
-            out.write(div.getBytes());
+            "</span>"; 
+            out.write(span.getBytes());
         } else if (p != null) {
             out.write(p.getValue().getBytes());
         } else {
