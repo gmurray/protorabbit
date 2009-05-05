@@ -1,0 +1,21 @@
+{
+
+  "templates" : [
+     {
+      "id" : "yahoo-grid",
+      "template" : "templates/yahoo-2-column-base.html",   
+      "styles" : {
+        "libs" : [
+           { "url" : "http://yui.yahooapis.com/2.7.0/build/reset-fonts-grids/reset-fonts-grids.css" }
+         ]
+      },
+      "properties" : {
+          "title" :  { "type" : "string", "value" : "Welcome to Proto Rabbit with Yahoo Grid"},
+          "header" : { "type" : "include", "value" : "/header.html" },
+          "body" : {  "type" : "include", "value" : "/blueprints.html"},
+          "sidebar" : { "type" : "include", "value" : "/sidebar.html" },
+          "footer" : { "type" : "include", "value" : "/footer.html" } 
+      }
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+   "http://www.w3.org/TR/html4/strict.dtd">
+
+<html>
+  <head>
+   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <title><% insert('title') %></title>
+   <% includeResources('styles') %>
+ </head>
+
+<body>
+
+<div id="doc" class="yui-t6">
+    <div id="hd">
+       <div style="font-size:3em"><% insert('title') %></div>
+       <% include('header') %>
+    </div>
+    <div id="bd">
+
+        <!-- Preset Templates control the width and alignment of the two blocks (div.yui-b). -->
+        <!-- The wide column is wrapped in div#yui-main -->
+        <div id="yui-main">
+            <div class="yui-b">
+
+               <% include('body') %>
+            </div>
+        </div>
+
+        <!-- the unwrapped div.yui-b takes a fixed width and alignment based on the class of the top-level containing node -->
+        <div class="yui-b">
+          <% include('sidebar') %>
+        </div>
+        
+    </div>
+    <div id="ft">
+        <% include('footer') %>
+    </div>
+</div>
+   <% includeResources('scripts') %>
+</body>
+</html>
