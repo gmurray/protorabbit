@@ -23,7 +23,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import org.protorabbit.accelerator.CombinedResourceManager;
+import org.protorabbit.accelerator.ResourceManager;
 import org.protorabbit.model.ICommand;
 import org.protorabbit.model.IContext;
 import org.protorabbit.model.IProperty;
@@ -64,7 +64,7 @@ public class Config {
     boolean defaultCombineResources = false;
     boolean devMode = false;
 
-    CombinedResourceManager crm = null;
+    ResourceManager crm = null;
 
     long combinedResourceTimeout = 60 * 1000 + 60 * 24;
 
@@ -75,16 +75,16 @@ public class Config {
     public Config(String serviceURI, long maxAge ) {
         init();
         this.maxAge = maxAge;
-        crm = new CombinedResourceManager(this,
+        crm = new ResourceManager(this,
                 serviceURI,
                 getMaxAge());
     }
 
     public Config() {
         init();
-        crm = new CombinedResourceManager(this,
-                                          resourceService,
-                                         getMaxAge());
+        crm = new ResourceManager(this,
+                                  resourceService,
+                                  getMaxAge());
     }
 
     void init() {
@@ -175,7 +175,7 @@ public class Config {
         return (t != null);
     }
 
-    public CombinedResourceManager getCombinedResourceManager() {
+    public ResourceManager getCombinedResourceManager() {
         return crm;
     }
 
@@ -242,7 +242,7 @@ public class Config {
                 }
             }
         } catch (Exception e) {
-            getLogger().log(Level.SEVERE, "Error getting include file content for tempalte " +
+            getLogger().log(Level.SEVERE, "Error getting include file content for template " +
                             tid + " resource " + id + ".", e);
         }
 

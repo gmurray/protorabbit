@@ -5,6 +5,7 @@
       "id" : "private",
       "template" : "templates/private-template.html",
       "styles" : {
+        "combineResources" : true,
         "libs" : [
            { "url" : "lib/reset.css" },
            { "url" : "lib/typography.css" },

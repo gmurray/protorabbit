@@ -32,13 +32,15 @@ public interface IContext {
 
     public StringBuffer getResource(String baseDir, String name) throws IOException;
 
+    public Object parseExpression(String expression); 
+
     public boolean resourceExists(String name);
 
     public String getContextRoot();
 
-     public boolean isUpdated(String name, long lastUpdate);
+    public boolean isUpdated(String name, long lastUpdate);
      
-     public long getLastUpdated(String name);
+    public long getLastUpdated(String name);
 
-     public boolean uaTest(String test);
+    public boolean uaTest(String test);
 }

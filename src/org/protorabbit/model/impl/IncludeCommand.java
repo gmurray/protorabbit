@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.logging.Level;
 
 import org.protorabbit.Config;
-import org.protorabbit.accelerator.CombinedResourceManager;
+import org.protorabbit.accelerator.ResourceManager;
 import org.protorabbit.accelerator.impl.CacheableResource;
 import org.protorabbit.accelerator.impl.DeferredResource;
 import org.protorabbit.model.IProperty;
@@ -84,7 +84,7 @@ public class IncludeCommand extends BaseCommand {
             if (useThreadedDefer) {
                 hash  = IOUtil.generateHash(baseDir + resourceName);
                 resourceId = hash;
-                CombinedResourceManager crm = cfg.getCombinedResourceManager();
+                ResourceManager crm = cfg.getCombinedResourceManager();
                 long timeout = property.getTimeout();
                 DeferredResource dr = new DeferredResource(baseDir, resourceName, ctx, timeout);
                 crm.putResource(resourceId, dr);
@@ -96,7 +96,7 @@ public class IncludeCommand extends BaseCommand {
                 if (inc.getDeferContent() != null) {
                     deferContent = inc.getDeferContent();
                 }
-                CombinedResourceManager crm = cfg.getCombinedResourceManager();
+                ResourceManager crm = cfg.getCombinedResourceManager();
                 CacheableResource cr = new CacheableResource("text/html", inc.getTimeout(), hash);
                 cr.setContent( buff );
                 crm.putResource(resourceId, cr);

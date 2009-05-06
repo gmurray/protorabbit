@@ -3,10 +3,17 @@
   "templates" : [
    
     {
-     "gzip" : false,
-     "combineResources" : false,
+     "combineResources" : true,
      "id" : "welcome",
      "extends" : "blueprints-css",
+     "properties" : {
+           "title" : {"type" : "string", "value" : "Welcome to ProtoRabbit"},
+           "body" : { "type" : "include", "value" : "/main.html"}
+       }     
+    },
+    {
+     "id" : "deferred-load",
+     "extends" : "welcome",
      "scripts" : {
          "libs" : [
            { "url" : "/resources/js/test.js", "defer" : true, "timeout" : 5000 }
@@ -40,7 +47,7 @@
        }
     },
     {
-     "id" : "yahoo",
+     "id" : "external-content",
      "extends" : "blueprints-css-liquid",
      "timeout" : 5000,
      "styles" : {
@@ -50,7 +57,7 @@
      "properties" : {
            "title" : {"type" : "string", "value" : "External Include Test"},
            "message" : { "type" : "string", "value" : "I'm set to only update every 5 seconds."},
-           "body" : { "type" : "include", "value" : "http://yahoo.com", "defer" : true, "timeout" : 5000 }
+           "body" : { "type" : "include", "value" : "http://ebay.com", "defer" : true, "timeout" : 5000 }
        }
     }
   ]

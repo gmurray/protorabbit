@@ -46,4 +46,8 @@ public  abstract class BaseContext implements IContext {
     public String getTemplateId() {
         return templateId;
     }
+
+    public Object parseExpression(String expression) {
+        return getAttribute(expression);
+    }
 }

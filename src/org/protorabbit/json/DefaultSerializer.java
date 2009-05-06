@@ -92,20 +92,17 @@ public class DefaultSerializer implements JSONSerializer {
      * to get value.
      */
     public Object serializePOJO(Object pojo) {
-        
+
         Object[] args = {};
         HashMap<String, Object> map = new HashMap<String, Object>();
-        
+
         Method[] methods = pojo.getClass().getDeclaredMethods();
-        
+
         for (int i=0; i < methods.length;i++) {
             try {
                 Method m = methods[i];
                 if (Modifier.isPublic(m.getModifiers()) &&
                     m.getName().startsWith("get") && m.getName().length() > 3) {
-
-
-                
                     // change the case of the property from camelCase
                     String key = m.getName().substring(3,4).toLowerCase();
                     // get the rest of the name;
@@ -114,7 +111,7 @@ public class DefaultSerializer implements JSONSerializer {
                     }
                     Object value =  m.invoke(pojo, args);
                     map.put(key, value);
-                }        
+                }
             } catch (IllegalArgumentException e) {
                 e.printStackTrace();
             } catch (IllegalAccessException e) {
@@ -127,9 +124,8 @@ public class DefaultSerializer implements JSONSerializer {
         if (map.keySet().size() > 0) {
             return serialize(map);
         }
-        
+
         return JSONObject.NULL;
     }
-    
 
 }

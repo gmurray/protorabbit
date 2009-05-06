@@ -18,7 +18,7 @@ import java.util.Map;
 
 import org.json.JSONObject;
 import org.protorabbit.Config;
-import org.protorabbit.accelerator.CombinedResourceManager;
+import org.protorabbit.accelerator.ResourceManager;
 import org.protorabbit.accelerator.ICacheable;
 import org.protorabbit.accelerator.impl.CacheableResource;
 import org.protorabbit.json.JSONSerializer;
@@ -60,7 +60,7 @@ public class IncludeResourcesCommand extends BaseCommand {
         String target = params[0].toLowerCase();
 
         ITemplate t = cfg.getTemplate(ctx.getTemplateId());
-        CombinedResourceManager crm = cfg.getCombinedResourceManager();
+        ResourceManager crm = cfg.getCombinedResourceManager();
 
         boolean deferredWritten = (ctx.getAttribute(DEFERRED_WRITTEN) != null &&
                 ctx.getAttribute(DEFERRED_WRITTEN) == Boolean.TRUE);
@@ -86,7 +86,7 @@ public class IncludeResourcesCommand extends BaseCommand {
            }
            if (t.getCombineScripts() != null && t.getCombineScripts()) {
 
-                String hash = crm.processScripts(scripts, ctx, hasDeferredScripts);
+                String hash = crm.processScripts(scripts, ctx, hasDeferredScripts, out);
 
                 if (!hasDeferredScripts && hash != null) {
                     String uri = "<script src=\"" + 

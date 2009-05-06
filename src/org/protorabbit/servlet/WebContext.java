@@ -14,9 +14,13 @@ package org.protorabbit.servlet;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -26,6 +30,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.json.JSONObject;
 import org.protorabbit.Config;
 import org.protorabbit.model.impl.BaseContext;
 import org.protorabbit.util.IOUtil;
@@ -144,8 +149,82 @@ public class WebContext extends BaseContext {
                    return new StringBuffer(contents);
             } else {
                 // don't throw out the resource name to end user
-                Config.getLogger().log(Level.SEVERE, "Error  loading " + resourceName);
-                throw new IOException("Error  loading resource. Please notify the administrator that there was an issue.");
+                Config.getLogger().log(Level.SEVERE, "Error loading " + resourceName);
+                throw new IOException("Error loading resource. Please notify the administrator that there was an issue.");
+            }
+        }
+        return null;
+    }
+
+    /*
+     * 
+     * Parses a expression like request.user.name
+     * Which translates to : http servlet request.getAttribute("user").getName();
+     * 
+     * The scopes are: 
+     * 
+     * request - HttpServlet Request
+     * session - HttpSession
+     * context - ServletContext
+     * none - protorabbit context (similar to request) 
+     *
+     */
+    public Object parseExpression(String expression) {
+
+        String scope = null;
+        String[] path = {expression};
+        if (expression.indexOf(".") != -1) {
+            path = expression.split("\\.");
+        }
+        Object target = null;
+        if (path.length > 1) {
+            scope = path[0];
+            if ("request".equals(scope)) {
+                target = getRequest().getAttribute(path[1]);
+            } else if ("session".equals(scope) && getRequest().getSession() != null) {
+                target = getRequest().getSession().getAttribute(path[1]);
+            } else if ("context".equals(scope) && getRequest().getSession() != null) {
+                target = getRequest().getSession().getServletContext().getAttribute(path[1]);
+            } else {
+                target = getAttribute(expression);
+            }
+        } else {
+            target = getAttribute(expression);
+        }
+
+        int start = 1;
+        if (scope != null) {
+            start += 1;
+        }
+        // if there is anything below the scope and object
+        for (int i=start; target != null && i < path.length; i++) {
+            target = getObject(target, path[i]);
+        }
+
+        return target;
+    }
+
+    public Object getObject(Object pojo, String target) {
+        String getTarget = "get" + target.substring(0,1).toUpperCase() + target.substring(1);
+        Object[] args = {};
+        Method[] methods = pojo.getClass().getDeclaredMethods();
+
+        for (int i=0; i < methods.length;i++) {
+            try {
+                Method m = methods[i];
+                if (Modifier.isPublic(m.getModifiers()) &&
+                   ( m.getName().equals(getTarget) || 
+                     m.getName().equals(target))) {
+                    // change the case of the property from camelCase
+                    Object value =  m.invoke(pojo, args);
+                    return value;
+                }
+            } catch (IllegalArgumentException e) {
+                Config.getLogger().warning("Non Fatal Error looking up property : " + target + " on object " + pojo + " " + e);
+            } catch (IllegalAccessException e) {
+               Config.getLogger().warning("Non Fatal Error looking up property : " + target + " on object " + pojo + " " + e);
+            } catch (InvocationTargetException e) {
+                Config.getLogger().warning("Non Fatal Error looking up property : " + target + " on object " + pojo + " " + e);
             }
         }
         return null;
