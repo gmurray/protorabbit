@@ -16,6 +16,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -37,7 +38,6 @@ import org.protorabbit.util.IOUtil;
 public class ResourceManager {
 
     private String resourceService;
-    
     private Hashtable<String, ICacheable> combinedResources = null;
 
     // in milliseconds
@@ -55,6 +55,33 @@ public class ResourceManager {
         this.maxTimeout = maxTimeout;
         combinedResources = new Hashtable<String, ICacheable>();
 
+    }
+
+    /*
+     * 
+     * Reset resources that have exceeded their max timeout and
+     * remove objects that have exceeded the threshhold.
+     * 
+     */
+    public void cleanup(long threshhold) {
+        Iterator<String> it = combinedResources.keySet().iterator();
+        long now = (new Date()).getTime();
+        while (it.hasNext()){
+            String key = it.next();
+            ICacheable c = combinedResources.get(key);
+            long diff = c.getLastAccessed() - now;
+            // don't delete it if it is loading
+            if (c.isLoaded() &&
+                (diff > c.getTimeout() ||
+                diff > threshhold)) {
+                
+                if (diff > threshhold) {
+                	combinedResources.remove(key);
+                } else {
+                	c.reset();
+                }
+            }
+        }
     }
 
     public String getResourceService() {
@@ -193,7 +220,7 @@ public class ResourceManager {
     }
 
     @SuppressWarnings("unchecked")
-	public CacheableResource getStyles(List<ResourceURI>styleResources, IContext ctx, OutputStream out) throws IOException {
+    public CacheableResource getStyles(List<ResourceURI>styleResources, IContext ctx, OutputStream out) throws IOException {
 
         CacheableResource styles = new CacheableResource("text/css", maxTimeout, getHash(styleResources));
         List<String> deferredScripts = (List<String>)ctx.getAttribute(IncludeCommand.DEFERRED_SCRIPTS);

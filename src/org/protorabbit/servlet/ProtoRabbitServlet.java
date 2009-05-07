@@ -19,6 +19,7 @@ import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.logging.Level;
@@ -57,16 +58,24 @@ public class ProtoRabbitServlet extends HttpServlet {
     private String engineClassName = "org.protorabbit.impl.DefaultEngine";
     private String defaultTemplateURI = "/WEB-INF/templates.json";
     private String serviceURI = "prt";
+
     private long maxAge = 1225000;
     private int maxTries = 300;
     private long tryTimeout = 20;
 
-    private String version = "0.5-dev c";
+    private long cleanupTimeout = 60000;
+    private long lastCleanup = -1;
+
+    private String version = "0.5-dev";
 
     @SuppressWarnings("unchecked")
     public void init(ServletConfig cfg) throws ServletException {
 
             super.init(cfg);
+
+            // set the lastCleanup to current
+            lastCleanup = (new Date()).getTime();
+
             Config.getLogger().info("Protorabbit version : " + version);
             lastUpdated = new HashMap<String, Long>();
             this.ctx = cfg.getServletContext();
@@ -199,6 +208,91 @@ public class ProtoRabbitServlet extends HttpServlet {
         }
     }
 
+    /*
+     * Process a request for an external resource
+     */
+    void processResourceRequest(String id, WebContext wc,
+                                HttpServletRequest req,
+                                HttpServletResponse resp,
+                                boolean canGzip) throws IOException {
+
+        OutputStream out = resp.getOutputStream();
+        int lastDot = id.lastIndexOf(".");
+        if (lastDot != -1) {
+            id = id.substring(0, lastDot);
+        }
+
+        ICacheable cr = jcfg.getCombinedResourceManager().getResource(id);
+
+        if (cr == null) {
+            Config.getLogger().severe("could not find resource " + id);
+        }
+
+        if (cr != null) {
+            CacheContext cc = cr.getCacheContext();
+            if (cc.isExpired() || cr.getContent() == null) {
+                if (jcfg.getGzip() && canGzip && cr.gzipResources()) {
+                    resp.setHeader("Content-Encoding", "gzip");
+                    cr.refresh(wc);
+                }
+            }
+            // wait for the resource to load
+            int tries = 0;
+            while ((cr.getStatus() != 200) && tries < maxTries) {
+                try {
+                    Thread.sleep(tryTimeout);
+                } catch (InterruptedException e) {
+                }
+                tries += 1;
+            }
+            if (cr.getStatus() != 200) {
+                resp.sendError(HttpServletResponse.SC_REQUEST_TIMEOUT);
+                return;
+            }
+            if (cr.getContentType() != null) {
+                resp.setContentType(cr.getContentType());
+            }
+
+            String etag = cr.getContentHash();
+            // get the If-None-Match header
+            String ifNoneMatch = req.getHeader("If-None-Match");
+            if (etag != null &&
+                ifNoneMatch != null && 
+                ifNoneMatch.equals(etag)) {
+                resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
+            }
+            if (etag != null) {
+                resp.setHeader("ETag", etag);
+            }
+            resp.setHeader("Expires", cc.getExpires());
+            resp.setHeader("Cache-Control", "public,max-age=" + cc.getMaxAge());
+
+            if (jcfg.getGzip() && canGzip && cr.gzipResources()) {
+                resp.setHeader("Content-Encoding", "gzip");
+                byte[] bytes = cr.getGZippedContent();
+                if (bytes != null) {
+                    ByteArrayInputStream bis = new ByteArrayInputStream(
+                            bytes);
+                    IOUtil.writeBinaryResource(bis, out);
+                }
+            } else {
+                resp.setHeader("Content-Type", cr.getContentType());
+                out.write(cr.getContent().toString().getBytes());
+            }
+
+        } else {
+            Config.getLogger().warning("resource " + id +
+                    " requested but not found.");
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        long now = (new Date()).getTime();
+        if (now - lastCleanup > cleanupTimeout) {
+            Config.getLogger().info("Cleaning up old Objects");
+            jcfg.getCombinedResourceManager().cleanup(maxAge);
+        }
+    }
+
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
                         throws IOException, javax.servlet.ServletException {
         doGet(req,resp);
@@ -227,76 +321,8 @@ public class ProtoRabbitServlet extends HttpServlet {
         String id = req.getParameter("resourceid");
 
         if (id != null) {
-            OutputStream out = resp.getOutputStream();
-            int lastDot = id.lastIndexOf(".");
-            if (lastDot != -1) {
-                id = id.substring(0, lastDot);
-            }
-
-            ICacheable cr = jcfg.getCombinedResourceManager().getResource(id);
-
-            if (cr == null) {
-                Config.getLogger().severe("could not find resource " + id);
-            }
-
-            if (cr != null) {
-                CacheContext cc = cr.getCacheContext();
-                if (cc.isExpired() || cr.getContent() == null) {
-                    if (jcfg.getGzip() && canGzip && cr.gzipResources()) {
-                        resp.setHeader("Content-Encoding", "gzip");
-                        cr.refresh(wc);
-                    }
-                }
-                // wait for the resource to load
-                int tries = 0;
-                while ((cr.getStatus() != 200) && tries < maxTries) {
-                    try {
-                        Thread.sleep(tryTimeout);
-                    } catch (InterruptedException e) {
-                    }
-                    tries += 1;
-                }
-                if (cr.getStatus() != 200) {
-                    resp.sendError(HttpServletResponse.SC_REQUEST_TIMEOUT);
-                    return;
-                }
-                if (cr.getContentType() != null) {
-                    resp.setContentType(cr.getContentType());
-                }
-
-                String etag = cr.getContentHash();
-                // get the If-None-Match header
-                String ifNoneMatch = req.getHeader("If-None-Match");
-                if (etag != null &&
-                    ifNoneMatch != null && 
-                    ifNoneMatch.equals(etag)) {
-                    resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
-                }
-                if (etag != null) {
-                    resp.setHeader("ETag", etag);
-                }
-                resp.setHeader("Expires", cc.getExpires());
-                resp.setHeader("Cache-Control", "public,max-age=" + cc.getMaxAge());
-
-                if (jcfg.getGzip() && canGzip && cr.gzipResources()) {
-                    resp.setHeader("Content-Encoding", "gzip");
-                    byte[] bytes = cr.getGZippedContent();
-                    if (bytes != null) {
-                        ByteArrayInputStream bis = new ByteArrayInputStream(
-                                bytes);
-                        IOUtil.writeBinaryResource(bis, out);
-                    }
-                } else {
-                    resp.setHeader("Content-Type", cr.getContentType());
-                    out.write(cr.getContent().toString().getBytes());
-                }
-                return;
-            } else {
-                Config.getLogger().warning("resource " + id
-                        + " requested but not found.");
-                resp.sendError(HttpServletResponse.SC_NOT_FOUND);
-                return;
-            }
+            processResourceRequest(id, wc, req, resp, canGzip);
+            return;
         }
 
         String servletPath = req.getServletPath();

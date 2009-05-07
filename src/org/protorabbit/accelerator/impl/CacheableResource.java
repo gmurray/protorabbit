@@ -1,7 +1,9 @@
 package org.protorabbit.accelerator.impl;
 
 import java.io.IOException;
+import java.util.Date;
 
+import org.protorabbit.Config;
 import org.protorabbit.accelerator.CacheContext;
 import org.protorabbit.accelerator.ICacheable;
 import org.protorabbit.model.IContext;
@@ -26,12 +28,16 @@ public class CacheableResource implements ICacheable {
     protected String contentHash;
     private int status = -1;
 
+    private long lastAccessed = -1;
+    private long timeout = -1;
+
     public CacheableResource() {}
 
     public CacheableResource(String contentType,
                             long maxAge,
                             String hash) {
 
+        this.setTimeout(maxAge);
         this.contentType =  contentType;
         this.content = new StringBuffer();
         this.contentHash = hash;
@@ -59,8 +65,10 @@ public class CacheableResource implements ICacheable {
     public void reset() {
         setLoaded(false);
         status = -1;
+        lastAccessed = -1;
         this.content = new StringBuffer();
         this.gzippedContent = null;
+        Config.getLogger().info("Resetting " + hash);
         cc.reset();
     }
 
@@ -105,6 +113,8 @@ public class CacheableResource implements ICacheable {
      * @see org.protorabbit.accelerator.ICacheable#getContent()
      */
     public StringBuffer getContent() {
+        Date now = new Date();
+        setLastAccessed(now.getTime());
         return content;
     }
 
@@ -128,6 +138,8 @@ public class CacheableResource implements ICacheable {
             gzippedContent = IOUtil.getGZippedContent(getContent().toString().getBytes());
 
         }
+        Date now = new Date();
+        setLastAccessed(now.getTime());
         return gzippedContent;
     }
 
@@ -155,5 +167,21 @@ public class CacheableResource implements ICacheable {
 
     public int getStatus() {
         return status;
+    }
+
+    public void setLastAccessed(long lastAccessed) {
+        this.lastAccessed = lastAccessed;
+    }
+
+    public long getLastAccessed() {
+        return lastAccessed;
+    }
+
+    public void setTimeout(long timeout) {
+        this.timeout = timeout;
+    }
+
+    public long getTimeout() {
+        return timeout;
     }
 }

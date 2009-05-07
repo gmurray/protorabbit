@@ -19,6 +19,8 @@ public interface ICacheable {
 
     public boolean gzipResources();
 
+    public long getTimeout();
+
     public void setGzipResources(boolean gzip);
 
     public void reset();
@@ -42,11 +44,14 @@ public interface ICacheable {
     public void setLoaded(boolean loaded);
 
     public boolean isLoaded();
-    
+
     public void refresh(IContext ctx);
-    
+
     public int getStatus();
-    
+
     public void setStatus(int status);
 
+    public void setLastAccessed(long lastAccessed);
+
+    public long getLastAccessed();
 }
