@@ -5,7 +5,6 @@
   <property file="build.properties"/>
   <property file="${user.home}/build.properties"/>
 
-  <property name="version" value="0.5.0"/>
   <property name="src.web" value="${basedir}/web"/>
   <property name="dist.dir" value="${basedir}/dist"/>
   <property name="build.dir" value="${basedir}/build"/>

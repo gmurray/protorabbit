@@ -29,7 +29,7 @@ import org.protorabbit.util.IOUtil;
 public class IncludeResourcesCommand extends BaseCommand {
 
     public static String DEFERRED_WRITTEN = "deferredWritten";
-    
+
     private String protorabbitClient = "resources/protorabbit.js";
 
     private void writeDeferred(Config cfg, OutputStream out, ITemplate t) throws IOException {
@@ -98,10 +98,10 @@ public class IncludeResourcesCommand extends BaseCommand {
                               "?resourceid=" + hash + ".js');</script>").getBytes());
                }
 
-            } else {
+           } else {
                 String tFile = cfg.getResourceReferences(ctx.getTemplateId(), params[0], ctx);
                 out.write(tFile.getBytes());
-            }
+           }
            if (deferredScripts != null) {
                for (String s : deferredScripts) {
                    out.write(s.getBytes());

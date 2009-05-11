@@ -43,9 +43,9 @@ import org.protorabbit.json.JSONUtil;
 import org.protorabbit.model.ITemplate;
 import org.protorabbit.util.IOUtil;
 
-@SuppressWarnings("serial")
 public class ProtoRabbitServlet extends HttpServlet {
 
+    private static final long serialVersionUID = -3786248493378026969L;
     private ServletContext ctx;
     private Config jcfg;
     private boolean isDevMode = false;
@@ -66,7 +66,7 @@ public class ProtoRabbitServlet extends HttpServlet {
     private long cleanupTimeout = 60000;
     private long lastCleanup = -1;
 
-    private String version = "0.5-dev";
+    private String version = "0.6-dev";
 
     @SuppressWarnings("unchecked")
     public void init(ServletConfig cfg) throws ServletException {
@@ -370,7 +370,7 @@ public class ProtoRabbitServlet extends HttpServlet {
             // headers after this point do not get written
             engine.renderTemplate(id, jcfg, bos, wc);
 
-            String content = bos.toString("UTF8");
+            String content = bos.toString(jcfg.getEncoding());
             String hash = IOUtil.generateHash(content);
             ICacheable cr = new CacheableResource("text/html", t.getTimeout(), hash);
             resp.setHeader("ETag", cr.getContentHash());

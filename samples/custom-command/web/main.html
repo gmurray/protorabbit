@@ -1,12 +1,11 @@
 <div style="padding:1em">
-	
 <p>
- 
+
   This page is build using a simple template file found at <code>WEB-INF/page-templates/base-page.html</code> which
   contains a custom action <code>mycommand.HelloCommand</code>
   
   The source for the command is :
-  
+
 </p>
 
 <pre>
@@ -19,17 +18,17 @@ import org.protorabbit.model.impl.BaseCommand;
 
 public class HelloCommand extends BaseCommand {
 
-	@Override
-	public void doProcess(OutputStream out) throws IOException {
-		
-		String message = "hello ";
-		
-		if (params.length > 0) {
-			message += params[0];
-		}
-		out.write(message.getBytes());
-		
-	}
+    @Override
+    public void doProcess(OutputStream out) throws IOException {
+        
+        String message = "hello ";
+        
+        if (params.length > 0) {
+            message += params[0];
+        }
+        out.write(message.getBytes());
+        
+    }
 
 }
 </pre>

@@ -28,11 +28,11 @@ import org.protorabbit.model.ICommand;
 import org.protorabbit.model.IContext;
 import org.protorabbit.model.IProperty;
 import org.protorabbit.model.ITemplate;
-import org.protorabbit.model.impl.IncludeCommand;
 import org.protorabbit.model.impl.IncludeFile;
 import org.protorabbit.model.impl.PropertyImpl;
 import org.protorabbit.model.impl.ResourceURI;
 import org.protorabbit.model.impl.TemplateImpl;
+import org.protorabbit.model.impl.URIResourceManager;
 
 public class Config {
 
@@ -249,6 +249,56 @@ public class Config {
         return null;
     }
 
+    static void processURIResources(int type, JSONObject bsjo, ITemplate temp,
+            String baseURI) throws JSONException {
+
+        List<ResourceURI> refs = null;
+        refs = new ArrayList<ResourceURI>();
+
+        if (bsjo.has("libs")) {
+
+            JSONArray ja = bsjo.getJSONArray("libs");
+
+            for (int j = 0; j < ja.length(); j++) {
+
+                JSONObject so = ja.getJSONObject(j);
+                String url = so.getString("url");
+                if (url.startsWith("/") || url.startsWith("http")) {
+                    baseURI = "";
+                }
+                ResourceURI ri = new ResourceURI(url, baseURI, type);
+                if (so.has("id")) {
+                    ri.setId(so.getString("id"));
+                }
+                if (so.has("uaTest")) {
+                    ri.setUATest(so.getString("uaTest"));
+                }
+                if (so.has("defer")) {
+                    ri.setDefer(so.getBoolean("defer"));
+                }
+                refs.add(ri);
+            }
+        }
+        Boolean combine = null;
+        if (bsjo.has("combineResources")) {
+            combine = bsjo.getBoolean("combineResources");
+        }
+        Boolean lgzip = null;
+        if (bsjo.has("gzip")) {
+            lgzip = bsjo.getBoolean("gzip");
+        }
+
+        if (type == ResourceURI.SCRIPT) {
+            temp.setCombineScripts(combine);
+            temp.setGzipScripts(lgzip);
+            temp.setScripts(refs);
+        } else if (type == ResourceURI.LINK) {
+            temp.setGzipStyles(lgzip);
+            temp.setStyles(refs);
+            temp.setCombineStyles(combine);
+        }
+    }
+
     @SuppressWarnings("unchecked")
     public void registerTemplates(JSONArray templates, String baseURI) {
 
@@ -317,7 +367,7 @@ public class Config {
                 if (t.has("scripts")) {
 
                     JSONObject bsjo = t.getJSONObject("scripts");
-                    
+
                     processURIResources(ResourceURI.SCRIPT,
                                         bsjo,
                                         temp,
@@ -394,58 +444,6 @@ public class Config {
         }
     }
 
-    private void processURIResources(int type,
-                                JSONObject bsjo,
-                                ITemplate temp,
-                                String baseURI) throws JSONException {
-
-            List<ResourceURI> refs = null;
-            refs = new ArrayList<ResourceURI>();
-
-            if (bsjo.has("libs")) {
-
-                JSONArray ja = bsjo.getJSONArray("libs");
-
-                for (int j=0; j < ja.length(); j++) {
-
-                    JSONObject so = ja.getJSONObject(j);
-                    String url = so.getString("url");
-                    if (url.startsWith("/") || url.startsWith("http")) {
-                        baseURI = "";
-                    }
-                    ResourceURI ri = new ResourceURI(url , baseURI, type);
-                    if (so.has("id")) {
-                        ri.setId(so.getString("id"));
-                    }
-                    if (so.has("uaTest")) {
-                        ri.setUATest(so.getString("uaTest"));
-                    }
-                    if (so.has("defer")) {
-                        ri.setDefer(so.getBoolean("defer"));
-                    }
-                    refs.add(ri);
-                }
-            }
-            Boolean combine = null;
-            if (bsjo.has("combineResources")) {
-                combine = bsjo.getBoolean("combineResources");
-            } 
-            Boolean lgzip = null;
-            if (bsjo.has("gzip")) {
-                lgzip = bsjo.getBoolean("gzip");
-            }
-
-            if (type == ResourceURI.SCRIPT) {
-                temp.setCombineScripts(combine);
-                temp.setGzipScripts(lgzip);
-                temp.setScripts(refs);
-            } else if (type == ResourceURI.LINK) {
-                temp.setGzipStyles(lgzip);
-                temp.setStyles(refs);
-                temp.setCombineStyles(combine);
-            }
-    }
-
     public ITemplate getTemplate(String id) {
         if (tmap.containsKey(id)) {
             return tmap.get(id);
@@ -455,74 +453,14 @@ public class Config {
 
     public String generateScriptReferences(ITemplate template, IContext ctx) {
         List<ResourceURI> scripts = template.getAllScripts(ctx);
-        return generateReferences(template,ctx,scripts, ResourceURI.SCRIPT);
+        return URIResourceManager.generateReferences(template,ctx,scripts, ResourceURI.SCRIPT);
     }
 
     public String generateStyleReferences(ITemplate template, IContext ctx) {
         List<ResourceURI> styles = template.getAllStyles(ctx);
-        return generateReferences(template, ctx, styles, ResourceURI.LINK);
+        return URIResourceManager.generateReferences(template, ctx, styles, ResourceURI.LINK);
     }
 
-    @SuppressWarnings("unchecked")
-    public String generateReferences(ITemplate template, IContext ctx, List<ResourceURI> resources, int type) {
-        String buff = "";
-
-            if (resources != null) {
-                List<String> deferredScripts = (List<String>)ctx.getAttribute(IncludeCommand.DEFERRED_SCRIPTS);
-                Iterator<ResourceURI> it = resources.iterator();
-                while (it.hasNext()) {
-
-                    ResourceURI ri = it.next();
-                    if (ri.isWritten()) continue;
-                    String resource = ri.getUri();
-                    String baseURI =  ctx.getContextRoot();
-
-                    if (!ri.isExternal()){
-                        // map to root
-                        if (resource.startsWith("/")) {
-                            baseURI = ctx.getContextRoot();
-                        } else {
-                           baseURI +=  ri.getBaseURI();
-                        }
-                    } else {
-                        baseURI = "";
-                    }
-                    if (type == ResourceURI.SCRIPT) {
-                        if (ri.isDefer()) {
-                            if (deferredScripts == null) {
-                                deferredScripts = new ArrayList<String>();
-                            }
-                            String fragement = "<script>protorabbit.addDeferredScript('" +
-                                     baseURI + resource + "');</script>";
-                            deferredScripts.add(fragement);
-                            ri.setWritten(true);
-                            ctx.setAttribute(IncludeCommand.DEFERRED_SCRIPTS, deferredScripts);
-                        } else {
-                            buff += "<script type=\"text/javascript\" src=\"" + baseURI + resource + "\"></script>\n";
-                        }
-                    } else if (type == ResourceURI.LINK) {
-                        String mediaType = ri.getMediaType();
-                        if (mediaType == null){
-                            mediaType = defaultMediaType;
-                        }
-                        if (ri.isDefer()) {
-                            if (deferredScripts == null) {
-                                deferredScripts = new ArrayList<String>();
-                            }
-                            String fragement = "<script>protorabbit.addDeferredStyle('" +
-                                                baseURI + resource  + "', '" + mediaType + "');</script>";
-                            deferredScripts.add(fragement);
-                            ri.setWritten(true);
-                            ctx.setAttribute(IncludeCommand.DEFERRED_SCRIPTS, deferredScripts);
-
-                        } else {
-                            buff += "<link rel=\"stylesheet\" type=\"text/css\"  href=\"" + baseURI + resource + "\" media=\"" + mediaType + "\" />\n";
-                        }
-                    }
-                }
-            }
-            return buff;
-    }
 
     public String getTemplateURI(JSONObject template) {
         if (template.has("template")) {
@@ -558,7 +496,6 @@ public class Config {
             if (p != null) {
                 return p;
             }
-
         }
         return null;
     }
@@ -590,7 +527,7 @@ public class Config {
         this.resourceTimeout = resourceTimeout;
     }
 
-    public String mediaType() {
+    public String getMediaType() {
         return defaultMediaType;
     }
 

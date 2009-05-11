@@ -15,16 +15,16 @@ public class SerializationFactory {
 
     public static String DEFAULT_SERIALIZER = "org.protorabbit.json.DefaultSerializer";
     private String factoryClass = DEFAULT_SERIALIZER;
-    
+
     private JSONSerializer serializer = null;
-    
+
     public SerializationFactory() {
     }
 
     public SerializationFactory(String factoryClass) {
         this.factoryClass = factoryClass;
     }
-    
+
     public JSONSerializer getInstance() {
         if (serializer == null) {
             try {

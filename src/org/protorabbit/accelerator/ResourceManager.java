@@ -243,7 +243,7 @@ public class ResourceManager {
                 baseURI = "";
             }
             if (mediaType == null){
-                mediaType = ctx.getConfig().mediaType();
+                mediaType = ctx.getConfig().getMediaType();
             }
             if (ri.isDefer()) {
                 if (deferredScripts == null) {

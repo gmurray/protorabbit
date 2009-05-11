@@ -34,10 +34,10 @@ public class DefaultSerializer implements JSONSerializer {
 
             return JSONObject.NULL;
         }
-        
+
         // collections
         if (Collection.class.isAssignableFrom(o.getClass())) {
-            
+
             Iterator<?> it =  ((Collection<?>)o).iterator();
         
             JSONArray ja = new JSONArray();
@@ -74,7 +74,7 @@ public class DefaultSerializer implements JSONSerializer {
             o instanceof Boolean) {
             return o;
         }
-        
+
         if (o instanceof Date) {
             return ((Date)o).getTime();
         }

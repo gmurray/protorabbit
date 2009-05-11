@@ -27,7 +27,7 @@ public class ControllerServlet extends HttpServlet {
 
     private static final long serialVersionUID = 5372835715115785622L;
     public static final String CART = "petstore.CART";
-	private static Logger logger;
+    private static Logger logger;
 
     public JSONObject catalog = null;
 
@@ -78,10 +78,11 @@ public class ControllerServlet extends HttpServlet {
                 }
             }
         }
-        
+
       return null;
-        
+
     }
+
     @SuppressWarnings("unchecked")
     public void doPost(HttpServletRequest req, HttpServletResponse resp)
         throws IOException, javax.servlet.ServletException {
