@@ -290,6 +290,7 @@ public class ProtoRabbitServlet extends HttpServlet {
         if (now - lastCleanup > cleanupTimeout) {
             Config.getLogger().info("Cleaning up old Objects");
             jcfg.getCombinedResourceManager().cleanup(maxAge);
+            lastCleanup = now;
         }
     }
 
