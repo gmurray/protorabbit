@@ -61,6 +61,11 @@ public class IncludeCommand extends BaseCommand {
                     return;
                 }
             }
+            if (property.getTest() != null) {
+                if (ctx.test(property.getTest()) == false) {
+                    return;
+                }
+            }
             resourceName = property.getValue();
 
             baseDir = "";

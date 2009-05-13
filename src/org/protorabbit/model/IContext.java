@@ -43,4 +43,6 @@ public interface IContext {
     public long getLastUpdated(String name);
 
     public boolean uaTest(String test);
+
+    public boolean test(String test);
 }

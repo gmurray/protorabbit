@@ -66,4 +66,9 @@ public class FileSystemContext extends BaseContext {
         return true;
     }
 
+    public boolean test(String test) {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
 }

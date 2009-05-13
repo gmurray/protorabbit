@@ -11,8 +11,10 @@
 
 package org.protorabbit.model;
 
-public interface IUATestable {
+public interface ITestable {
 
+    public String getTest();
+    public void setTest(String test);
     public String getUATest();
     public void setUATest(String test);
 }

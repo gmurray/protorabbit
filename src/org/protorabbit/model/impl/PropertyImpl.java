@@ -13,6 +13,7 @@ package org.protorabbit.model.impl;
 
 import org.protorabbit.model.IProperty;
 
+
 public class PropertyImpl implements IProperty {
 
     private String baseURI = null;
@@ -23,7 +24,8 @@ public class PropertyImpl implements IProperty {
     private long timeout = 0;
     private String test = null;
     private boolean defer;
-    private StringBuffer deferContent;
+    private StringBuffer deferContent = null;
+    private String uaTest = null;
 
     public PropertyImpl(String key, String value, int type, String baseURI, String originalTemplate) {
         this.key = key;
@@ -65,11 +67,11 @@ public class PropertyImpl implements IProperty {
         this.timeout = timeout;
     }
 
-    public String getUATest() {
+    public String getTest() {
         return test;
     }
 
-    public void setUATest(String t) {
+    public void setTest(String t) {
         this.test = t;
     }
 
@@ -87,5 +89,13 @@ public class PropertyImpl implements IProperty {
 
     public StringBuffer getDeferContent() {
         return deferContent;
+    }
+
+    public String getUATest() {
+        return uaTest ;
+    }
+
+    public void setUATest(String test) {
+        this.uaTest = test;
     }
 }

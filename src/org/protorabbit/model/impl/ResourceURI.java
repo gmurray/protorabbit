@@ -12,9 +12,9 @@
 package org.protorabbit.model.impl;
 
 import org.protorabbit.model.IContext;
-import org.protorabbit.model.IUATestable;
+import org.protorabbit.model.ITestable;
 
-public class ResourceURI implements IUATestable {
+public class ResourceURI implements ITestable {
 
     public static final int SCRIPT = 1;
     public static final int LINK = 2;
@@ -33,6 +33,7 @@ public class ResourceURI implements IUATestable {
     private int loadIndex;
     private boolean defer = false;
     private long lastUpdated = -1;
+    private String uaTest = null;
 
     public ResourceURI(String uri, String baseURI, int type) {
         this.uri = uri;
@@ -122,11 +123,11 @@ public class ResourceURI implements IUATestable {
         return baseURI + uri;
     }
 
-    public String getUATest() {
+    public String getTest() {
         return test ;
     }
 
-    public void setUATest(String test) {
+    public void setTest(String test) {
         this.test = test;
     }
 
@@ -152,5 +153,13 @@ public class ResourceURI implements IUATestable {
 
     public boolean isUpdated(IContext ctx) {
         return ctx.isUpdated(getFullURI(), lastUpdated);
+    }
+
+    public String getUATest() {
+        return this.uaTest;
+    }
+
+    public void setUATest(String test) {
+        this.uaTest = test;
     }
 }

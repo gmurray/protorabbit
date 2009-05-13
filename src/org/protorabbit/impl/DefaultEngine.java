@@ -150,7 +150,7 @@ public class DefaultEngine implements IEngine {
 
         Config.getLogger().info("\n\nRender time for 3 templates=" + (stopTime - postConfigTime) + "ms");
     }
-    
+
     /*
      * A command looks like 
      * 

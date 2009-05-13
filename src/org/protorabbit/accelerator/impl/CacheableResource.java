@@ -147,7 +147,7 @@ public class CacheableResource implements ICacheable {
      * @see org.protorabbit.accelerator.ICacheable#getContentHash()
      */
     public String getContentHash() {
-        if (contentHash == null) {
+        if (contentHash == null && content != null) {
             contentHash = IOUtil.generateHash(content.toString());
         }
         return contentHash;

@@ -28,11 +28,28 @@ public class InsertCommand extends BaseCommand {
     public void doProcess(OutputStream out) throws IOException {
 
         Config cfg = ctx.getConfig();
-        IProperty p = cfg.getContent(ctx.getTemplateId(), params[0], ctx);
-
-
-        String value = p.getValue();
-        int current = value.indexOf("${");
+        IProperty p = cfg.getProperty(ctx.getTemplateId(), params[0], ctx);
+        boolean valid = true;
+        if (p.getTest() != null) {
+            valid = ctx.test(p.getTest());
+        }
+        if (p.getUATest() != null) {
+            valid = ctx.test(p.getUATest());
+        }
+        if (!valid) {
+            return;
+        }
+        String value = null;
+        if (p != null) {
+            value = p.getValue();
+        } else {
+            Config.getLogger().warning("Non fatal error : null property " + params[0] + " processing template " + ctx.getTemplateId());
+            return;
+        }
+        int current = -1;
+        if (value != null) {
+            current = value.indexOf("${");
+        }
         /*
          *  Write out any expressions - need to optimize this block
          */

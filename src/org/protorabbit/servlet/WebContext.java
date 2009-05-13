@@ -20,6 +20,7 @@ import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Collection;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -233,9 +234,54 @@ public class WebContext extends BaseContext {
     }
 
     /*
-     * Test wether an expression matches the user agent
-     * (non-Javadoc)
-     * @see org.protorabbit.model.IContext#uaTest(java.lang.String)
+     * Test whether an expression matches the user agent
+     */
+    public boolean test(String test) {
+        boolean notTest = false;
+        boolean matches = false;
+        Object lvalue = null;
+        Object rvalue = null;
+
+        int equalStart = test.indexOf("==");
+        int notEqualStart = test.indexOf("!=");
+
+        // we are an equal test
+        if (equalStart != -1) {
+            lvalue = findValue(test.substring(0, equalStart));
+            rvalue = findValue(test.substring(equalStart+2));
+        } else if (notEqualStart != -1){
+            notTest = true;
+            lvalue = findValue(test.substring(0, notEqualStart));
+            rvalue = findValue(test.substring(notEqualStart+2));
+        }
+
+        if (lvalue != null && rvalue != null &&
+            String.class.isAssignableFrom(lvalue.getClass())) {
+            if (String.class.isAssignableFrom(rvalue.getClass())) {
+                matches = ((String)lvalue).equals((String)rvalue);
+            }
+        } else if (lvalue != null && rvalue != null &&
+                Boolean.class.isAssignableFrom(lvalue.getClass())) {
+            if (Boolean.class.isAssignableFrom(rvalue.getClass())) {
+                matches = ((Boolean)lvalue).equals((Boolean)rvalue);
+            }
+        } else if (lvalue != null && rvalue != null &&
+                Number.class.isAssignableFrom(lvalue.getClass())) {
+            if (Number.class.isAssignableFrom(rvalue.getClass())) {
+                matches = ((Number)lvalue).byteValue() == ((Number)rvalue).byteValue();
+            }
+        } else {
+            matches = (lvalue == rvalue);
+        }
+        if (notTest) {
+            return (!matches);
+        } else {
+            return matches;
+        }
+    }
+
+    /*
+     * Test whether an expression matches the user agent
      */
     public boolean uaTest(String test) {
         boolean matches = false;

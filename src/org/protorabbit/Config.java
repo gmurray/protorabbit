@@ -211,6 +211,11 @@ public class Config {
                         return null;
                     }
                 }
+                if (prop.getTest() != null) {
+                    if (ctx.test(prop.getTest()) == false) {
+                        return null;
+                    }
+                }
                 String includeFile = prop.getValue();
 
                 String tBase = "";
@@ -272,6 +277,9 @@ public class Config {
                 }
                 if (so.has("uaTest")) {
                     ri.setUATest(so.getString("uaTest"));
+                }
+                if (so.has("test")) {
+                    ri.setTest(so.getString("test"));
                 }
                 if (so.has("defer")) {
                     ri.setDefer(so.getBoolean("defer"));
@@ -417,6 +425,9 @@ public class Config {
                         if (so.has("uaTest")) {
                             pi.setUATest(so.getString("uaTest"));
                         }
+                        if (so.has("test")) {
+                            pi.setTest(so.getString("test"));
+                        }
                         if (so.has("defer")) {
                             pi.setDefer(so.getBoolean("defer"));
                         }
@@ -488,16 +499,13 @@ public class Config {
         return null;
     }
 
-    public IProperty getContent(String tid, String id, IContext ctx) {
+    public IProperty getProperty(String tid, String id, IContext ctx) {
         ITemplate template = getTemplate(tid);
+        IProperty p = null;
         if (template != null) {
-            
-            IProperty p = template.getProperty(id, ctx);
-            if (p != null) {
-                return p;
-            }
+             p = template.getProperty(id, ctx);
         }
-        return null;
+        return p;
     }
 
     public String getResourceReferences(String tid, String pid, IContext ctx) {

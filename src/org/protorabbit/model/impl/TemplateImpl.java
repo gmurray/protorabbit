@@ -28,7 +28,7 @@ import org.protorabbit.model.ICommand;
 import org.protorabbit.model.IContext;
 import org.protorabbit.model.IProperty;
 import org.protorabbit.model.ITemplate;
-import org.protorabbit.model.IUATestable;
+import org.protorabbit.model.ITestable;
 
 public class TemplateImpl implements ITemplate {
 
@@ -219,7 +219,7 @@ public class TemplateImpl implements ITemplate {
         return null;
     }
 
-    private boolean includeResource(IUATestable ri, IContext ctx) {
+    private boolean includeResource(ITestable ri, IContext ctx) {
         if (ri == null) {
             return false;
         }
@@ -235,7 +235,7 @@ public class TemplateImpl implements ITemplate {
 
     public List<ResourceURI> getAllStyles(IContext ctx) {
         HashMap<String, String> existingRefs = new HashMap<String, String> ();
-        
+
         List<ResourceURI> astyles = new ArrayList<ResourceURI>();
         if (styles != null) {
             Iterator<ResourceURI> sit = styles.iterator();
@@ -490,7 +490,7 @@ public class TemplateImpl implements ITemplate {
         }
         Set<String> keys = properties.keySet();
         for (String  key : keys) {
-            IUATestable p = properties.get(key); 
+            ITestable p = properties.get(key); 
             if (p != null && 
                 p.getUATest() != null) {
                 return true;
@@ -522,7 +522,7 @@ public class TemplateImpl implements ITemplate {
         if (list == null) {
             return false;
         }
-        for (IUATestable t : list) {
+        for (ITestable t : list) {
             if (t.getUATest() != null) {
                 return true;
             }
