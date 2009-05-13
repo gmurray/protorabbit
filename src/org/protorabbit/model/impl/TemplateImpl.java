@@ -230,6 +230,14 @@ public class TemplateImpl implements ITemplate {
             // if the test matches then keep the resource
             includeResource = ctx.uaTest(ri.getUATest());
         }
+        // return false if the first test fails
+        if (includeResource == false ) {
+            return includeResource;
+        }
+        // check the test if there is one
+        if (ri.getTest() != null) {
+            includeResource = ctx.test(ri.getTest());
+        }
         return includeResource;
     }
 
