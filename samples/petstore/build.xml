@@ -5,8 +5,9 @@
   <property file="build.properties"/>
   <property file="${user.home}/build.properties"/>
   <property name="protorabbit.home" value="../../"/>
-  <property name="version" value="0.5.0"/>
+  <property name="version" value="0.6.0"/>
   <property name="json.lib" value="${protorabbit.home}/lib/org.json-0.0.2.jar"/>
+  <property name="servlet.jar" value="${protorabbit.home}/lib/servlet-api-2.4.jar"/>
   <property name="protorabbit.lib" value="${protorabbit.home}/dist/protorabbit-${version}.jar"/>
   <property name="src.web" value="${basedir}/web"/>
   <property name="dist.dir" value="${basedir}/dist"/>
@@ -18,11 +19,24 @@
   <target name="dependencies">
      <ant dir="${protorabbit.home}" inheritAll="false" target="dist"></ant>
   </target>
+  
+  	
+  <target name="compile" depends="clean">
+  	<mkdir dir="build/classes" />
+  	<javac srcdir="src"
+  		destdir="${build.dir}/classes"
+  		classpath="${protorabbit.lib}:${json.lib}:${servlet.jar}"
+  		source="1.5"
+  		debug="on">
+  	</javac>
+   
+  </target>	
 
-  <target name="war" depends="dependencies">
+  <target name="war" depends="dependencies, compile">
 
-    <mkdir dir="${war.lib}"/>
-      <mkdir dir="${dist.dir}"/>
+     <mkdir dir="${war.lib}"/>
+     <mkdir dir="${build.dir}/classes"/>
+     <mkdir dir="${dist.dir}"/>
 
       <copy file="${protorabbit.lib}" todir="${war.lib}"/>
       <copy file="${json.lib}" todir="${war.lib}"/>
@@ -44,7 +58,7 @@
   <target name="dist" depends="war">
       <mkdir dir="${dist.dir}"/>
       
-      <mkdir dir="${dist.dir}"/>
+    <mkdir dir="${dist.dir}"/>
     <jar destfile="${war.file}"
          basedir="${war.build.dir}"
     />
