@@ -2,33 +2,33 @@
 <web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" id="WebApp_ID" version="2.5">
   <display-name>Proto Rabbit Hello World</display-name>
 
-	<context-param>
-		<description> Template Definitions - Order only matters in that the templates further
+    <context-param>
+        <description> Template Definitions - Order only matters in that the templates further
        to the left will override properties defined to those to the right.</description>
-		<param-name>prt-templates</param-name>
-		<param-value>/WEB-INF/templates.json,/resources/blueprint/blueprint-templates.json</param-value>
-	</context-param>
+        <param-name>prt-templates</param-name>
+        <param-value>/WEB-INF/templates.json,/resources/blueprint/blueprint-templates.json</param-value>
+    </context-param>
 
-	<context-param>
-		<description>Turn on development mode. Files will reload on save in this mode.</description>
-		<param-name>prt-dev-mode</param-name>
-		<param-value>true</param-value>
-	</context-param>
+    <context-param>
+        <description>Turn on development mode. Files will reload on save in this mode.</description>
+        <param-name>prt-dev-mode</param-name>
+        <param-value>true</param-value>
+    </context-param>
 
-	<servlet>
-		<servlet-name>ProtoRabbit Servlet</servlet-name>
-		<servlet-class>org.protorabbit.servlet.ProtoRabbitServlet</servlet-class>
-		<load-on-startup>1</load-on-startup>
-	</servlet>
+    <servlet>
+        <servlet-name>ProtoRabbit Servlet</servlet-name>
+        <servlet-class>org.protorabbit.servlet.ProtoRabbitServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
 
-	<servlet-mapping>
-		<servlet-name>ProtoRabbit Servlet</servlet-name>
-		<url-pattern>*.prt</url-pattern>
-	</servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ProtoRabbit Servlet</servlet-name>
+        <url-pattern>*.prt</url-pattern>
+    </servlet-mapping>
 
-	<servlet-mapping>
-		<servlet-name>ProtoRabbit Servlet</servlet-name>
-		<url-pattern>/prt</url-pattern>
-	</servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ProtoRabbit Servlet</servlet-name>
+        <url-pattern>/prt</url-pattern>
+    </servlet-mapping>
 
 </web-app>

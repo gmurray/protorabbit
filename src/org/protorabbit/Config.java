@@ -351,6 +351,10 @@ public class Config {
                     temp.setTemplateURI(templateURI);
                 }
 
+                if (t.has("namespace")) {
+                    temp.setURINamespace(t.getString("namespace"));
+                }
+
                 if (t.has("extends")) {
                     List<String> ancestors = null;
                     String base = t.getString("extends");

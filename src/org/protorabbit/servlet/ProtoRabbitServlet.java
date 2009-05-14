@@ -303,6 +303,7 @@ public class ProtoRabbitServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
+
         // check for updates to the templates.json file
         if (isDevMode) {
             updateConfig();
@@ -326,22 +327,40 @@ public class ProtoRabbitServlet extends HttpServlet {
             return;
         }
 
-        String servletPath = req.getServletPath();
-        int lastSep = servletPath.lastIndexOf("/");
+        String path = req.getServletPath();
+        if (("/" + serviceURI).equals(path)) {
+            path = req.getPathInfo();
+        }
+        int lastSep = path.lastIndexOf("/");
 
-        if (lastSep != -1 && lastSep < servletPath.length() - 1) {
-            int nextDot = servletPath.indexOf(".", lastSep + 1);
+        String namespace = null;
+        if (lastSep != -1 && lastSep < path.length() - 1) {
+            int nextDot = path.indexOf(".", lastSep + 1);
+            int lastSlash = path.lastIndexOf("/");
             if (nextDot != -1) {
-                id = servletPath.substring(lastSep + 1, nextDot);
+                id = path.substring(lastSep + 1, nextDot);
+            } else {
+                if ( lastSlash != -1 && lastSlash < path.length()) {
+                    id = path.substring(lastSlash + 1);
+                }
+            }
+            if ( lastSlash != -1 && lastSlash < path.length()) {
+                namespace = path.substring(0, lastSlash);
             }
         }
-
         ITemplate t = null;
 
         if (id != null) {
             t = jcfg.getTemplate(id);
         }
-        if (id == null || t == null) {
+        boolean namespaceOk = true;
+        if (t != null && t.getURINamespace() != null ) {
+            if (namespace == null || !t.getURINamespace().startsWith(namespace)) {
+                namespaceOk = false;
+                Config.getLogger().warning("request for template " + id + " without matching namespace " + t.getURINamespace());
+            }
+        }
+        if (id == null || t == null || !namespaceOk) {
             Config.getLogger().warning("template " + id + " requested but not found.");
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;

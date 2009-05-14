@@ -40,7 +40,7 @@
        "combineResources": true,
      },
      "properties" : {
-           "title" : {"type" : "string", "value" : "JSP Include Test ${static.java.util.Calendar.instance.timeZone}"},
+           "title" : {"type" : "string", "value" : "JSP Include Test"},
            "message" : { "type" : "string", "value" : "I'm set to only update every 5 seconds."},
            "body" : { "type" : "include", "value" : "/main.jsp", "defer" : true, "timeout" : 5000 }
        }

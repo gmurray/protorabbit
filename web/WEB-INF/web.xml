@@ -30,6 +30,11 @@
 
     <servlet-mapping>
         <servlet-name>ProtoRabbit Servlet</servlet-name>
+        <url-pattern>/prt/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>ProtoRabbit Servlet</servlet-name>
         <url-pattern>*.prt</url-pattern>
     </servlet-mapping>
 

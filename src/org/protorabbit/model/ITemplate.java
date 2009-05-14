@@ -51,11 +51,13 @@ public interface ITemplate {
     public void setGzipStyles(Boolean gzip);
     public Boolean combineResources();
     public void setCombineScripts(Boolean combineResources);
-    public void setCombineStyles(Boolean combineResources);    
+    public void setCombineStyles(Boolean combineResources);
     public Boolean getCombineScripts();
-    public Boolean getCombineStyles();    
+    public Boolean getCombineStyles();
     public Boolean gzipTemplate();
     public Boolean gzipScripts();
     public Boolean gzipStyles();
+    public String getURINamespace();
+    public void setURINamespace(String namespace);
     public boolean hasUserAgentDependencies(IContext ctx);
 }

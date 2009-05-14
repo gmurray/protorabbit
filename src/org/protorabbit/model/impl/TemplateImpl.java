@@ -53,6 +53,7 @@ public class TemplateImpl implements ITemplate {
     private Boolean combineScripts = null;
     private ICacheable templateResource = null;
     private Boolean hasUADependencies = null;
+	private String uriNamespace;
 
     public TemplateImpl(String id, String baseURI, JSONObject json, Config cfg) {
         this.json = json;
@@ -570,6 +571,14 @@ public class TemplateImpl implements ITemplate {
             _hasDependnencies = checkPropertiesForUA();
         }
        hasUADependencies = new Boolean(_hasDependnencies);
+    }
+
+    public void setURINamespace(String namespace) {
+        this.uriNamespace = namespace;
+    }
+
+    public String getURINamespace() {
+        return uriNamespace;
     }
 
 }
