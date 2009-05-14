@@ -20,7 +20,6 @@ import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.Collection;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -175,9 +174,13 @@ public class WebContext extends BaseContext {
         if (expression.indexOf(".") != -1) {
             path = expression.split("\\.");
         }
+        int start = 1;
+        
         Object target = null;
         if (path.length > 1) {
+
             scope = path[0];
+
             if ("request".equals(scope)) {
                 target = getRequest().getAttribute(path[1]);
             } else if ("session".equals(scope) && getRequest().getSession() != null) {
@@ -188,16 +191,27 @@ public class WebContext extends BaseContext {
                 String className = "";
                 for (int i=1; i < path.length -1; i++) {
                     className += path[i];
-                    if (i < path.length -2) {
-                        className += ".";
+                    start += 1;
+                    // check if we are a Class (assuming classes start with Upper Case Character
+                    if (path[i].length() > 0 &&
+                        (Character.isUpperCase(path[i].charAt(0)))) {
+                        break;
+                    } else {
+                        if (i < path.length -2) {
+                            className += ".";
+                        }
                     }
                 }
-                String targetMethod = path[path.length -1];
-                // clear path so we don't try walking it later
-                path = new String[0];
+                String targetMethod = null;
+                if (start < path.length) {
+                    targetMethod = path[start];
+                } else {
+                    Config.getLogger().warning("Non Fatal Error looking up property : " + className + ". No property.");
+                    return null;
+                }
                try {
                    Class<?> c = Class.forName(className);
-                   return getObject(c, null,targetMethod);
+                   target = getObject(c, null,targetMethod);
                } catch (ClassNotFoundException cfe) {
                    Config.getLogger().warning("Non Fatal Error looking up property : " + className);
                    return null;
@@ -208,8 +222,6 @@ public class WebContext extends BaseContext {
         } else {
             target = getAttribute(expression);
         }
-
-        int start = 1;
         if (scope != null) {
             start += 1;
         }
@@ -231,7 +243,7 @@ public class WebContext extends BaseContext {
                 Method m = methods[i];
                 if (Modifier.isPublic(m.getModifiers()) &&
                     m.getParameterTypes().length == 0 &&
-                   ( m.getName().equals(getTarget) || 
+                   ( m.getName().equals(getTarget) ||
                      m.getName().equals(target))) {
                     // change the case of the property from camelCase
                     Object value = null;
@@ -247,6 +259,8 @@ public class WebContext extends BaseContext {
             } catch (IllegalAccessException e) {
                Config.getLogger().warning("Non Fatal Error looking up property : " + target + " on object " + pojo + " " + e);
             } catch (InvocationTargetException e) {
+                Config.getLogger().warning("Non Fatal Error looking up property : " + target + " on object " + pojo + " " + e);
+            } catch (Exception e) {
                 Config.getLogger().warning("Non Fatal Error looking up property : " + target + " on object " + pojo + " " + e);
             }
         }

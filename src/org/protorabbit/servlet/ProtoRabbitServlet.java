@@ -62,8 +62,8 @@ public class ProtoRabbitServlet extends HttpServlet {
     private long maxAge = 1225000;
     private int maxTries = 300;
     private long tryTimeout = 20;
-
-    private long cleanupTimeout = 60000;
+    // default to one hour
+    private long cleanupTimeout = 3600000;
     private long lastCleanup = -1;
 
     private String version = "0.6-dev";
