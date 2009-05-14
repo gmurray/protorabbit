@@ -26,6 +26,9 @@
     <mkdir dir="${dist.dir}"/>
     <mkdir dir="${build.classes}/org/protorabbit/resources"/>
     <copy file="src/org/protorabbit/resources/protorabbit.js" todir="${build.classes}/org/protorabbit/resources"/>
+    <copy todir="${build.classes}/org">
+      <fileset dir="src/org" />
+    </copy>
     <jar destfile="${dist.dir}/protorabbit-${version}.jar"
          basedir="${build.classes}"
     />

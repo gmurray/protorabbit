@@ -29,14 +29,7 @@ public class InsertCommand extends BaseCommand {
 
         Config cfg = ctx.getConfig();
         IProperty p = cfg.getProperty(ctx.getTemplateId(), params[0], ctx);
-        boolean valid = true;
-        if (p.getTest() != null) {
-            valid = ctx.test(p.getTest());
-        }
-        if (p.getUATest() != null) {
-            valid = ctx.test(p.getUATest());
-        }
-        if (!valid) {
+        if (p == null) {
             return;
         }
         String value = null;
@@ -78,6 +71,10 @@ public class InsertCommand extends BaseCommand {
                 current= value.indexOf("${", index);
             }
             if (evalue != null) {
+            	// tack on the rest of the string
+            	if (value.length() > index) {
+            	    evalue += value.substring(index);
+            	}
                 value = evalue;
             }
         }

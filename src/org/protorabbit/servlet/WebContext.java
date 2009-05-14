@@ -235,8 +235,9 @@ public class WebContext extends BaseContext {
 
     public Object getObject(Class<?> c, Object pojo, String target) {
         String getTarget = "get" + target.substring(0,1).toUpperCase() + target.substring(1);
+        String isTarget = "is" + target.substring(0,1).toUpperCase() + target.substring(1);
         Object[] args = {};
-        Method[] methods = c.getDeclaredMethods();
+        Method[] methods = c.getMethods();
 
         for (int i=0; i < methods.length;i++) {
             try {
@@ -244,7 +245,10 @@ public class WebContext extends BaseContext {
                 if (Modifier.isPublic(m.getModifiers()) &&
                     m.getParameterTypes().length == 0 &&
                    ( m.getName().equals(getTarget) ||
-                     m.getName().equals(target))) {
+                     m.getName().equals(target) ||
+                     m.getName().equals(isTarget)
+                     
+                     )) {
                     // change the case of the property from camelCase
                     Object value = null;
                     if (pojo == null) {
@@ -283,14 +287,25 @@ public class WebContext extends BaseContext {
         int equalStart = test.indexOf("==");
         int notEqualStart = test.indexOf("!=");
 
+        String rvalueString = null;
+        String lvalueString = null;
+  
         // we are an equal test
         if (equalStart != -1) {
-            lvalue = findValue(test.substring(0, equalStart));
-            rvalue = findValue(test.substring(equalStart+2));
+            lvalueString = test.substring(0, equalStart);
+            rvalueString = test.substring(equalStart+2);
         } else if (notEqualStart != -1){
             notTest = true;
-            lvalue = findValue(test.substring(0, notEqualStart));
-            rvalue = findValue(test.substring(notEqualStart+2));
+            lvalueString = test.substring(0, notEqualStart);
+            rvalueString = test.substring(notEqualStart+2);
+        }
+
+        lvalue = findValue(lvalueString);
+        rvalue = findValue(rvalueString);
+
+        if (Config.getLogger().isLoggable(Level.FINEST )) {
+            Config.getLogger().log(Level.FINEST, "rvalue=" + lvalueString + " result=" + lvalue);
+            Config.getLogger().log(Level.FINEST, "lvalue=" + lvalueString + " result=" + rvalue);
         }
 
         if (lvalue != null && rvalue != null &&

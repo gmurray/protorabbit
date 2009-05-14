@@ -16,6 +16,7 @@ import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.protorabbit.Config;
 import org.protorabbit.model.IContext;
 
 public  abstract class BaseContext implements IContext {
@@ -77,7 +78,10 @@ public  abstract class BaseContext implements IContext {
                     String expression = value.substring(current + 2,currentEnd);
                     Object o =  parseExpression(expression);
                     return o;
-                } 
+                } else {
+                	Config.getLogger().warning("Non fatal error parsing " + value + " no closing bracket.");
+                    return null;
+                }
             }
         }
 
