@@ -5,7 +5,7 @@
   <property file="build.properties"/>
   <property file="${user.home}/build.properties"/>
   <property name="protorabbit.home" value="../../"/>
-  <property name="version" value="0.5.0"/>
+  <property name="version" value="0.6.0"/>
   <property name="json.lib" value="${protorabbit.home}/lib/org.json-0.0.2.jar"/>	
   <property name="protorabbit.lib" value="${protorabbit.home}/dist/protorabbit-${version}.jar"/>	
   <property name="src.web" value="${basedir}/web"/>

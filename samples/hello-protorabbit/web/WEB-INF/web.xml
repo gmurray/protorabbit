@@ -6,7 +6,7 @@
 		<description> Template Definitions - Order only matters in that the templates further
        to the left will override properties defined to those to the right.</description>
 		<param-name>prt-templates</param-name>
-		<param-value>/WEB-INF/templates.json,/resources/blueprint/templates.json</param-value>
+		<param-value>/WEB-INF/templates.json,/resources/blueprint/blueprint-templates.json</param-value>
 	</context-param>
 
 	<context-param>
