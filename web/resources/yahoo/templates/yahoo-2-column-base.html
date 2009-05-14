@@ -4,16 +4,16 @@
 <html>
   <head>
    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-   <title><% insert('title') %></title>
-   <% includeResources('styles') %>
+   <title><^ insert('title') ^></title>
+   <^ includeResources('styles') ^>
  </head>
 
 <body>
 
 <div id="doc" class="yui-t6">
     <div id="hd">
-       <div style="font-size:3em"><% insert('title') %></div>
-       <% include('header') %>
+       <div style="font-size:3em"><^ insert('title') ^></div>
+       <^ include('header') ^>
     </div>
     <div id="bd">
 
@@ -22,20 +22,20 @@
         <div id="yui-main">
             <div class="yui-b">
 
-               <% include('body') %>
+               <^ include('body') ^>
             </div>
         </div>
 
         <!-- the unwrapped div.yui-b takes a fixed width and alignment based on the class of the top-level containing node -->
         <div class="yui-b">
-          <% include('sidebar') %>
+          <^ include('sidebar') ^>
         </div>
         
     </div>
     <div id="ft">
-        <% include('footer') %>
+        <^ include('footer') ^>
     </div>
 </div>
-   <% includeResources('scripts') %>
+   <^ includeResources('scripts') ^>
 </body>
 </html>

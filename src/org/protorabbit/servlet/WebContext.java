@@ -184,6 +184,24 @@ public class WebContext extends BaseContext {
                 target = getRequest().getSession().getAttribute(path[1]);
             } else if ("context".equals(scope) && getRequest().getSession() != null) {
                 target = getRequest().getSession().getServletContext().getAttribute(path[1]);
+            } else if ("static".equals(scope)) {
+                String className = "";
+                for (int i=1; i < path.length -1; i++) {
+                    className += path[i];
+                    if (i < path.length -2) {
+                        className += ".";
+                    }
+                }
+                String targetMethod = path[path.length -1];
+                // clear path so we don't try walking it later
+                path = new String[0];
+               try {
+                   Class<?> c = Class.forName(className);
+                   return getObject(c, null,targetMethod);
+               } catch (ClassNotFoundException cfe) {
+                   Config.getLogger().warning("Non Fatal Error looking up property : " + className);
+                   return null;
+               }
             } else {
                 target = getAttribute(expression);
             }
@@ -197,25 +215,31 @@ public class WebContext extends BaseContext {
         }
         // if there is anything below the scope and object
         for (int i=start; target != null && i < path.length; i++) {
-            target = getObject(target, path[i]);
+            target = getObject(target.getClass(), target, path[i]);
         }
 
         return target;
     }
 
-    public Object getObject(Object pojo, String target) {
+    public Object getObject(Class<?> c, Object pojo, String target) {
         String getTarget = "get" + target.substring(0,1).toUpperCase() + target.substring(1);
         Object[] args = {};
-        Method[] methods = pojo.getClass().getDeclaredMethods();
+        Method[] methods = c.getDeclaredMethods();
 
         for (int i=0; i < methods.length;i++) {
             try {
                 Method m = methods[i];
                 if (Modifier.isPublic(m.getModifiers()) &&
+                    m.getParameterTypes().length == 0 &&
                    ( m.getName().equals(getTarget) || 
                      m.getName().equals(target))) {
                     // change the case of the property from camelCase
-                    Object value =  m.invoke(pojo, args);
+                    Object value = null;
+                    if (pojo == null) {
+                        value = m.invoke(pojo);
+                    } else {
+                        value = m.invoke(pojo, args);
+                    }
                     return value;
                 }
             } catch (IllegalArgumentException e) {

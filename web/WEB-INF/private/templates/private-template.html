@@ -5,8 +5,8 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 
-<title><% insert('title') %></title>
-    <% includeResources('styles') %>
+<title><^ insert('title') ^></title>
+    <^ includeResources('styles') ^>
 </head>
 
 <body>
@@ -16,28 +16,28 @@
 <div class="block">
 <div class="column span-24">
 <div>
-<h1><% insert('title') %></h1>
+<h1><^ insert('title') ^></h1>
 </div>
-<% include('header') %>
+<^ include('header') ^>
 </div>
 </div>
 
 <div class="block">
 <div class="column span-18 colborder">
   <div>
-   <% include('body') %>
+   <^ include('body') ^>
   </div>
 </div>
 
 <div class="column span-5 last">
 
-             <% include('sidebar') %>
+             <^ include('sidebar') ^>
 
 </div>
 </div>
 
 </div>
-   <% includeResources('scripts') %>
+   <^ includeResources('scripts') ^>
 
 </body>
 </html>

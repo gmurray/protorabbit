@@ -166,8 +166,8 @@ public class DefaultEngine implements IEngine {
         int len = doc.length();
 
         while(index < len) {
-            index = doc.indexOf("<%", index);
-            int end = doc.indexOf("%>", index);
+            index = doc.indexOf("<^", index);
+            int end = doc.indexOf("^>", index);
             
             if (index == -1 || end == -1) {
                 break;

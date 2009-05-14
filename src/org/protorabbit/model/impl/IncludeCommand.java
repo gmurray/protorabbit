@@ -52,8 +52,9 @@ public class IncludeCommand extends BaseCommand {
         if (template != null) {
 
             property = template.getProperty(id,ctx);
+
             if (property == null) {
-                Config.getLogger().log(Level.SEVERE, "Unable to find Include file for " + id + " in template " + tid);
+                Config.getLogger().log(Level.SEVERE, "Unable to find include file for " + id + " in template " + tid);
                 return;
             }
             if (property.getUATest() != null) {

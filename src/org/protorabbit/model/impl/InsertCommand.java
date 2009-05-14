@@ -64,7 +64,7 @@ public class InsertCommand extends BaseCommand {
                     Object replacement =  ctx.parseExpression(expression);
                     String replacementString = "";
                     if (replacement != null) {
-                        replacementString = replacement.toString();
+                        replacementString = replacement + "";
                     }
                     evalue += replacementString;
 

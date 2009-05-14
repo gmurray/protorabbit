@@ -38,12 +38,11 @@
      "timeout" : 5000,
      "styles" : {
        "combineResources": true,
-       "gzip" : true
      },
      "properties" : {
-           "title" : {"type" : "string", "value" : "JSP Include Test"},
+           "title" : {"type" : "string", "value" : "JSP Include Test ${static.java.lang.System.currentTimeMillis}"},
            "message" : { "type" : "string", "value" : "I'm set to only update every 5 seconds."},
-           "body" : { "type" : "include", "value" : "/main.jsp", "defer" : true, "timeout" : 5000, "test" : "'foo' ==  ${session.greg}" }
+           "body" : { "type" : "include", "value" : "/main.jsp", "defer" : true, "timeout" : 5000 }
        }
     },
     {
