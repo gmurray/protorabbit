@@ -13,6 +13,11 @@
            { "uaTest" : "MSIE", "url" : "lib/ie.css" }
          ]
       },
+      "scripts" : {
+           "libs" : [
+               { "url" : "lib/base.js" }
+           ]
+       },
       "properties" : {
           "title" :  { "type" : "string", "value" : "Welcome to Proto Rabbit"},
           "header" : { "type" : "include", "value" : "/header.html" },
@@ -27,6 +32,11 @@
        "styles" : {
            "libs" : [
                { "id" : "blueprint", "url" : "lib/liquid.css" }
+           ]
+       },
+       "scripts" : {
+           "libs" : [
+               { "url" : "lib/liquid.js" }
            ]
        },
        "properties" : {

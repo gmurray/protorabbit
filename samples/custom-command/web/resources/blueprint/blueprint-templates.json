@@ -3,7 +3,6 @@
   "templates" : [
      {
       "id" : "blueprints-css",
-      "timeout" : 100000,
       "gzip" : true,
       "styles" : {
         "combineResources" : true,
@@ -15,6 +14,11 @@
            { "uaTest" : "MSIE", "url" : "lib/ie.css" }
          ]
       },
+      "scripts" : {
+           "libs" : [
+               { "url" : "lib/reset.js" }
+           ]
+       },
       "properties" : {
           "title" :  { "type" : "string", "value" : "Welcome to Spindle View"},
           "header" : { "type" : "include", "value" : "/header.html" },

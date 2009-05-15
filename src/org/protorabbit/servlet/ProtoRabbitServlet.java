@@ -61,6 +61,7 @@ public class ProtoRabbitServlet extends HttpServlet {
 
     private long maxAge = 1225000;
     private int maxTries = 300;
+    // in milliseconds
     private long tryTimeout = 20;
     // default to one hour
     private long cleanupTimeout = 3600000;
@@ -166,7 +167,6 @@ public class ProtoRabbitServlet extends HttpServlet {
                     Config.getLogger().log(Level.SEVERE, "Error  loading " + templates[i]);
                     throw new IOException("Error  loading " + templates[i] + ": Please verify the file exists.");
                 }
-                
                 if (base == null) {
                     Config.getLogger().log(Level.SEVERE, "Error  loading " + templates[i]);
                     throw new IOException("Error  loading" + templates[i] + ": Please verify the file is correctly formatted.");

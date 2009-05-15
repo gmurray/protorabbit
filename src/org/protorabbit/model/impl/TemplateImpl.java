@@ -48,14 +48,15 @@ public class TemplateImpl implements ITemplate {
     private Boolean gzipScripts = null;
     private Config config = null;
     private long lastUpdate;
-    private long timeout = 0;
+    private Long timeout = null;
     private Boolean combineStyles = null;
     private Boolean combineScripts = null;
     private ICacheable templateResource = null;
     private Boolean hasUADependencies = null;
-	private String uriNamespace;
+    private String uriNamespace = null;
 
     public TemplateImpl(String id, String baseURI, JSONObject json, Config cfg) {
+
         this.json = json;
         this.id = id;
         this.baseURI  = baseURI;
@@ -71,7 +72,6 @@ public class TemplateImpl implements ITemplate {
             ResourceURI tri = getTemplateURI();
 
             if (tri == null) {
-
                 String message = "Unable to locate template for " + id;
                 return new StringBuffer(message);
             } else {
@@ -100,15 +100,15 @@ public class TemplateImpl implements ITemplate {
     public List<ICommand> getCommands() {
         return commands;
     }
-    
+
     public void setCommands(List<ICommand> commands) {
         this.commands = commands;
     }
 
     public List<String> getAncestors() {
         return ancestors;
-    }    
-    
+    }
+
     public void setAncestors(List<String> ancestors) {
         this.ancestors = ancestors;
     }
@@ -166,9 +166,9 @@ public class TemplateImpl implements ITemplate {
 
         List<ResourceURI> ascripts = new ArrayList<ResourceURI>();
         if (scripts != null) {
-            Iterator<ResourceURI> sit = scripts.iterator();
-            while (sit.hasNext()) {
-                ResourceURI ri = sit.next();
+            int size = scripts.size() -1;
+            for (int i = size; i >= 0; i-=1) {
+                ResourceURI ri = scripts.get(i);
                 String id = ri.getId();
                 if (!existingRefs.containsKey(id)) {
                     if (includeResource(ri,ctx)) {
@@ -211,13 +211,13 @@ public class TemplateImpl implements ITemplate {
                 if (p != null) {
                     
                     if (p.getTemplateURI() != null) {
-                    
-                        return p.getTemplateURI() ;
+                        templateURI = p.getTemplateURI();
+                        break;
                     }
                 }
             }
         }
-        return null;
+        return templateURI;
     }
 
     private boolean includeResource(ITestable ri, IContext ctx) {
@@ -247,9 +247,9 @@ public class TemplateImpl implements ITemplate {
 
         List<ResourceURI> astyles = new ArrayList<ResourceURI>();
         if (styles != null) {
-            Iterator<ResourceURI> sit = styles.iterator();
-            while (sit.hasNext()) {
-                ResourceURI ri = sit.next();
+            int size = styles.size() -1;
+            for (int i = size; i >= 0; i-=1) {
+                ResourceURI ri = styles.get(i);
                 String id = ri.getId();
                 if (!existingRefs.containsKey(id)) {
                     if (includeResource(ri,ctx)) {
@@ -332,11 +332,25 @@ public class TemplateImpl implements ITemplate {
         this.templateURI = ri;
     }
 
-    public void setTimeout(long timeout) {
+    public void setTimeout(Long timeout) {
         this.timeout = timeout;
     }
-    
-    public long getTimeout() {
+
+    public Long getTimeout() {
+        if (timeout == null) {
+            if (ancestors != null) {
+                Iterator<String> it = ancestors.iterator();
+                while (it.hasNext()) {
+                    ITemplate p = config.getTemplate(it.next());
+                    if (p != null) {
+                        if (p.getTimeout() != null) {
+                            timeout = p.getTimeout();
+                            break;
+                        }
+                    }
+                }
+            }
+        }
         return timeout;
     }
 
@@ -578,6 +592,20 @@ public class TemplateImpl implements ITemplate {
     }
 
     public String getURINamespace() {
+        if (uriNamespace == null) {
+            if (ancestors != null) {
+                Iterator<String> it = ancestors.iterator();
+                while (it.hasNext()) {
+                    ITemplate p = config.getTemplate(it.next());
+                    if (p != null) {
+                        if (p.gzipTemplate() != null) {
+                            uriNamespace = p.getURINamespace();
+                            break;
+                        }
+                    }
+                }
+            }
+        }
         return uriNamespace;
     }
 

@@ -42,8 +42,8 @@ public interface ITemplate {
     public void setStyles(List<ResourceURI> styles);
     public void setScripts(List<ResourceURI> scripts);
     public void setProperties(Map<String, IProperty> properties);
-    public void setTimeout(long templateTimeout);
-    public long getTimeout();
+    public void setTimeout(Long templateTimeout);
+    public Long getTimeout();
     public void setTemplateResource(ICacheable cr);
     public ICacheable getTemplateResource();
     public void setGzipTemplate(Boolean gzip);

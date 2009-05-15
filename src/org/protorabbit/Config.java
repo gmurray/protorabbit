@@ -1,13 +1,13 @@
 /*
- * Protorabbit
- *
- * Copyright (c) 2009 Greg Murray (protorabbit.org)
- * 
- * Licensed under the MIT License:
- * 
- *  http://www.opensource.org/licenses/mit-license.php
- *
- */
+* Protorabbit
+*
+* Copyright (c) 2009 Greg Murray (protorabbit.org)
+*
+* Licensed under the MIT License:
+*
+*  http://www.opensource.org/licenses/mit-license.php
+*
+*/
 
 package org.protorabbit;
 
@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -36,527 +37,532 @@ import org.protorabbit.model.impl.URIResourceManager;
 
 public class Config {
 
-    private static Logger logger = null;
+   private static Logger logger = null;
 
-    public static Logger getLogger() {
-        if (logger == null) {
-            logger = Logger.getLogger("org.protrabbit");
-        }
-        return logger;
-    }
+   public static long DEFAULT_TIMEOUT = 60 * 1000 * 15;
+   boolean gzip = true;
+   boolean defaultCombineResources = false;
+   boolean devMode = false;
+   private String encoding = "UTF-8";
+   private long resourceTimeout = DEFAULT_TIMEOUT;
+   // in seconds
+   private long maxAge = 1225000;
+   private String resourceService =  "prt";
+   String defaultMediaType = "screen, projection";
+   String commandBase = "";
 
-    private Map<String, Object> globalAttributes = null;
-    
-    public static long DEFAULT_TIMEOUT = 60 * 1000 * 15;
+   public static Logger getLogger() {
+       if (logger == null) {
+           logger = Logger.getLogger("org.protrabbit");
+       }
+       return logger;
+   }
 
-    private long resourceTimeout = DEFAULT_TIMEOUT;
+   private Map<String, Object> globalAttributes = null;
+   Map<String, ITemplate> tmap = null;
+   Map<String, IncludeFile> includeFiles = null;
+   Map<String, String> commandMap = null;
 
-    String encoding = "UTF-8";
+   ResourceManager crm = null;
 
-    String defaultMediaType = "screen, projection";
-    String commandBase = "";
+   public Config(String serviceURI, long maxAge ) {
+       init();
+       this.maxAge = maxAge;
+       crm = new ResourceManager(this,
+               serviceURI,
+               getMaxAge());
+   }
 
-    Map<String, ITemplate> tmap = null;
-    Map<String, IncludeFile> includeFiles = null;
-    Map<String, String> commandMap = null;
+   public Config() {
+       init();
+       crm = new ResourceManager(this,
+                                 resourceService,
+                                 getMaxAge());
+   }
 
-    boolean gzip = true;
-    boolean defaultCombineResources = false;
-    boolean devMode = false;
+   void init() {
+       globalAttributes = new HashMap<String, Object>();
+       commandMap = new HashMap<String, String>();
 
-    ResourceManager crm = null;
+       // include mappings for the default commands
+       commandMap.put("insert", "org.protorabbit.model.impl.InsertCommand");
+       commandMap.put("include", "org.protorabbit.model.impl.IncludeCommand");
+       commandMap.put("includeResources", "org.protorabbit.model.impl.IncludeResourcesCommand");
 
-    long combinedResourceTimeout = 60 * 1000 + 60 * 24;
+       tmap = new HashMap<String, ITemplate>();
+       includeFiles = new HashMap<String, IncludeFile>();
+   }
 
-    // in seconds 
-    private long maxAge = 1225000;
-    private String resourceService =  "prt";
+   public Object getGlobalAttribute(String key) {
+       return globalAttributes.get(key);
+   }
 
-    public Config(String serviceURI, long maxAge ) {
-        init();
-        this.maxAge = maxAge;
-        crm = new ResourceManager(this,
-                serviceURI,
-                getMaxAge());
-    }
+   public void setGlobaAttribute(String key, Object value) {
+       globalAttributes.put(key, value);
+   }
 
-    public Config() {
-        init();
-        crm = new ResourceManager(this,
-                                  resourceService,
-                                  getMaxAge());
-    }
+   public void clearGlobalAttributes() {
+       globalAttributes.clear();
+   }
 
-    void init() {
-        globalAttributes = new HashMap<String, Object>();
-        commandMap = new HashMap<String, String>();
+   public void setDevMode(boolean devMode) {
+       this.devMode = devMode;
+   }
 
-        // include mappings for the default commands
-        commandMap.put("insert", "org.protorabbit.model.impl.InsertCommand");
-        commandMap.put("include", "org.protorabbit.model.impl.IncludeCommand");
-        commandMap.put("includeResources", "org.protorabbit.model.impl.IncludeResourcesCommand");
+   public boolean getDevMode() {
+       return devMode;
+   }
 
-        tmap = new HashMap<String, ITemplate>();
-        includeFiles = new HashMap<String, IncludeFile>();
-    }
+   public boolean getGzip() {
+       return gzip;
+   }
 
-    public Object getGlobalAttribute(String key) {
-        return globalAttributes.get(key);
-    }
+   public void setCommandBase(String commandBase) {
+       this.commandBase = commandBase;
+   }
 
-    public void setGlobaAttribute(String key, Object value) {
-        globalAttributes.put(key, value);
-    }
+   public ICommand getCommand(String name) {
+       String className = commandMap.get(name);
 
-    public void clearGlobalAttributes() {
-        globalAttributes.clear();
-    }
+       Class<?> clazz = null;
 
-    public void setDevMode(boolean devMode) {
-        this.devMode = devMode;
-    }
+       // look for custom commands
+       if (className == null) {
+           try {
+               clazz = Class.forName(commandBase + name + "Command");
+           } catch (ClassNotFoundException cnfe) {
+               getLogger().log(Level.SEVERE, "Error locating class impementation for command " + name + ".");
 
-    public boolean getDevMode() {
-        return devMode;
-    }
+               return null;
+           }
+       } else {
+           try {
+               clazz = Class.forName(className);
+           } catch (ClassNotFoundException cnfe) {
+               getLogger().log(Level.SEVERE, "Could not find class " + className);
+               return null;
+           }
+       }
 
-    public boolean getGzip() {
-        return gzip;
-    }
+       try {
 
-    public void setCommandBase(String commandBase) {
-        this.commandBase = commandBase;
-    }
+           Object o = clazz.newInstance();
+           if (o instanceof ICommand) {
+               ICommand ic = (ICommand)o;
+               return ic;
+           } else {
+               getLogger().log(Level.SEVERE, "Error creating instance of " + className +
+                       ". The command needs to implement org.protorabbit.model.Command");
+           }
 
-    public ICommand getCommand(String name) {
-        String className = commandMap.get(name);
+       } catch (InstantiationException e) {
+           e.printStackTrace();
+       } catch (IllegalAccessException e) {
+           e.printStackTrace();
+       }
+       return null;
+   }
 
-        Class<?> clazz = null;
+   public boolean hasTemplate(String id, IContext ctx) {
+       ITemplate t = getTemplate(id);
+       return (t != null);
+   }
 
-        // look for custom commands
-        if (className == null) {
-            try {
-                clazz = Class.forName(commandBase + name + "Command");
-            } catch (ClassNotFoundException cnfe) {
-                getLogger().log(Level.SEVERE, "Error locating class impementation for command " + name + ".");
+   public ResourceManager getCombinedResourceManager() {
+       return crm;
+   }
 
-                return null;
-            }
-        } else {
-            try {
-                clazz = Class.forName(className);
-            } catch (ClassNotFoundException cnfe) {
-                getLogger().log(Level.SEVERE, "Could not find class " + className);
-                return null;
-            }
-        }
+   /*
+    * Used when you know the resource id of the include file (the uri to the resource)
+    * and you want to add the file.
+    *
+    */
+   public void setIncludeFile(String rid, IncludeFile inc) {
+       includeFiles.put(rid, inc);
+   }
 
-        try {
+   /*
+    * Used when you know the resource id of the include file (the uri to the resource)
+    *
+    */
+   public IncludeFile getIncludeFile(String rid) {
+       return includeFiles.get(rid);
+   }
 
-            Object o = clazz.newInstance();
-            if (o instanceof ICommand) {
-                ICommand ic = (ICommand)o;
-                return ic;
-            } else {
-                getLogger().log(Level.SEVERE, "Error creating instance of " + className +
-                        ". The command needs to implement org.protorabbit.model.Command");
-            }
+   public IncludeFile getIncludeFileContent(String tid, String id, IContext ctx) {
+       try {
+           ITemplate template = getTemplate(tid);
+           if (template != null && template.getJSON() != null) {
 
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
+               IProperty prop = template.getProperty(id,ctx);
+               if (prop == null) {
+                   getLogger().log(Level.SEVERE, "Unable to find Include file for " + id + " in template " + tid);
+                   return null;
+               }
+               if (prop.getUATest() != null) {
+                   if (ctx.uaTest(prop.getUATest()) == false) {
+                       return null;
+                   }
+               }
+               if (prop.getTest() != null) {
+                   if (ctx.test(prop.getTest()) == false) {
+                       return null;
+                   }
+               }
+               String includeFile = prop.getValue();
 
-    public boolean hasTemplate(String id, IContext ctx) {
-        ITemplate t = getTemplate(id);
-        return (t != null);
-    }
+               String tBase = "";
+               if (!includeFile.startsWith("/")) {
+                   tBase = prop.getBaseURI();
+               }
 
-    public ResourceManager getCombinedResourceManager() {
-        return crm;
-    }
+               String uri = tBase + includeFile;
+               IncludeFile inc = null;
+               if (includeFiles.containsKey(uri)) {
+                   inc =  includeFiles.get(uri);
+               }
+               if (inc == null || (inc != null && inc.isStale(ctx))) {
 
-    /*
-     * Used when you know the resource id of the include file (the uri to the resource)
-     * and you want to add the file.
-     * 
-     */
-    public void setIncludeFile(String rid, IncludeFile inc) {
-        includeFiles.put(rid, inc);
-    }
-
-    /*
-     * Used when you know the resource id of the include file (the uri to the resource)
-     * 
-     */
-    public IncludeFile getIncludeFile(String rid) {
-        return includeFiles.get(rid);
-    }
-
-    public IncludeFile getIncludeFileContent(String tid, String id, IContext ctx) {
-        try {
-            ITemplate template = getTemplate(tid);
-            if (template != null && template.getJSON() != null) {
-
-                IProperty prop = template.getProperty(id,ctx);
-                if (prop == null) {
-                    getLogger().log(Level.SEVERE, "Unable to find Include file for " + id + " in template " + tid);
-                    return null;
-                }
-                if (prop.getUATest() != null) {
-                    if (ctx.uaTest(prop.getUATest()) == false) {
-                        return null;
-                    }
-                }
-                if (prop.getTest() != null) {
-                    if (ctx.test(prop.getTest()) == false) {
-                        return null;
-                    }
-                }
-                String includeFile = prop.getValue();
-
-                String tBase = "";
-                if (!includeFile.startsWith("/")) {
-                    tBase = prop.getBaseURI();
-                }
-
-                String uri = tBase + includeFile;
-                IncludeFile inc = null;
-                if (includeFiles.containsKey(uri)) {
-                    inc =  includeFiles.get(uri);
-                }
-                if (inc == null || (inc != null && inc.isStale(ctx))) {
-
-                    StringBuffer buff = ctx.getResource(tBase, includeFile);
-                    if (inc == null) {
-                        inc = new IncludeFile(uri, buff);
-                        inc.setTimeout(prop.getTimeout());
-                        inc.setDefer(prop.getDefer());
-                        inc.setDeferContent(prop.getDeferContent());
-                        includeFiles.put(uri, inc);
-                    } else {
-                        inc.setContent(buff);
-                    }
-
-                    return inc;
-                } else {
-                    return inc;
-                }
-            }
-        } catch (Exception e) {
-            getLogger().log(Level.SEVERE, "Error getting include file content for template " +
-                            tid + " resource " + id + ".", e);
-        }
-
-        return null;
-    }
-
-    static void processURIResources(int type, JSONObject bsjo, ITemplate temp,
-            String baseURI) throws JSONException {
-
-        List<ResourceURI> refs = null;
-        refs = new ArrayList<ResourceURI>();
-
-        if (bsjo.has("libs")) {
-
-            JSONArray ja = bsjo.getJSONArray("libs");
-
-            for (int j = 0; j < ja.length(); j++) {
-
-                JSONObject so = ja.getJSONObject(j);
-                String url = so.getString("url");
-                if (url.startsWith("/") || url.startsWith("http")) {
-                    baseURI = "";
-                }
-                ResourceURI ri = new ResourceURI(url, baseURI, type);
-                if (so.has("id")) {
-                    ri.setId(so.getString("id"));
-                }
-                if (so.has("uaTest")) {
-                    ri.setUATest(so.getString("uaTest"));
-                }
-                if (so.has("test")) {
-                    ri.setTest(so.getString("test"));
-                }
-                if (so.has("defer")) {
-                    ri.setDefer(so.getBoolean("defer"));
-                }
-                refs.add(ri);
-            }
-        }
-        Boolean combine = null;
-        if (bsjo.has("combineResources")) {
-            combine = bsjo.getBoolean("combineResources");
-        }
-        Boolean lgzip = null;
-        if (bsjo.has("gzip")) {
-            lgzip = bsjo.getBoolean("gzip");
-        }
-
-        if (type == ResourceURI.SCRIPT) {
-            temp.setCombineScripts(combine);
-            temp.setGzipScripts(lgzip);
-            temp.setScripts(refs);
-        } else if (type == ResourceURI.LINK) {
-            temp.setGzipStyles(lgzip);
-            temp.setStyles(refs);
-            temp.setCombineStyles(combine);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    public void registerTemplates(JSONArray templates, String baseURI) {
-
-        for (int i=0; i < templates.length(); i++) {
-            JSONObject t;
-            try {
-                t = templates.getJSONObject(i);
-                String id = t.getString("id");
-
-                   ITemplate temp = new TemplateImpl(id, baseURI, t, this);
-
-                   long templateTimeout = resourceTimeout;
-
-                   if (t.has("timeout")) {
-                       templateTimeout = t.getLong("timeout");
-                       temp.setTimeout(templateTimeout);
+                   StringBuffer buff = ctx.getResource(tBase, includeFile);
+                   if (inc == null) {
+                       inc = new IncludeFile(uri, buff);
+                       inc.setTimeout(prop.getTimeout());
+                       inc.setDefer(prop.getDefer());
+                       inc.setDeferContent(prop.getDeferContent());
+                       includeFiles.put(uri, inc);
+                   } else {
+                       inc.setContent(buff);
                    }
 
-                   boolean tgzip = gzip;
+                   return inc;
+               } else {
+                   return inc;
+               }
+           }
+       } catch (Exception e) {
+           getLogger().log(Level.SEVERE, "Error getting include file content for template " +
+                           tid + " resource " + id + ".", e);
+       }
 
-                   if (t.has("gzip")) {
-                       tgzip = t.getBoolean("gzip");
-                       temp.setGzipStyles(tgzip);
-                       temp.setGzipScripts(tgzip);
-                       temp.setGzipTemplate(tgzip);
+       return null;
+   }
+
+   static void processURIResources(int type, JSONObject bsjo, ITemplate temp,
+           String baseURI) throws JSONException {
+
+       List<ResourceURI> refs = null;
+       refs = new ArrayList<ResourceURI>();
+
+       if (bsjo.has("libs")) {
+
+           JSONArray ja = bsjo.getJSONArray("libs");
+
+           for (int j = 0; j < ja.length(); j++) {
+
+               JSONObject so = ja.getJSONObject(j);
+               String url = so.getString("url");
+               if (url.startsWith("/") || url.startsWith("http")) {
+                   baseURI = "";
+               }
+               ResourceURI ri = new ResourceURI(url, baseURI, type);
+               if (so.has("id")) {
+                   ri.setId(so.getString("id"));
+               }
+               if (so.has("uaTest")) {
+                   ri.setUATest(so.getString("uaTest"));
+               }
+               if (so.has("test")) {
+                   ri.setTest(so.getString("test"));
+               }
+               if (so.has("defer")) {
+                   ri.setDefer(so.getBoolean("defer"));
+               }
+               refs.add(ri);
+           }
+       }
+       Boolean combine = null;
+       if (bsjo.has("combineResources")) {
+           combine = bsjo.getBoolean("combineResources");
+       }
+       Boolean lgzip = null;
+       if (bsjo.has("gzip")) {
+           lgzip = bsjo.getBoolean("gzip");
+       }
+
+       if (type == ResourceURI.SCRIPT) {
+           temp.setCombineScripts(combine);
+           temp.setGzipScripts(lgzip);
+           temp.setScripts(refs);
+       } else if (type == ResourceURI.LINK) {
+           temp.setGzipStyles(lgzip);
+           temp.setStyles(refs);
+           temp.setCombineStyles(combine);
+       }
+   }
+
+   @SuppressWarnings("unchecked")
+   public void registerTemplates(JSONArray templates, String baseURI) {
+
+       for (int i=0; i < templates.length(); i++) {
+           JSONObject t;
+           try {
+               t = templates.getJSONObject(i);
+               String id = t.getString("id");
+
+                  ITemplate temp = new TemplateImpl(id, baseURI, t, this);
+
+                  long templateTimeout = 0;
+
+                  if (!devMode) {
+                      templateTimeout = resourceTimeout;
+                  }
+
+                  if (t.has("timeout")) {
+                      templateTimeout = t.getLong("timeout");
+                      temp.setTimeout(templateTimeout);
+                  }
+
+                  boolean tgzip = false;
+
+                  if (!devMode) {
+                      tgzip = gzip;
+                  }
+
+                  if (t.has("gzip")) {
+                      tgzip = t.getBoolean("gzip");
+                      temp.setGzipStyles(tgzip);
+                      temp.setGzipScripts(tgzip);
+                      temp.setGzipTemplate(tgzip);
+                  }
+
+                  boolean combineResources = false;
+                  if (!devMode) {
+                      combineResources = defaultCombineResources;
+                  }
+
+                  // template overrides default combineResources
+                  if (t.has("combineResources")) {
+                      combineResources = t.getBoolean("combineResources");
+                      temp.setCombineScripts(combineResources);
+                      temp.setCombineStyles(combineResources);
+                  }
+
+                  temp.setTimeout(templateTimeout);
+
+               if (t.has("template")) {
+                   String turi = t.getString("template");
+                   ResourceURI templateURI = new ResourceURI(turi, baseURI, ResourceURI.TEMPLATE);
+                   temp.setTemplateURI(templateURI);
+               }
+
+               if (t.has("namespace")) {
+                   temp.setURINamespace(t.getString("namespace"));
+               }
+
+               if (t.has("extends")) {
+                   List<String> ancestors = null;
+                   String base = t.getString("extends");
+                   if (base.length() > 0) {
+                       String[] parentIds = null;
+                       if (base.indexOf(",") != -1) {
+                           parentIds = base.split(",");
+                       } else {
+                           parentIds = new String[1];
+                           parentIds[0] = base;
+                       }
+                       ancestors = new ArrayList<String>();
+
+                       for (int j = 0; j < parentIds.length; j++) {
+                           ancestors.add(parentIds[j].trim());
+                       }
                    }
 
-                   boolean combineResources = defaultCombineResources;
+                   temp.setAncestors(ancestors);
+               }
 
-                   // template overrides default combineResources
-                   if (t.has("combineResources")) {
-                       combineResources = t.getBoolean("combineResources");
-                       temp.setCombineScripts(combineResources);
-                       temp.setCombineStyles(combineResources);
+               if (t.has("scripts")) {
+
+                   JSONObject bsjo = t.getJSONObject("scripts");
+
+                   processURIResources(ResourceURI.SCRIPT,
+                                       bsjo,
+                                       temp,
+                                       baseURI);
+               }
+
+               if (t.has("styles")) {
+                   JSONObject bsjo = t.getJSONObject("styles");
+
+                   processURIResources(ResourceURI.LINK,
+                           bsjo,
+                           temp,
+                           baseURI);
+               }
+
+               if (t.has("properties")) {
+
+                   Map<String,IProperty> properties = null;
+                   JSONObject po = t.getJSONObject("properties");
+                   properties = new  HashMap<String,IProperty>();
+
+                   Iterator<String> jit =  po.keys();
+                   while(jit.hasNext()) {
+
+                       String name = jit.next();
+                       JSONObject so = po.getJSONObject(name);
+                       int type = IProperty.STRING;
+                       String value = so.getString("value");
+
+                       if (so.has("type")) {
+
+                           String typeString = so.getString("type");
+
+                           if ("string".equals(typeString.toLowerCase())) {
+                               type = IProperty.STRING;
+                           } else if ("include".equals(typeString.toLowerCase())) {
+                               type = IProperty.INCLUDE;
+                           }
+                       }
+
+                       IProperty pi= new PropertyImpl(name, value, type, baseURI, id);
+                       long timeout = templateTimeout;
+                       if (so.has("timeout")) {
+                           timeout = so.getLong("timeout");
+                       }
+
+                       if (so.has("uaTest")) {
+                           pi.setUATest(so.getString("uaTest"));
+                       }
+                       if (so.has("test")) {
+                           pi.setTest(so.getString("test"));
+                       }
+                       if (so.has("defer")) {
+                           pi.setDefer(so.getBoolean("defer"));
+                       }
+                       if (so.has("deferContent")) {
+                           pi.setDeferContent(new StringBuffer(so.getString("deferContent")));
+                       }
+                       pi.setTimeout(timeout);
+                       properties.put(name, pi);
                    }
+                   temp.setProperties(properties);
+               }
 
-                   temp.setTimeout(templateTimeout);
+               // force combineResources if under the /WEB-INF
+               if (baseURI.startsWith("/WEB-INF") && combineResources != true) {
+                   getLogger().warning("Template " + temp.getId() + " is loated in a private directory " + baseURI + " without " +
+                                       "combineResouces being set. It is recommended that you enable combineResouces.");
+               }
+              tmap.put(id, temp);
 
-                if (t.has("template")) {
-                    String turi = t.getString("template");
-                    ResourceURI templateURI = new ResourceURI(turi, baseURI, ResourceURI.TEMPLATE);
-                    temp.setTemplateURI(templateURI);
-                }
+              getLogger().info("Added template definition : " + id);
 
-                if (t.has("namespace")) {
-                    temp.setURINamespace(t.getString("namespace"));
-                }
+           } catch (JSONException e) {
+               getLogger().log(Level.SEVERE, "Error parsing configuration.", e);
+           }
+       }
+   }
 
-                if (t.has("extends")) {
-                    List<String> ancestors = null;
-                    String base = t.getString("extends");
-                    if (base.length() > 0) {
-                        String[] parentIds = null;
-                        if (base.indexOf(",") != -1) {
-                            parentIds = base.split(",");
-                        } else {
-                            parentIds = new String[1];
-                            parentIds[0] = base;
-                        }
-                        ancestors = new ArrayList<String>();
+   public ITemplate getTemplate(String id) {
+       if (tmap.containsKey(id)) {
+           return tmap.get(id);
+       }
+       return null;
+   }
 
-                        for (int j = 0; j < parentIds.length; j++) {
-                            ancestors.add(parentIds[j].trim());
-                        }
-                    }
+   public String generateScriptReferences(ITemplate template, IContext ctx) {
+       List<ResourceURI> scripts = template.getAllScripts(ctx);
+       Collections.reverse(scripts);
+       return URIResourceManager.generateReferences(template,ctx,scripts, ResourceURI.SCRIPT);
+   }
 
-                    temp.setAncestors(ancestors);
-                }
-
-                if (t.has("scripts")) {
-
-                    JSONObject bsjo = t.getJSONObject("scripts");
-
-                    processURIResources(ResourceURI.SCRIPT,
-                                        bsjo,
-                                        temp,
-                                        baseURI);
-                }
-
-                if (t.has("styles")) {
-                    JSONObject bsjo = t.getJSONObject("styles");
-
-                    processURIResources(ResourceURI.LINK,
-                            bsjo,
-                            temp,
-                            baseURI);
-                }
-
-                if (t.has("properties")) {
-
-                    Map<String,IProperty> properties = null;
-                    JSONObject po = t.getJSONObject("properties");
-                    properties = new  HashMap<String,IProperty>();
-
-                    Iterator<String> jit =  po.keys();
-                    while(jit.hasNext()) {
-
-                        String name = jit.next();
-                        JSONObject so = po.getJSONObject(name);
-                        int type = IProperty.STRING;
-                        String value = so.getString("value");
-
-                        if (so.has("type")) {
-
-                            String typeString = so.getString("type");
-                            
-                            if ("string".equals(typeString.toLowerCase())) {
-                                type = IProperty.STRING;
-                            } else if ("include".equals(typeString.toLowerCase())) {
-                                type = IProperty.INCLUDE;
-                            }
-                        }
-
-                        IProperty pi= new PropertyImpl(name, value, type, baseURI, id);
-                        long timeout = templateTimeout;
-                        if (so.has("timeout")) {
-                            timeout = so.getLong("timeout");
-                        }
-
-                        if (so.has("uaTest")) {
-                            pi.setUATest(so.getString("uaTest"));
-                        }
-                        if (so.has("test")) {
-                            pi.setTest(so.getString("test"));
-                        }
-                        if (so.has("defer")) {
-                            pi.setDefer(so.getBoolean("defer"));
-                        }
-                        if (so.has("deferContent")) {
-                            pi.setDeferContent(new StringBuffer(so.getString("deferContent")));
-                        }
-                        pi.setTimeout(timeout);
-                        properties.put(name, pi);
-                    }
-                    temp.setProperties(properties);
-                }
-
-                // force combineResources if under the /WEB-INF
-                if (baseURI.startsWith("/WEB-INF") && combineResources != true) {
-                    getLogger().warning("Template " + temp.getId() + " is loated in a private directory " + baseURI + " without " +
-                                        "combineResouces being set. It is recommended that you enable combineResouces.");
-                }
-               tmap.put(id, temp);
-
-               getLogger().info("Added template definition : " + id);
-
-            } catch (JSONException e) {
-                getLogger().log(Level.SEVERE, "Error parsing configuration.", e);
-            }
-        }
-    }
-
-    public ITemplate getTemplate(String id) {
-        if (tmap.containsKey(id)) {
-            return tmap.get(id);
-        }
-        return null;
-    }
-
-    public String generateScriptReferences(ITemplate template, IContext ctx) {
-        List<ResourceURI> scripts = template.getAllScripts(ctx);
-        return URIResourceManager.generateReferences(template,ctx,scripts, ResourceURI.SCRIPT);
-    }
-
-    public String generateStyleReferences(ITemplate template, IContext ctx) {
-        List<ResourceURI> styles = template.getAllStyles(ctx);
-        return URIResourceManager.generateReferences(template, ctx, styles, ResourceURI.LINK);
-    }
+   public String generateStyleReferences(ITemplate template, IContext ctx) {
+       List<ResourceURI> styles = template.getAllStyles(ctx);
+       Collections.reverse(styles);
+       return URIResourceManager.generateReferences(template, ctx, styles, ResourceURI.LINK);
+   }
 
 
-    public String getTemplateURI(JSONObject template) {
-        if (template.has("template")) {
-            try {
-                return template.getString("template");
-            } catch (JSONException e) {
-                getLogger().log(Level.SEVERE, "Error locating template.", e);
-            }
-        }
-        return null;
-    }
+   public String getTemplateURI(JSONObject template) {
+       if (template.has("template")) {
+           try {
+               return template.getString("template");
+           } catch (JSONException e) {
+               getLogger().log(Level.SEVERE, "Error locating template.", e);
+           }
+       }
+       return null;
+   }
 
-    public String getIncludeFileName(JSONObject template, String tid) {
-        if (template.has("properties")) {
-            try {
-                JSONObject properties =  template.getJSONObject("properties");
-                if (properties.has(tid)) {
-                    JSONObject to = properties.getJSONObject(tid);
-                    return to.getString("value");
-                }
-            } catch (JSONException e) {
-                getLogger().log(Level.SEVERE, "Error parsing include file name.", e);
-            }
-        }
-        return null;
-    }
+   public String getIncludeFileName(JSONObject template, String tid) {
+       if (template.has("properties")) {
+           try {
+               JSONObject properties =  template.getJSONObject("properties");
+               if (properties.has(tid)) {
+                   JSONObject to = properties.getJSONObject(tid);
+                   return to.getString("value");
+               }
+           } catch (JSONException e) {
+               getLogger().log(Level.SEVERE, "Error parsing include file name.", e);
+           }
+       }
+       return null;
+   }
 
-    public IProperty getProperty(String tid, String id, IContext ctx) {
-        ITemplate template = getTemplate(tid);
-        IProperty p = null;
-        if (template != null) {
-             p = template.getProperty(id, ctx);
-        }
-        return p;
-    }
+   public IProperty getProperty(String tid, String id, IContext ctx) {
+       ITemplate template = getTemplate(tid);
+       IProperty p = null;
+       if (template != null) {
+            p = template.getProperty(id, ctx);
+       }
+       return p;
+   }
 
-    public String getResourceReferences(String tid, String pid, IContext ctx) {
-        ITemplate template = getTemplate(tid);
-        String rtype = pid.toLowerCase();
-        if (template != null && "scripts".equals(rtype)) {
-            return generateScriptReferences(template, ctx);
-        } else if (template != null && "styles".equals(rtype)) {
-            return generateStyleReferences(template, ctx);
-        }
-        return null;
-    }
+   public String getResourceReferences(String tid, String pid, IContext ctx) {
+       ITemplate template = getTemplate(tid);
+       String rtype = pid.toLowerCase();
+       if (template != null && "scripts".equals(rtype)) {
+           return generateScriptReferences(template, ctx);
+       } else if (template != null && "styles".equals(rtype)) {
+           return generateStyleReferences(template, ctx);
+       }
+       return null;
+   }
 
-    public String getEncoding() {
-        return encoding;
-    }
+   public String getEncoding() {
+       return encoding;
+   }
 
-    public void setEncoding(String encoding) {
-        this.encoding = encoding;
-    }
+   public void setEncoding(String encoding) {
+       this.encoding = encoding;
+   }
 
-    public long getResourceTimeout() {
-        return resourceTimeout;
-    }
+   public long getResourceTimeout() {
+       return resourceTimeout;
+   }
 
-    public void setResourceTimeout(long resourceTimeout) {
-        this.resourceTimeout = resourceTimeout;
-    }
+   public void setResourceTimeout(long resourceTimeout) {
+       this.resourceTimeout = resourceTimeout;
+   }
 
-    public String getMediaType() {
-        return defaultMediaType;
-    }
+   public String getMediaType() {
+       return defaultMediaType;
+   }
 
-    public long getMaxAge() {
-        return maxAge;
-    }
+   public long getMaxAge() {
+       return maxAge;
+   }
 
-    public void setMaxAge(long maxAge) {
-        this.maxAge = maxAge;
-    }
+   public void setMaxAge(long maxAge) {
+       this.maxAge = maxAge;
+   }
 
-    public String getResourceService() {
-        return resourceService;
-    }
+   public String getResourceService() {
+       return resourceService;
+   }
 
-    public void setResourceService(String resourceService) {
-        this.resourceService = resourceService;
-    }
+   public void setResourceService(String resourceService) {
+       this.resourceService = resourceService;
+   }
 
 }

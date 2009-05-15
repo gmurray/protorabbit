@@ -23,7 +23,7 @@
     },     
     {
        "id" : "about",
-       "extends" : "index",      
+       "extends" : "index",
        "properties" : {
            "title" : {"type" : "string", "value" : "About"},
            "body" : { "type" : "include", "value" : "/about.html" }
