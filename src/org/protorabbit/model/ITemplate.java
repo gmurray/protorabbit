@@ -50,6 +50,7 @@ public interface ITemplate {
     public void setGzipScripts(Boolean gzip);
     public void setGzipStyles(Boolean gzip);
     public Boolean combineResources();
+    public void setCombineResources(Boolean combineResources);
     public void setCombineScripts(Boolean combineResources);
     public void setCombineStyles(Boolean combineResources);
     public Boolean getCombineScripts();

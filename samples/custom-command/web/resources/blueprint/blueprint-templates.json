@@ -4,8 +4,8 @@
      {
       "id" : "blueprints-css",
       "gzip" : true,
+      "combineResources" : true,
       "styles" : {
-        "combineResources" : true,
         "libs" : [
            { "url" : "lib/reset.css" },
            { "url" : "lib/typography.css" },

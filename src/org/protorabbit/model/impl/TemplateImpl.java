@@ -613,4 +613,8 @@ public class TemplateImpl implements ITemplate {
         return uriNamespace;
     }
 
+    public void setCombineResources(Boolean combineResources) {
+        this.combineResources = combineResources;
+    }
+
 }

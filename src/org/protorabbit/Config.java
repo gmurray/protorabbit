@@ -332,14 +332,10 @@ public class Config {
                       temp.setGzipTemplate(tgzip);
                   }
 
-                  boolean combineResources = false;
-                  if (!devMode) {
-                      combineResources = defaultCombineResources;
-                  }
-
                   // template overrides default combineResources
                   if (t.has("combineResources")) {
-                      combineResources = t.getBoolean("combineResources");
+                      boolean combineResources = t.getBoolean("combineResources");
+                      temp.setCombineResources(combineResources);
                       temp.setCombineScripts(combineResources);
                       temp.setCombineStyles(combineResources);
                   }
@@ -444,7 +440,7 @@ public class Config {
                }
 
                // force combineResources if under the /WEB-INF
-               if (baseURI.startsWith("/WEB-INF") && combineResources != true) {
+               if (baseURI.startsWith("/WEB-INF") && temp.combineResources() == null) {
                    getLogger().warning("Template " + temp.getId() + " is loated in a private directory " + baseURI + " without " +
                                        "combineResouces being set. It is recommended that you enable combineResouces.");
                }
