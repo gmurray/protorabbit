@@ -26,7 +26,7 @@ public class DeferredResource extends CacheableResource {
     private IWorker worker;
     private ICallback callback;
 
-    public DeferredResource(String baseDir, String resource, IContext ctx, long timeout) {
+    public DeferredResource(String baseDir, String resource, IContext ctx, Long timeout) {
         super();
         cc = new CacheContext(timeout, hash);
         callback = new DeferredCallback(this);

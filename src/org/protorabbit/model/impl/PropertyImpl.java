@@ -21,7 +21,7 @@ public class PropertyImpl implements IProperty {
     private String key = null;
     private int type = -1;
     private String originalTemplate = null;
-    private long timeout = 0;
+    private Long timeout = null;
     private String test = null;
     private boolean defer;
     private StringBuffer deferContent = null;
@@ -59,11 +59,11 @@ public class PropertyImpl implements IProperty {
         this.value = value;
     }
 
-    public long getTimeout() {
+    public Long getTimeout() {
         return timeout;
     }
 
-    public void setTimeout(long timeout) {
+    public void setTimeout(Long timeout) {
         this.timeout = timeout;
     }
 

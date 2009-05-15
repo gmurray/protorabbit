@@ -136,9 +136,10 @@ public class IncludeResourcesCommand extends BaseCommand {
                     writeDeferred(cfg,out, t);
                 }
             }
-            String hash = crm.processStyles(styles, ctx, out);
+
 
             if (t.getCombineStyles() != null && t.getCombineStyles()) {
+                String hash = crm.processStyles(styles, ctx, out);
                 if (!hasDeferredStyles && hash != null) {
                     String uri = "<link rel=\"stylesheet\" type=\"text/css\" href=\"" +
                     cfg.getResourceService() + "?resourceid=" + hash + 

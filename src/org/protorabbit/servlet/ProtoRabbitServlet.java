@@ -372,10 +372,11 @@ public class ProtoRabbitServlet extends HttpServlet {
         ICacheable tr = t.getTemplateResource();
 
         // get the initial content or get the content if it is expired
-        if ((t.getTimeout() > 0 && (tr == null ||
+        if (t.getTimeout() != null && 
+                ((t.getTimeout() > 0 && (tr == null ||
                 tr.getCacheContext().isExpired() )) ||
                 t.requiresRefresh(wc) ||
-                t.hasUserAgentDependencies(wc)) {
+                t.hasUserAgentDependencies(wc) )) {
 
             if (canGzip && t.gzipTemplate() != null && t.gzipTemplate()) {
                 resp.setHeader("Vary", "Accept-Encoding");
@@ -419,7 +420,7 @@ public class ProtoRabbitServlet extends HttpServlet {
             }
 
             // write out content / gzip or otherwise from the cache
-        } else if (t.getTimeout() > 0 && tr != null) {
+        } else if (t.getTimeout() != null && t.getTimeout() > 0 && tr != null) {
 
             // if the client has the same resource as the one on the server return a 304
             // get the If-None-Match header

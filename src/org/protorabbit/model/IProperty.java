@@ -19,8 +19,8 @@ public interface IProperty extends ITestable {
     public String getTest();
     public void setTest(String test);
     public String getBaseURI();
-    public long getTimeout();
-    public void setTimeout(long to);
+    public Long getTimeout();
+    public void setTimeout(Long to);
     public int getType();
     public String getValue();
     public String getKey();

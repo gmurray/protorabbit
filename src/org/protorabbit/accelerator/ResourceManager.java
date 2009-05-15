@@ -71,14 +71,18 @@ public class ResourceManager {
             ICacheable c = combinedResources.get(key);
             long diff = c.getLastAccessed() - now;
             // don't delete it if it is loading
+            long timeout = 0;
+            if (c.getTimeout() != null) {
+                timeout = c.getTimeout().longValue();
+            }
             if (c.isLoaded() &&
-                (diff > c.getTimeout() ||
+                (diff > timeout ||
                 diff > threshhold)) {
                 
                 if (diff > threshhold) {
-                	combinedResources.remove(key);
+                    combinedResources.remove(key);
                 } else {
-                	c.reset();
+                    c.reset();
                 }
             }
         }

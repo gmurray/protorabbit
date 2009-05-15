@@ -19,7 +19,7 @@ public class IncludeFile {
 
     private String uri;
     private StringBuffer content;
-    private long timeout;
+    private Long timeout;
     private long lastRefresh;
     private int loadIndex;
     private boolean defer = false;
@@ -47,11 +47,11 @@ public class IncludeFile {
         lastRefresh = (new Date()).getTime();
     }
 
-    public long getTimeout() {
+    public Long getTimeout() {
         return timeout;
     }
 
-    public void setTimeout(long timeout) {
+    public void setTimeout(Long timeout) {
         this.timeout = timeout;
     }
 

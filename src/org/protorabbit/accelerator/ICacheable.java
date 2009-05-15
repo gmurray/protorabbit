@@ -19,7 +19,10 @@ public interface ICacheable {
 
     public boolean gzipResources();
 
-    public long getTimeout();
+    public Long getTimeout();
+
+    public void setTimeout(Long timeout);
+
 
     public void setGzipResources(boolean gzip);
 

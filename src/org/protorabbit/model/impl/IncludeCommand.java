@@ -91,7 +91,10 @@ public class IncludeCommand extends BaseCommand {
                 hash  = IOUtil.generateHash(baseDir + resourceName);
                 resourceId = hash;
                 ResourceManager crm = cfg.getCombinedResourceManager();
-                long timeout = property.getTimeout();
+                Long timeout = property.getTimeout();
+                if (timeout == null) {
+                    timeout = 0L;
+                }
                 DeferredResource dr = new DeferredResource(baseDir, resourceName, ctx, timeout);
                 crm.putResource(resourceId, dr);
             } else {

@@ -226,14 +226,17 @@ public class Config {
                    StringBuffer buff = ctx.getResource(tBase, includeFile);
                    if (inc == null) {
                        inc = new IncludeFile(uri, buff);
-                       inc.setTimeout(prop.getTimeout());
+                       if (inc.getTimeout() != null) {
+                           inc.setTimeout(prop.getTimeout());
+                       } else {
+                           inc.setTimeout(0L);
+                       }
                        inc.setDefer(prop.getDefer());
                        inc.setDeferContent(prop.getDeferContent());
                        includeFiles.put(uri, inc);
                    } else {
                        inc.setContent(buff);
                    }
-
                    return inc;
                } else {
                    return inc;
@@ -311,14 +314,8 @@ public class Config {
 
                   ITemplate temp = new TemplateImpl(id, baseURI, t, this);
 
-                  long templateTimeout = 0;
-
-                  if (!devMode) {
-                      templateTimeout = resourceTimeout;
-                  }
-
                   if (t.has("timeout")) {
-                      templateTimeout = t.getLong("timeout");
+                      long templateTimeout = t.getLong("timeout");
                       temp.setTimeout(templateTimeout);
                   }
 
@@ -346,8 +343,6 @@ public class Config {
                       temp.setCombineScripts(combineResources);
                       temp.setCombineStyles(combineResources);
                   }
-
-                  temp.setTimeout(templateTimeout);
 
                if (t.has("template")) {
                    String turi = t.getString("template");
@@ -425,9 +420,10 @@ public class Config {
                        }
 
                        IProperty pi= new PropertyImpl(name, value, type, baseURI, id);
-                       long timeout = templateTimeout;
+ 
                        if (so.has("timeout")) {
-                           timeout = so.getLong("timeout");
+                           long timeout = so.getLong("timeout");
+                           pi.setTimeout(timeout);
                        }
 
                        if (so.has("uaTest")) {
@@ -442,7 +438,6 @@ public class Config {
                        if (so.has("deferContent")) {
                            pi.setDeferContent(new StringBuffer(so.getString("deferContent")));
                        }
-                       pi.setTimeout(timeout);
                        properties.put(name, pi);
                    }
                    temp.setProperties(properties);

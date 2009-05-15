@@ -424,7 +424,11 @@ public class TemplateImpl implements ITemplate {
             isUpdated = ctx.isUpdated(base + tri.getUri(), lastUpdate);
         }
         // check against the timeout
-        if (now - lastUpdate > timeout)  {
+        long ltimeout = 0;
+        if (timeout != null) {
+            ltimeout = timeout.longValue();
+        }
+        if (now - lastUpdate > ltimeout)  {
              needsUpdate = true;
         }
         return needsUpdate || isUpdated;

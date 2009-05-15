@@ -29,12 +29,12 @@ public class CacheableResource implements ICacheable {
     private int status = -1;
 
     private long lastAccessed = -1;
-    private long timeout = -1;
+    private Long timeout = null;
 
     public CacheableResource() {}
 
     public CacheableResource(String contentType,
-                            long maxAge,
+                            Long maxAge,
                             String hash) {
 
         this.setTimeout(maxAge);
@@ -177,11 +177,11 @@ public class CacheableResource implements ICacheable {
         return lastAccessed;
     }
 
-    public void setTimeout(long timeout) {
+    public void setTimeout(Long timeout) {
         this.timeout = timeout;
     }
 
-    public long getTimeout() {
+    public Long getTimeout() {
         return timeout;
     }
 }

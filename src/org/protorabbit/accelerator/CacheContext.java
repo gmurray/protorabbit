@@ -19,14 +19,16 @@ public class CacheContext {
 
     private String expires = null;
     // time in milliseconds 
-    private long created=0;
+    private long created = 0;
     // maximum time in seconds
-    private long maxAge=0;
+    private long maxAge = 0;
     private SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss  z");
     private String hash;
 
-    public CacheContext(long maxAge, String hash) {
-        this.maxAge = maxAge;
+    public CacheContext(Long maxAge, String hash) {
+        if (maxAge != null) {
+            this.maxAge = maxAge;
+        }
         this.hash = hash;
         reset();
     }
