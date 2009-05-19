@@ -102,6 +102,7 @@ public class DefaultSerializer implements JSONSerializer {
             try {
                 Method m = methods[i];
                 if (Modifier.isPublic(m.getModifiers()) &&
+                    !m.getName().equals("getClass")  &&
                     m.getName().startsWith("get") && m.getName().length() > 3) {
                     // change the case of the property from camelCase
                     String key = m.getName().substring(3,4).toLowerCase();

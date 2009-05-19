@@ -16,11 +16,13 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.protorabbit.Config;
 import org.protorabbit.accelerator.ResourceManager;
 import org.protorabbit.accelerator.impl.CacheableResource;
 import org.protorabbit.accelerator.impl.DeferredResource;
+import org.protorabbit.model.IParameter;
 import org.protorabbit.model.IProperty;
 import org.protorabbit.model.ITemplate;
 import org.protorabbit.util.IOUtil;
@@ -29,6 +31,15 @@ public class IncludeCommand extends BaseCommand {
 
     public static final String COUNTER = "COUNTER";
     public static final String DEFERRED_SCRIPTS = "DEFERRED_SCRIPTS";
+
+    private static Logger logger = null;
+
+    public static final Logger getLogger() {
+        if (logger == null) {
+            logger = Logger.getLogger("org.protrabbit");
+        }
+        return logger;
+    }
 
     @SuppressWarnings("unchecked")
     @Override
@@ -42,7 +53,14 @@ public class IncludeCommand extends BaseCommand {
         boolean useThreadedDefer = true;
 
         String tid = ctx.getTemplateId();
-        String id = params[0];
+
+        String id = null;
+        if (params.length > 0 && params[0].getType() == IParameter.STRING) {
+            id = params[0].getValue().toString();
+        } else {
+            getLogger().severe("Error processing property " + params[0].getValue().toString() + " Parameter is not of type String");
+            return;
+        }
 
         String resourceName = null;
         String baseDir = null;
@@ -54,7 +72,7 @@ public class IncludeCommand extends BaseCommand {
             property = template.getProperty(id,ctx);
 
             if (property == null) {
-                Config.getLogger().log(Level.SEVERE, "Unable to find include file for " + id + " in template " + tid);
+                getLogger().log(Level.SEVERE, "Unable to find include file for " + id + " in template " + tid);
                 return;
             }
             if (property.getUATest() != null) {
@@ -98,7 +116,7 @@ public class IncludeCommand extends BaseCommand {
                 DeferredResource dr = new DeferredResource(baseDir, resourceName, ctx, timeout);
                 crm.putResource(resourceId, dr);
             } else {
-                IncludeFile inc = cfg.getIncludeFileContent(ctx.getTemplateId(), params[0],ctx);
+                IncludeFile inc = cfg.getIncludeFileContent(ctx.getTemplateId(), id,ctx);
                 buff = inc.getContent();
                 hash = IOUtil.generateHash(buff.toString());
                 resourceId = hash;
@@ -118,7 +136,7 @@ public class IncludeCommand extends BaseCommand {
             deferredScripts.add(script);
             ctx.setAttribute(COUNTER, new Integer(counter + 1));
         } else {
-            IncludeFile inc = cfg.getIncludeFileContent(ctx.getTemplateId(), params[0],ctx);
+            IncludeFile inc = cfg.getIncludeFileContent(ctx.getTemplateId(), id,ctx);
             buff = inc.getContent();
             out.write(buff.toString().getBytes());
         }

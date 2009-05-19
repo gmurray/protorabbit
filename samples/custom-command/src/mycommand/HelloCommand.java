@@ -13,7 +13,7 @@ public class HelloCommand extends BaseCommand {
         String message = "hello ";
         
         if (params.length > 0) {
-            message += params[0];
+            message += params[0].getValue();
         }
         out.write(message.getBytes());
         

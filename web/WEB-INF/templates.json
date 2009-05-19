@@ -1,7 +1,6 @@
 {
-
   "templates" : [
-   
+
     {
      "combineResources" : true,
      "id" : "welcome",
@@ -9,7 +8,7 @@
      "properties" : {
            "title" : {"type" : "string", "value" : "Welcome to ProtoRabbit"},
            "body" : { "type" : "include", "value" : "/main.html"}
-       }     
+       }
     },
     {
      "id" : "deferred-load",
@@ -22,7 +21,7 @@
      "properties" : {
            "title" : {"type" : "string", "value" : "Welcome to ProtoRabbit", "defer" : true},
            "body" : { "type" : "include", "value" : "/main.html", "defer" : true, "deferContent" : "Loading..."}
-       }     
+       }
     },
     {
        "id" : "about",

@@ -16,18 +16,19 @@ import java.io.OutputStream;
 
 import org.protorabbit.model.ICommand;
 import org.protorabbit.model.IContext;
+import org.protorabbit.model.IParameter;
 
 public abstract class BaseCommand implements ICommand {
-    
+
     int start = -1;
     int end = -1;
     int commandType = -1;
     int type = ICommand.UNKNOWN;
-    
-    IContext ctx = null;
-    
-    protected String[] params = null;
-    
+
+    protected IContext ctx = null;
+
+    protected IParameter[] params = null;
+
     public BaseCommand() {
     }
 
@@ -36,11 +37,11 @@ public abstract class BaseCommand implements ICommand {
     public void setContext(IContext ctx) {
         this.ctx = ctx;
     }
-    
-    public String[] getParams() {
+
+    public IParameter[] getParams() {
         return params;
     }
-    
+
     public int getType() {
         return commandType;
     }
@@ -52,7 +53,7 @@ public abstract class BaseCommand implements ICommand {
     public int getEndIndex() {
         return end;
     }
-    
+
     public String toString() {
         return "Command : { start = " + start + ", end=" + end + ", commandType=" + commandType + ", params=" + params[0] + "}";
     }
@@ -62,13 +63,13 @@ public abstract class BaseCommand implements ICommand {
         
     }
 
-    public void setParams(String[] params) {
+    public void setParams(IParameter[] params) {
         this.params = params;
         
     }
 
     public void setStartIndex(int index) {
-        this.start = index;    
+        this.start = index;
     }
 
     public void setType(int type) {

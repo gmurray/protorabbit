@@ -12,23 +12,43 @@
 package org.protorabbit.model.impl;
 
 import org.protorabbit.Config;
+import org.protorabbit.model.IParameter;
 import org.protorabbit.model.IProperty;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class InsertCommand extends BaseCommand {
 
     public static final String DEFERRED_PROPERTIES = "DEFERRED_PROPERTIES";
+
+    private static Logger logger = null;
+
+    public static final Logger getLogger() {
+        if (logger == null) {
+            logger = Logger.getLogger("org.protrabbit");
+        }
+        return logger;
+    }
 
     @SuppressWarnings("unchecked")
     @Override
     public void doProcess(OutputStream out) throws IOException {
 
         Config cfg = ctx.getConfig();
-        IProperty p = cfg.getProperty(ctx.getTemplateId(), params[0], ctx);
+
+        String id = null;
+        if (params.length > 0 && params[0].getType() == IParameter.STRING) {
+            id = params[0].getValue().toString();
+        } else {
+            getLogger().severe("Error processing property " + params[0].getValue().toString() + " Parameter is not of type String");
+            return;
+        }
+
+        IProperty p = cfg.getProperty(ctx.getTemplateId(), id, ctx);
         if (p == null) {
             return;
         }
@@ -36,7 +56,7 @@ public class InsertCommand extends BaseCommand {
         if (p != null) {
             value = p.getValue();
         } else {
-            Config.getLogger().warning("Non fatal error : null property " + params[0] + " processing template " + ctx.getTemplateId());
+            getLogger().warning("Non fatal error : null property " + id + " processing template " + ctx.getTemplateId());
             return;
         }
         int current = -1;

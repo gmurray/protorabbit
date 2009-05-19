@@ -19,6 +19,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Iterator;
+import java.util.logging.Logger;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -190,4 +191,12 @@ public class JSONUtil {
         return null;
     }
 
+    private static Logger logger;
+
+    public static Logger getLogger() {
+        if (logger == null) {
+            logger = Logger.getLogger("org.protorabbit");
+        }
+        return logger;
+    }
 }

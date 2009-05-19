@@ -14,11 +14,17 @@ package org.protorabbit.impl;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.NumberFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import org.protorabbit.Config;
@@ -26,8 +32,10 @@ import org.protorabbit.IEngine;
 import org.protorabbit.json.JSONUtil;
 import org.protorabbit.model.ICommand;
 import org.protorabbit.model.IContext;
+import org.protorabbit.model.IParameter;
 import org.protorabbit.model.ITemplate;
 import org.protorabbit.model.impl.FileSystemContext;
+import org.protorabbit.model.impl.ParameterImpl;
 
 /*
  *  DefaultEngine.java
@@ -37,6 +45,15 @@ import org.protorabbit.model.impl.FileSystemContext;
  * 
  */
 public class DefaultEngine implements IEngine {
+
+    private static Logger logger = null;
+
+    public static final Logger getLogger() {
+        if (logger == null) {
+            logger = Logger.getLogger("org.protrabbit");
+        }
+        return logger;
+    }
 
     public void renderTemplate(String tid, Config cfg, OutputStream out, IContext ctx) {
 
@@ -73,10 +90,10 @@ public class DefaultEngine implements IEngine {
                 out.write(buff.substring(index).getBytes());
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            getLogger().log(Level.SEVERE, "Error rendering ", e);
         }
         long stopTime = (new Date()).getTime();
-        Config.getLogger().info(" Render time=" + (stopTime - startTime) + "ms");
+        getLogger().info(" Render time=" + (stopTime - startTime) + "ms");
         try {
             out.flush();
             out.close();
@@ -142,20 +159,20 @@ public class DefaultEngine implements IEngine {
         // last item is the target;
         String targetTemplate = args[args.length -1];
 
-        Config.getLogger().info("** Config Processing Time : " + (postConfigTime -  startTime) + "\n\n");
+        getLogger().info("** Config Processing Time : " + (postConfigTime -  startTime) + "\n\n");
         IEngine engine = new DefaultEngine();
         engine.renderTemplate(targetTemplate, cfg, System.out, ctx);
 
         long stopTime = (new Date()).getTime();
 
-        Config.getLogger().info("\n\nRender time for 3 templates=" + (stopTime - postConfigTime) + "ms");
+        getLogger().info("\n\nRender time for 3 templates=" + (stopTime - postConfigTime) + "ms");
     }
 
     /*
      * A command looks like 
      * 
-     * <% include('foo') %> or <% include('foo', 'baz', 'bin') %>
-     * <% insert('bar') %>
+     * <^ include('foo') ^> or <^ include('foo', 'baz', 'bin') ^>
+     * <^ insert('bar') ^>
      * 
      */
     public static List<ICommand> getCommands(Config cfg, StringBuffer doc, JSONObject template) {
@@ -168,7 +185,7 @@ public class DefaultEngine implements IEngine {
         while(index < len) {
             index = doc.indexOf("<^", index);
             int end = doc.indexOf("^>", index);
-            
+
             if (index == -1 || end == -1) {
                 break;
             }
@@ -178,30 +195,22 @@ public class DefaultEngine implements IEngine {
 
             //find the command
             int paramStart = exp.indexOf("(");
-            int paramEnd = exp.indexOf(")", paramStart);
-            
+            int paramEnd = exp.lastIndexOf(")");
+
             if (paramStart != -1 && paramEnd != -1 && paramEnd > paramStart) {
-               
+
                // get commandType
                 String commandTypeString = exp.substring(0,paramStart).trim();
-                
+
                 ICommand cmd = cfg.getCommand(commandTypeString);
 
                 if (cmd != null) {
                     // get the params
                     String paramsString = exp.substring(paramStart +1, paramEnd);
-                    String[] params = paramsString.split(",");
 
+                    // need to parse out JSON
+                    IParameter[] params = getParams(paramsString);
                     if (params != null) {
-                        // clean up the params
-                        for (int i=0; i < params.length; i++) {
-                            params[i] = params[i].trim();
-                            String[] sparams = params[i].split("\'");
-                            // take the middle value that was between the quotes
-                            if (sparams != null && sparams.length > 0) {
-                                params[i] = sparams[1];
-                            }
-                        }
                         cmd.setParams(params);
                     }
 
@@ -229,4 +238,167 @@ public class DefaultEngine implements IEngine {
         return commands;
     }
 
+    private static IParameter[] getParams(String paramsString) {
+
+        paramsString = paramsString.trim();
+        // for simple case of one item
+        if (paramsString.indexOf(",") == -1 &&
+            paramsString.startsWith("\"")  &&
+            paramsString.endsWith("\"") ) {
+            String text = paramsString.substring(0,paramsString.length());
+            IParameter param = getParameter(text, new Character('\"'));
+            IParameter[] params = new IParameter[1];
+            params[0] = param;
+            return params;
+        }
+
+        // otherwise we have quoted text or JSON objects
+        ArrayList<IParameter> params = new ArrayList<IParameter>();
+        int index = 0;
+        int paramStart = index;
+        boolean inQuote = false;
+        boolean inArray = false;
+        boolean inObject = false;
+        int braceDepth = 0;
+        int arrayDepth = 0;
+        Character lastToken = null;
+        while (index  < paramsString.length()) {
+            char c = paramsString.charAt(index);
+            switch (c) {
+                // string
+                case '\"' : {
+                    if (inQuote) {
+                        // if not escaped end the quote
+                        if (index > 0 && paramsString.charAt(index-1) != '\\') {
+                            inQuote = false;
+                            lastToken = new Character('\"');
+                        }
+                    } else if (!inArray && !inObject){
+                        inQuote = true;
+                        lastToken = new Character('\"');
+                    }
+                    break;
+                    }
+                case '[' : {
+                    if (!inQuote) {
+                        arrayDepth+=1;
+                        lastToken = new Character('[');
+                        inArray = true;
+                    }
+                    break;
+                }
+                case ']' : {
+                    if (!inQuote) {
+                        arrayDepth-=1;
+                        if (arrayDepth == 0 && braceDepth == 0) {
+                            inArray = false;
+                            String text = paramsString.substring(paramStart, index + 1).trim();
+                            IParameter param = getParameter(text, lastToken);
+                            params.add(param);
+                            paramStart = index+1;
+                            lastToken = new Character(']');
+                        }
+                    }
+                    break;
+                }
+                case '{' : {
+                    if (!inQuote && !inArray) {
+                        if (braceDepth == 0) {
+                            inObject = true;
+                            paramStart = index;
+                            lastToken = new Character('{');
+                        }
+                        braceDepth+=1;
+                    }
+                    break;
+                }
+                case '}' : {
+                    if (!inQuote) {
+                        braceDepth-=1;
+                        lastToken = new Character('}');
+                    }
+                    if (braceDepth == 0 && arrayDepth == 0 &&
+                        lastToken != null && 
+                        lastToken.charValue() != ']' && 
+                        lastToken.charValue() != '}') {
+                        inObject = false;
+                        String text = paramsString.substring(paramStart, index +1).trim();
+                        IParameter param = getParameter(text, lastToken);
+                        params.add(param);
+                        paramStart = index+1;
+                        lastToken = null;
+                    }
+                    break;
+                }
+                // could be a number or boolean
+                case ',' : {
+                    if (!inQuote && !inArray && !inObject) {
+                        String text = paramsString.substring(paramStart, index).trim();
+                        IParameter param = getParameter(text, lastToken);
+                        params.add(param);
+                        paramStart = index+1;
+                        lastToken = null;
+                    }
+                    break;
+                }
+            } 
+            index += 1;
+        }
+        // get the trailing param if there is one
+        if (paramStart < paramsString.length()) {
+            String text = paramsString.substring(paramStart, paramsString.length());
+            IParameter param = getParameter(text,lastToken);
+            params.add(param);
+        }
+        IParameter[] a = new IParameter[params.size()];
+        return params.toArray(a);
+    }
+
+    static IParameter getParameter(String text, Character lastToken) {
+        Object value = null;
+        int type = -1;
+        if (lastToken != null &&
+            lastToken.charValue() == '\"') {
+            type = IParameter.STRING;
+            // set the value to not include the quotes
+            value = text.substring(1, text.length()-1);
+        } else if ("true".equals(text) ||
+                   "false".equals(text) ) {
+            type = IParameter.BOOLEAN;
+            value = new Boolean(("true".equals(text)));
+        } else if ("null".equals(text)) {
+            type = IParameter.NULL;
+        } else if (text.startsWith("{") &&
+                text.endsWith("}")) {
+            try {
+                value = new JSONObject(text);
+                type = IParameter.OBJECT;
+            } catch (JSONException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        } else if (text.startsWith("[") &&
+                text.endsWith("]")) {
+            try {
+                value = new JSONArray(text);
+                type = IParameter.ARRAY;
+            } catch (JSONException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        } else {
+            try {
+                NumberFormat nf = NumberFormat.getInstance();
+                value = nf.parse(text);
+                type = IParameter.NUMBER;
+            } catch(ParseException pe) {
+                // do nothing
+            }
+        }
+        if (type != -1) {
+            return new ParameterImpl(type, value);
+        } else {
+            throw new RuntimeException("Error parsing parameter " + text);
+        }
+    }
 }

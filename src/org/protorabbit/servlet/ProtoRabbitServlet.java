@@ -67,7 +67,7 @@ public class ProtoRabbitServlet extends HttpServlet {
     private long cleanupTimeout = 3600000;
     private long lastCleanup = -1;
 
-    private String version = "0.6-dev";
+    private String version = "0.6-dev-b";
 
     @SuppressWarnings("unchecked")
     public void init(ServletConfig cfg) throws ServletException {

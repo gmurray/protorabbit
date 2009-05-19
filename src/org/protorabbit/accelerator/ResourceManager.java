@@ -174,8 +174,8 @@ public class ResourceManager {
 
    @SuppressWarnings("unchecked")
    public CacheableResource getScripts(List<ResourceURI>scriptResources, IContext ctx, OutputStream out) throws IOException {
-   	ITemplate template = ctx.getConfig().getTemplate(ctx.getTemplateId());
-      // reverse non-combined inclusion order
+       ITemplate template = ctx.getConfig().getTemplate(ctx.getTemplateId());
+       // reverse non-combined inclusion order
        Boolean combineScripts = template.getCombineScripts();
        if (combineScripts != null && combineScripts == Boolean.TRUE) {
           Collections.reverse(scriptResources);
@@ -232,6 +232,12 @@ public class ResourceManager {
    public CacheableResource getStyles(List<ResourceURI>styleResources, IContext ctx, OutputStream out) throws IOException {
 
        CacheableResource styles = new CacheableResource("text/css", maxTimeout, getHash(styleResources));
+       ITemplate template = ctx.getConfig().getTemplate(ctx.getTemplateId());
+       // reverse non-combined inclusion order
+       Boolean combineStyles = template.getCombineStyles();
+       if (combineStyles != null && combineStyles == Boolean.TRUE) {
+          Collections.reverse(styleResources);
+       }
        List<String> deferredScripts = (List<String>)ctx.getAttribute(IncludeCommand.DEFERRED_SCRIPTS);
        Iterator<ResourceURI> it = styleResources.iterator();
        while (it.hasNext()) {

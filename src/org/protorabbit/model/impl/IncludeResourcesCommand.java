@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import org.json.JSONObject;
 import org.protorabbit.Config;
@@ -23,6 +24,7 @@ import org.protorabbit.accelerator.ICacheable;
 import org.protorabbit.accelerator.impl.CacheableResource;
 import org.protorabbit.json.JSONSerializer;
 import org.protorabbit.json.SerializationFactory;
+import org.protorabbit.model.IParameter;
 import org.protorabbit.model.ITemplate;
 import org.protorabbit.util.IOUtil;
 
@@ -31,6 +33,15 @@ public class IncludeResourcesCommand extends BaseCommand {
     public static String DEFERRED_WRITTEN = "deferredWritten";
 
     private String protorabbitClient = "resources/protorabbit.js";
+
+    private static Logger logger = null;
+
+    public static final Logger getLogger() {
+        if (logger == null) {
+            logger = Logger.getLogger("org.protrabbit");
+        }
+        return logger;
+    }
 
     private void writeDeferred(Config cfg, OutputStream out, ITemplate t) throws IOException {
         StringBuffer buff = IOUtil.getClasspathResource(cfg, protorabbitClient);
@@ -44,7 +55,7 @@ public class IncludeResourcesCommand extends BaseCommand {
             out.write(uri.getBytes());
             ctx.setAttribute(DEFERRED_WRITTEN, Boolean.TRUE);
         } else {
-            Config.getLogger().severe("Unable to find protorabbit client script");
+            getLogger().severe("Unable to find protorabbit client script");
         }
     }
 
@@ -52,13 +63,19 @@ public class IncludeResourcesCommand extends BaseCommand {
     @Override
     public void doProcess(OutputStream out) throws IOException {
         if (params == null || params.length < 1) {
-            Config.getLogger().warning("Warning: IncludeReferences called with no parameter.");
+            getLogger().warning("Warning: IncludeReferences called with no parameter.");
             return;
         }
 
         Config cfg = ctx.getConfig();
-        String target = params[0].toLowerCase();
-
+        String target = null;
+        if (params.length > 0 && params[0].getType() == IParameter.STRING) {
+            target = params[0].getValue().toString();
+        } else {
+            getLogger().severe("Error processing property " + params[0].getValue().toString() + " Parameter is not of type String");
+            return;
+        }
+        target = target.toLowerCase();
         ITemplate t = cfg.getTemplate(ctx.getTemplateId());
         ResourceManager crm = cfg.getCombinedResourceManager();
 
@@ -99,7 +116,7 @@ public class IncludeResourcesCommand extends BaseCommand {
                }
 
            } else {
-                String tFile = cfg.getResourceReferences(ctx.getTemplateId(), params[0], ctx);
+                String tFile = cfg.getResourceReferences(ctx.getTemplateId(), target, ctx);
                 out.write(tFile.getBytes());
            }
            if (deferredScripts != null) {
@@ -151,7 +168,7 @@ public class IncludeResourcesCommand extends BaseCommand {
                    out.write(uri.getBytes());
                }
             } else {
-                String uri = cfg.getResourceReferences(ctx.getTemplateId(), params[0], ctx);
+                String uri = cfg.getResourceReferences(ctx.getTemplateId(), target, ctx);
                 out.write(uri.getBytes());
             }
         }
