@@ -24,6 +24,7 @@ import org.protorabbit.accelerator.ICacheable;
 import org.protorabbit.accelerator.impl.CacheableResource;
 import org.protorabbit.json.JSONSerializer;
 import org.protorabbit.json.SerializationFactory;
+import org.protorabbit.model.ICommand;
 import org.protorabbit.model.IParameter;
 import org.protorabbit.model.ITemplate;
 import org.protorabbit.util.IOUtil;
@@ -35,6 +36,14 @@ public class IncludeResourcesCommand extends BaseCommand {
     private String protorabbitClient = "resources/protorabbit.js";
 
     private static Logger logger = null;
+
+    protected int commandType = ICommand.INCLUDE_RESOURCES;
+    
+    public IncludeResourcesCommand(){
+        super();
+        // set this command to process after everything else
+        setProcessOrder(ICommand.PROCESS_LAST);
+    }
 
     public static final Logger getLogger() {
         if (logger == null) {
@@ -83,7 +92,6 @@ public class IncludeResourcesCommand extends BaseCommand {
                 ctx.getAttribute(DEFERRED_WRITTEN) == Boolean.TRUE);
 
         if ("scripts".equals(target)) {
-
             List<ResourceURI> scripts = t.getAllScripts(ctx);
             List<String> deferredScripts = (List<String>)ctx.getAttribute(IncludeCommand.DEFERRED_SCRIPTS);
             Map<String, String> deferredProperties = (Map<String, String>)ctx.getAttribute(InsertCommand.DEFERRED_PROPERTIES);
@@ -137,7 +145,6 @@ public class IncludeResourcesCommand extends BaseCommand {
                        "?resourceid=" + hash + ".json', '" + ctx.getTemplateId() +"');</script>").getBytes());
            }
         } else if ("styles".equals(target)) {
-
             List<ResourceURI> styles = t.getAllStyles(ctx);
             boolean hasDeferredStyles = false;
 
@@ -153,7 +160,6 @@ public class IncludeResourcesCommand extends BaseCommand {
                     writeDeferred(cfg,out, t);
                 }
             }
-
 
             if (t.getCombineStyles() != null && t.getCombineStyles()) {
                 String hash = crm.processStyles(styles, ctx, out);

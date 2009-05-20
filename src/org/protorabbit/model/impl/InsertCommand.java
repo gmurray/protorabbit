@@ -82,7 +82,7 @@ public class InsertCommand extends BaseCommand {
                     evalue += replacementString;
 
                 } else {
-                    Config.getLogger().warning("Non fatal error parsing expression for property " + p.getKey() +
+                    getLogger().warning("Non fatal error parsing expression for property " + p.getKey() +
                              ". Expression does not contain a closing }");
                     evalue = null;
                     break;

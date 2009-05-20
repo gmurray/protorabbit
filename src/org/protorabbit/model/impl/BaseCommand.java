@@ -20,16 +20,34 @@ import org.protorabbit.model.IParameter;
 
 public abstract class BaseCommand implements ICommand {
 
-    int start = -1;
-    int end = -1;
-    int commandType = -1;
-    int type = ICommand.UNKNOWN;
+    protected int start = -1;
+    protected int end = -1;
+    protected int commandType = ICommand.UNKNOWN;
+    protected int commandIndex = -1;
 
     protected IContext ctx = null;
 
     protected IParameter[] params = null;
 
+    protected int processOrder = ICommand.PROCESS_DEFAULT;
+
     public BaseCommand() {
+    }
+    
+    public int getCommandIndex() {
+        return commandIndex;
+    }
+
+    public void setCommandIndex(int commandIndex) {
+        this.commandIndex = commandIndex;
+    }
+
+    public void setProcessOrder(int processOrder) {
+        this.processOrder = processOrder;
+    }
+
+    public int getProcessOrder() {
+        return processOrder;
     }
 
     public abstract void doProcess(OutputStream out) throws IOException;
@@ -73,7 +91,7 @@ public abstract class BaseCommand implements ICommand {
     }
 
     public void setType(int type) {
-        this.type = type;
+        this.commandType = type;
     }
 
 }

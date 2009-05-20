@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -52,6 +53,15 @@ public class ProtoRabbitServlet extends HttpServlet {
     private HashMap<String, Long> lastUpdated;
     private IEngine engine;
 
+    private static Logger logger = null;
+
+    public static final Logger getLogger() {
+        if (logger == null) {
+            logger = Logger.getLogger("org.protrabbit");
+        }
+        return logger;
+    }
+
     private String[] templates = null;
 
     // defaults
@@ -77,7 +87,7 @@ public class ProtoRabbitServlet extends HttpServlet {
             // set the lastCleanup to current
             lastCleanup = (new Date()).getTime();
 
-            Config.getLogger().info("Protorabbit version : " + version);
+            getLogger().info("Protorabbit version : " + version);
             lastUpdated = new HashMap<String, Long>();
             this.ctx = cfg.getServletContext();
             if (ctx.getInitParameter("prt-dev-mode") != null) {
@@ -94,7 +104,7 @@ public class ProtoRabbitServlet extends HttpServlet {
                 try {
                     maxAge = (new Long(maxTimeoutString)).longValue();
                 } catch (Exception e) {
-                   Config.getLogger().warning("Non-fatal: Error processing configuration : prt-service-uri must be a long.");
+                   getLogger().warning("Non-fatal: Error processing configuration : prt-service-uri must be a long.");
                 }
             }
             if (ctx.getInitParameter("prt-templates") != null) {
@@ -109,7 +119,7 @@ public class ProtoRabbitServlet extends HttpServlet {
             try {
                 updateConfig();
                 } catch (IOException e) {
-                    Config.getLogger().log(Level.SEVERE, "Fatal Error: Unable to instanciate engine class " + engineClassName, e);
+                    getLogger().log(Level.SEVERE, "Fatal Error: Unable to instanciate engine class " + engineClassName, e);
                     throw new ServletException("Fatal Error: Unable to reading in configuration class " + engineClassName, e);
                 }
             // initialize the engine
@@ -118,13 +128,13 @@ public class ProtoRabbitServlet extends HttpServlet {
                 clazz = (Class<IEngine>) Class.forName(engineClassName);
                 engine = clazz.newInstance();
             } catch (ClassNotFoundException cnfe) {
-                Config.getLogger().severe("Fatal Error: Unable to find engine class " + engineClassName);
+                getLogger().severe("Fatal Error: Unable to find engine class " + engineClassName);
                 throw new ServletException("Fatal Error: Unable to find engine class " + engineClassName);
             } catch (InstantiationException e) {
-                Config.getLogger().log(Level.SEVERE, "Fatal Error: Instantiation exception for engine class " + engineClassName, e);
+                getLogger().log(Level.SEVERE, "Fatal Error: Instantiation exception for engine class " + engineClassName, e);
                 throw new ServletException("Fatal Error: Instantiation exception for engine class " + engineClassName, e);
             } catch (IllegalAccessException e) {
-                Config.getLogger().log(Level.SEVERE, "Fatal Error: Unable to access engine class " + engineClassName, e);
+                getLogger().log(Level.SEVERE, "Fatal Error: Unable to access engine class " + engineClassName, e);
                 throw new ServletException("Fatal Error: Unable to access engine class " + engineClassName, e);
             }
 
@@ -151,7 +161,7 @@ public class ProtoRabbitServlet extends HttpServlet {
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             } catch (NullPointerException npe) {
-                Config.getLogger().severe("Error reading configuration. Could not find " + templateName);
+                getLogger().severe("Error reading configuration. Could not find " + templateName);
             }
         }
 
@@ -164,11 +174,11 @@ public class ProtoRabbitServlet extends HttpServlet {
                 if (is != null) {
                     base = JSONUtil.loadFromInputStream(is);
                 } else {
-                    Config.getLogger().log(Level.SEVERE, "Error  loading " + templates[i]);
+                    getLogger().log(Level.SEVERE, "Error  loading " + templates[i]);
                     throw new IOException("Error  loading " + templates[i] + ": Please verify the file exists.");
                 }
                 if (base == null) {
-                    Config.getLogger().log(Level.SEVERE, "Error  loading " + templates[i]);
+                    getLogger().log(Level.SEVERE, "Error  loading " + templates[i]);
                     throw new IOException("Error  loading" + templates[i] + ": Please verify the file is correctly formatted.");
                 }
                 String baseURI = getTemplateDefDir(templates[i]);
@@ -178,11 +188,11 @@ public class ProtoRabbitServlet extends HttpServlet {
                         jcfg.registerTemplates(templatesArray, baseURI);
                     }
                     updateLastModified(templates[i]);
-                    Config.getLogger().info("Registered " + templates[i]);
+                    getLogger().info("Registered " + templates[i]);
                 } catch (JSONException e1) {
                     e1.printStackTrace();
                 } catch (Exception ex){
-                    Config.getLogger().log(Level.SEVERE, "Error  loading" + templates[i], ex);
+                    getLogger().log(Level.SEVERE, "Error  loading" + templates[i], ex);
                 }
             }
         }
@@ -204,7 +214,7 @@ public class ProtoRabbitServlet extends HttpServlet {
             long lastMod = uc.getLastModified();
             lastUpdated.put(uri, lastMod);
         } else {
-            Config.getLogger().warning("Error checking for last modified on:  " + uri);
+            getLogger().warning("Error checking for last modified on:  " + uri);
         }
     }
 
@@ -225,7 +235,7 @@ public class ProtoRabbitServlet extends HttpServlet {
         ICacheable cr = jcfg.getCombinedResourceManager().getResource(id);
 
         if (cr == null) {
-            Config.getLogger().severe("could not find resource " + id);
+            getLogger().severe("could not find resource " + id);
         }
 
         if (cr != null) {
@@ -281,14 +291,14 @@ public class ProtoRabbitServlet extends HttpServlet {
             }
 
         } else {
-            Config.getLogger().warning("resource " + id +
+            getLogger().warning("resource " + id +
                     " requested but not found.");
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
         long now = (new Date()).getTime();
         if (now - lastCleanup > cleanupTimeout) {
-            Config.getLogger().info("Cleaning up old Objects");
+            getLogger().info("Cleaning up old Objects");
             jcfg.getCombinedResourceManager().cleanup(maxAge);
             lastCleanup = now;
         }
@@ -357,11 +367,11 @@ public class ProtoRabbitServlet extends HttpServlet {
         if (t != null && t.getURINamespace() != null ) {
             if (namespace == null || !t.getURINamespace().startsWith(namespace)) {
                 namespaceOk = false;
-                Config.getLogger().warning("request for template " + id + " without matching namespace " + t.getURINamespace());
+                getLogger().warning("request for template " + id + " without matching namespace " + t.getURINamespace());
             }
         }
         if (id == null || t == null || !namespaceOk) {
-            Config.getLogger().warning("template " + id + " requested but not found.");
+            getLogger().warning("template " + id + " requested but not found.");
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }

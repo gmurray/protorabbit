@@ -11,6 +11,7 @@
 
 package org.protorabbit.impl;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -18,6 +19,7 @@ import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
@@ -66,29 +68,69 @@ public class DefaultEngine implements IEngine {
 
             StringBuffer buff = template.getContent(ctx);
             List<ICommand> cmds = getCommands(cfg, buff, template.getJSON());
-            int index = 0;
+            List<ICommand> firstCmds = null;
+            List<ICommand> lastCmds = null;
+            List<ICommand> defaultCmds = null;
+            HashMap<Integer, ByteArrayOutputStream> buffers = null;
             if (cmds != null) {
-                Iterator<ICommand> it = cmds.iterator();
+                  // pre-process to find first and last commands
+                int cindex = 0;
+                for (ICommand c : cmds) {
+                    c.setCommandIndex(cindex++);
+                    if (c.getProcessOrder() == ICommand.PROCESS_FIRST) {
+                        if (firstCmds == null) {
+                            firstCmds = new ArrayList<ICommand>();
+                        }
+                        firstCmds.add(c);
+                    } else if (c.getProcessOrder() == ICommand.PROCESS_LAST) {
+                        if (lastCmds == null) {
+                            lastCmds = new ArrayList<ICommand>();
+                        }
+                        lastCmds.add(c);
+                    } else {
+                        if (defaultCmds == null) {
+                            defaultCmds = new ArrayList<ICommand>();
+                        }
+                        defaultCmds.add(c);
+                    }
+                }
+                if (buffers == null) {
+                    buffers = new HashMap<Integer, ByteArrayOutputStream>(); 
+                }
+                // first
+                if (firstCmds != null) {
+                    processCommands( ctx, firstCmds, buffers);
+                }
+                // default commands
+                if (defaultCmds != null) {
+                    processCommands( ctx, defaultCmds, buffers);
+                }
+                // last commands
+                if (lastCmds != null) {
+                    processCommands( ctx, lastCmds, buffers);
+                }
 
-                while (it.hasNext()) {
-                    ICommand c = it.next();
-                    c.setContext(ctx);
-
+                int index = 0;
+                for (ICommand c : cmds) {
                     // output everything before the first command
-                    out.write(buff.substring(index, c.getStartIndex()).getBytes());
-
+                     out.write(buff.substring(index, c.getStartIndex()).getBytes());
+                    index = c.getEndIndex();
                     try {
-                        c.doProcess(out);
+                        ByteArrayOutputStream bos = buffers.get(new Integer(c.getCommandIndex()));
+                        if (bos != null) {
+                            out.write(bos.toByteArray());
+                        } else {
+                            getLogger().log(Level.SEVERE, "Error rendering buffer of commandIndex " + c.getCommandIndex());
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-
-                    index = c.getEndIndex();
                 }
             }
-            if (buff != null) {
-                out.write(buff.substring(index).getBytes());
-            }
+           // now write everything after the last command
+           ICommand lc = cmds.get(cmds.size() -1);
+           out.write(buff.substring(lc.getEndIndex()).getBytes());
+
         } catch (Exception e) {
             getLogger().log(Level.SEVERE, "Error rendering ", e);
         }
@@ -100,6 +142,23 @@ public class DefaultEngine implements IEngine {
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
+        }
+    }
+
+    void processCommands(IContext ctx,
+                         List<ICommand> cmds,
+                         HashMap<Integer, ByteArrayOutputStream> buffers) {
+
+        for (ICommand c : cmds) {
+            c.setContext(ctx);
+            ByteArrayOutputStream 
+                bos = new ByteArrayOutputStream();
+            try {
+                c.doProcess(bos);
+                buffers.put(new Integer(c.getCommandIndex()), bos);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -302,7 +361,7 @@ public class DefaultEngine implements IEngine {
                     break;
                 }
                 case '{' : {
-                    if (!inQuote && !inArray) {
+                    if (!inQuote) {
                         if (braceDepth == 0) {
                             inObject = true;
                             paramStart = index;

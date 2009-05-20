@@ -17,7 +17,7 @@
 <div class="block">
 <div class="column span-24">
 <div>
-<h1><^ insert({ "id" : "w1", "name" : "jmaki.menu3"}) ^></h1>
+<h1><^ insert("title") ^></h1>
 </div>
 <^ include("header") ^>
 </div>
@@ -26,13 +26,13 @@
 <div class="block">
 <div class="column span-18 colborder">
   <div>
-   <^ include("body", { "foo" : "bar"}) ^>
+   <^ include("body") ^>
   </div>
 </div>
 
 <div class="column span-5 last">
 
-             <^ include("sidebar") ^>
+    <^ include("sidebar") ^>
 
 </div>
 </div>
