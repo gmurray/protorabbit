@@ -65,7 +65,7 @@ public  abstract class BaseContext implements IContext {
      * 
      */
     public Object findValue(String value) {
-    	if (value == null) return null;
+        if (value == null) return null;
         value = value.trim();
         // look for expressions
         int current = value.indexOf("${");
