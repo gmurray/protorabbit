@@ -38,7 +38,7 @@ public class IncludeResourcesCommand extends BaseCommand {
     private static Logger logger = null;
 
     protected int commandType = ICommand.INCLUDE_RESOURCES;
-    
+
     public IncludeResourcesCommand(){
         super();
         // set this command to process after everything else
@@ -70,7 +70,7 @@ public class IncludeResourcesCommand extends BaseCommand {
 
     @SuppressWarnings("unchecked")
     @Override
-    public void doProcess(OutputStream out) throws IOException {
+    public void doProcess() throws IOException {
         if (params == null || params.length < 1) {
             getLogger().warning("Warning: IncludeReferences called with no parameter.");
             return;
@@ -106,30 +106,30 @@ public class IncludeResourcesCommand extends BaseCommand {
                 }
 
                 if ((hasDeferredScripts  || deferredScripts != null || deferredProperties != null)) {
-                    writeDeferred(cfg, out, t);
+                    writeDeferred(cfg, buffer, t);
                 }
            }
            if (t.getCombineScripts() != null && t.getCombineScripts()) {
 
-                String hash = crm.processScripts(scripts, ctx, hasDeferredScripts, out);
+                String hash = crm.processScripts(scripts, ctx, hasDeferredScripts, buffer);
 
                 if (!hasDeferredScripts && hash != null) {
                     String uri = "<script src=\"" + 
                     cfg.getResourceService() + "?resourceid=" + hash +  ".js\"></script>";
-                    out.write(uri.getBytes());
+                    buffer.write(uri.getBytes());
 
                } else if (hash != null){
-                   out.write(("<script>protorabbit.addDeferredScript('" + cfg.getResourceService() +
+                   buffer.write(("<script>protorabbit.addDeferredScript('" + cfg.getResourceService() +
                               "?resourceid=" + hash + ".js');</script>").getBytes());
                }
 
            } else {
                 String tFile = cfg.getResourceReferences(ctx.getTemplateId(), target, ctx);
-                out.write(tFile.getBytes());
+                buffer.write(tFile.getBytes());
            }
            if (deferredScripts != null) {
                for (String s : deferredScripts) {
-                   out.write(s.getBytes());
+                   buffer.write(s.getBytes());
                }
            }
            if (deferredProperties != null) {
@@ -141,7 +141,7 @@ public class IncludeResourcesCommand extends BaseCommand {
                CacheableResource cr = new CacheableResource("text/html", cfg.getResourceTimeout(), hash);
                cr.setContent( new StringBuffer(content) );
                crm.putResource(hash, cr);
-               out.write(("<script>protorabbit.addDeferredProperties('" + cfg.getResourceService() +
+               buffer.write(("<script>protorabbit.addDeferredProperties('" + cfg.getResourceService() +
                        "?resourceid=" + hash + ".json', '" + ctx.getTemplateId() +"');</script>").getBytes());
            }
         } else if ("styles".equals(target)) {
@@ -157,25 +157,25 @@ public class IncludeResourcesCommand extends BaseCommand {
                 }
 
                 if (hasDeferredStyles) {
-                    writeDeferred(cfg,out, t);
+                    writeDeferred(cfg,buffer, t);
                 }
             }
 
             if (t.getCombineStyles() != null && t.getCombineStyles()) {
-                String hash = crm.processStyles(styles, ctx, out);
+                String hash = crm.processStyles(styles, ctx, buffer);
                 if (!hasDeferredStyles && hash != null) {
                     String uri = "<link rel=\"stylesheet\" type=\"text/css\" href=\"" +
                     cfg.getResourceService() + "?resourceid=" + hash + 
                     ".css\"/>";
-                     out.write(uri.getBytes());
+                    buffer.write(uri.getBytes());
                } else if (hash != null){
                    String uri = "<script>protorabbit.addDeferredStyle('" + 
                    cfg.getResourceService() + "?resourceid=" + hash + ".css')</script>";
-                   out.write(uri.getBytes());
+                   buffer.write(uri.getBytes());
                }
             } else {
                 String uri = cfg.getResourceReferences(ctx.getTemplateId(), target, ctx);
-                out.write(uri.getBytes());
+                buffer.write(uri.getBytes());
             }
         }
 

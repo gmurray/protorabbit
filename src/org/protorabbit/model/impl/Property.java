@@ -14,7 +14,7 @@ package org.protorabbit.model.impl;
 import org.protorabbit.model.IProperty;
 
 
-public class PropertyImpl implements IProperty {
+public class Property implements IProperty {
 
     private String baseURI = null;
     private String value = null;
@@ -27,7 +27,7 @@ public class PropertyImpl implements IProperty {
     private StringBuffer deferContent = null;
     private String uaTest = null;
 
-    public PropertyImpl(String key, String value, int type, String baseURI, String originalTemplate) {
+    public Property(String key, String value, int type, String baseURI, String originalTemplate) {
         this.key = key;
         this.value = value;
         this.type = type;

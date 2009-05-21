@@ -30,7 +30,7 @@ import org.protorabbit.model.IProperty;
 import org.protorabbit.model.ITemplate;
 import org.protorabbit.model.ITestable;
 
-public class TemplateImpl implements ITemplate {
+public class Template implements ITemplate {
 
     private ResourceURI templateURI = null;
     private JSONObject json = null;
@@ -55,7 +55,7 @@ public class TemplateImpl implements ITemplate {
     private Boolean hasUADependencies = null;
     private String uriNamespace = null;
 
-    public TemplateImpl(String id, String baseURI, JSONObject json, Config cfg) {
+    public Template(String id, String baseURI, JSONObject json, Config cfg) {
 
         this.json = json;
         this.id = id;

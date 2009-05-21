@@ -20,6 +20,7 @@ import java.util.Date;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Logger;
 
 import org.protorabbit.Config;
 import org.protorabbit.accelerator.impl.CacheableResource;
@@ -39,6 +40,14 @@ public class ResourceManager {
 
    private String resourceService;
    private Hashtable<String, ICacheable> combinedResources = null;
+   private static Logger logger = null;
+
+   public static final Logger getLogger() {
+       if (logger == null) {
+           logger = Logger.getLogger("org.protrabbit");
+       }
+       return logger;
+   }
 
    // in milliseconds
    private long maxTimeout;
@@ -216,7 +225,7 @@ public class ResourceManager {
                    scripts.appendContent(scriptBuffer.toString());
                    ri.updateLastUpdated(ctx);
                } catch (Exception ioe) {
-                  System.out.println("Unable to locate resource " + ri.getUri());
+                  getLogger().warning("Unable to locate resource " + ri.getUri());
                }
            } else {
                String script = "<script type=\"text/javascript\" src=\"" +

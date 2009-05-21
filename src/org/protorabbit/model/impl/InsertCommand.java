@@ -16,7 +16,6 @@ import org.protorabbit.model.IParameter;
 import org.protorabbit.model.IProperty;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -36,7 +35,7 @@ public class InsertCommand extends BaseCommand {
 
     @SuppressWarnings("unchecked")
     @Override
-    public void doProcess(OutputStream out) throws IOException {
+    public void doProcess() throws IOException {
 
         Config cfg = ctx.getConfig();
 
@@ -91,10 +90,10 @@ public class InsertCommand extends BaseCommand {
                 current= value.indexOf("${", index);
             }
             if (evalue != null) {
-            	// tack on the rest of the string
-            	if (value.length() > index) {
-            	    evalue += value.substring(index);
-            	}
+                // tack on the rest of the string
+                if (value.length() > index) {
+                    evalue += value.substring(index);
+                }
                 value = evalue;
             }
         }
@@ -108,9 +107,9 @@ public class InsertCommand extends BaseCommand {
             String span = "<span id=\"" + ctx.getTemplateId() + "_" + p.getKey() + "\">" +
                 ((p.getDeferContent() != null) ? p.getDeferContent().toString() : "") + 
             "</span>"; 
-            out.write(span.getBytes());
+            buffer.write(span.getBytes());
         } else if (p != null) {
-            out.write(value.getBytes());
+            buffer.write(value.getBytes());
         } else {
             String message = "InsertWarning: Unable find property " + params[0];
             Config.getLogger().warning(message);

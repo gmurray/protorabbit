@@ -65,7 +65,7 @@ public class ProtoRabbitServlet extends HttpServlet {
     private String[] templates = null;
 
     // defaults
-    private String engineClassName = "org.protorabbit.impl.DefaultEngine";
+    private String engineClassName = null;
     private String defaultTemplateURI = "/WEB-INF/templates.json";
     private String serviceURI = "prt";
 
@@ -79,7 +79,6 @@ public class ProtoRabbitServlet extends HttpServlet {
 
     private String version = "0.6-dev-b";
 
-    @SuppressWarnings("unchecked")
     public void init(ServletConfig cfg) throws ServletException {
 
             super.init(cfg);
@@ -122,21 +121,7 @@ public class ProtoRabbitServlet extends HttpServlet {
                     getLogger().log(Level.SEVERE, "Fatal Error: Unable to instanciate engine class " + engineClassName, e);
                     throw new ServletException("Fatal Error: Unable to reading in configuration class " + engineClassName, e);
                 }
-            // initialize the engine
-            Class<IEngine> clazz = null;
-            try {
-                clazz = (Class<IEngine>) Class.forName(engineClassName);
-                engine = clazz.newInstance();
-            } catch (ClassNotFoundException cnfe) {
-                getLogger().severe("Fatal Error: Unable to find engine class " + engineClassName);
-                throw new ServletException("Fatal Error: Unable to find engine class " + engineClassName);
-            } catch (InstantiationException e) {
-                getLogger().log(Level.SEVERE, "Fatal Error: Instantiation exception for engine class " + engineClassName, e);
-                throw new ServletException("Fatal Error: Instantiation exception for engine class " + engineClassName, e);
-            } catch (IllegalAccessException e) {
-                getLogger().log(Level.SEVERE, "Fatal Error: Unable to access engine class " + engineClassName, e);
-                throw new ServletException("Fatal Error: Unable to access engine class " + engineClassName, e);
-            }
+             engine = jcfg.getEngine();
 
     }
 
@@ -168,6 +153,10 @@ public class ProtoRabbitServlet extends HttpServlet {
          if ((jcfg == null || needsUpdate) && templates.length > 0) {
             jcfg = new Config(serviceURI, maxAge);
             jcfg.setDevMode(isDevMode);
+            if (engineClassName != null) {
+                jcfg.setEngineClassName(engineClassName);
+            }
+            engine = jcfg.getEngine();
             for (int i = 0; i < templates.length; i++) {
                 JSONObject base = null;
                 InputStream is = this.ctx.getResourceAsStream(templates[i]);
@@ -399,7 +388,7 @@ public class ProtoRabbitServlet extends HttpServlet {
             resp.setHeader("Content-Type", "text/html");
 
             // headers after this point do not get written
-            engine.renderTemplate(id, jcfg, bos, wc);
+            engine.renderTemplate(id, wc, bos);
 
             String content = bos.toString(jcfg.getEncoding());
             String hash = IOUtil.generateHash(content);
@@ -477,7 +466,7 @@ public class ProtoRabbitServlet extends HttpServlet {
 
         } else {
             OutputStream out = resp.getOutputStream();
-            engine.renderTemplate(id, jcfg, bos, wc);
+            engine.renderTemplate(id, wc, bos);
             out.write(bos.toByteArray());
         }
 

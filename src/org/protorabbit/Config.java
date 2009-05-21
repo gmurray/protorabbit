@@ -30,9 +30,9 @@ import org.protorabbit.model.IContext;
 import org.protorabbit.model.IProperty;
 import org.protorabbit.model.ITemplate;
 import org.protorabbit.model.impl.IncludeFile;
-import org.protorabbit.model.impl.PropertyImpl;
+import org.protorabbit.model.impl.Property;
 import org.protorabbit.model.impl.ResourceURI;
-import org.protorabbit.model.impl.TemplateImpl;
+import org.protorabbit.model.impl.Template;
 import org.protorabbit.model.impl.URIResourceManager;
 
 public class Config {
@@ -50,6 +50,7 @@ public class Config {
    private String resourceService =  "prt";
    String defaultMediaType = "screen, projection";
    String commandBase = "";
+   private String engineClassName = "org.protorabbit.impl.DefaultEngine";
 
    public static Logger getLogger() {
        if (logger == null) {
@@ -57,6 +58,8 @@ public class Config {
        }
        return logger;
    }
+
+   private static IEngine engine = null;
 
    private Map<String, Object> globalAttributes = null;
    Map<String, ITemplate> tmap = null;
@@ -312,7 +315,7 @@ public class Config {
                t = templates.getJSONObject(i);
                String id = t.getString("id");
 
-                  ITemplate temp = new TemplateImpl(id, baseURI, t, this);
+                  ITemplate temp = new Template(id, baseURI, t, this);
 
                   if (t.has("timeout")) {
                       long templateTimeout = t.getLong("timeout");
@@ -415,7 +418,7 @@ public class Config {
                            }
                        }
 
-                       IProperty pi= new PropertyImpl(name, value, type, baseURI, id);
+                       IProperty pi= new Property(name, value, type, baseURI, id);
  
                        if (so.has("timeout")) {
                            long timeout = so.getLong("timeout");
@@ -555,5 +558,30 @@ public class Config {
    public void setResourceService(String resourceService) {
        this.resourceService = resourceService;
    }
+
+    public IEngine getEngine() {
+        if (engine == null) {
+            Class<IEngine> clazz = null;
+            try {
+                clazz = (Class<IEngine>) Class.forName(engineClassName);
+                engine = clazz.newInstance();
+            } catch (ClassNotFoundException cnfe) {
+                getLogger().severe("Fatal Error: Unable to find engine class " + engineClassName);
+                throw new RuntimeException("Fatal Error: Unable to find engine class " + engineClassName);
+            } catch (InstantiationException e) {
+                getLogger().log(Level.SEVERE, "Fatal Error: Instantiation exception for engine class " + engineClassName, e);
+                throw new RuntimeException("Fatal Error: Instantiation exception for engine class " + engineClassName, e);
+            } catch (IllegalAccessException e) {
+                getLogger().log(Level.SEVERE, "Fatal Error: Unable to access engine class " + engineClassName, e);
+                throw new RuntimeException("Fatal Error: Unable to access engine class " + engineClassName, e);
+            }
+        }
+        return engine;
+    }
+
+    @SuppressWarnings("unchecked")
+    public void setEngineClassName(String engineClassName) {
+        this.engineClassName = engineClassName;
+    }
 
 }

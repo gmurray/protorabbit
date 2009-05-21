@@ -11,20 +11,23 @@
 
 package org.protorabbit.model.impl;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 
 import org.protorabbit.model.ICommand;
 import org.protorabbit.model.IContext;
 import org.protorabbit.model.IParameter;
+import org.protorabbit.model.IDocumentContext;
 
 public abstract class BaseCommand implements ICommand {
 
+    protected ByteArrayOutputStream buffer;
     protected int start = -1;
     protected int end = -1;
     protected int commandType = ICommand.UNKNOWN;
     protected int commandIndex = -1;
 
+    protected IDocumentContext document = null;
     protected IContext ctx = null;
 
     protected IParameter[] params = null;
@@ -32,14 +35,22 @@ public abstract class BaseCommand implements ICommand {
     protected int processOrder = ICommand.PROCESS_DEFAULT;
 
     public BaseCommand() {
-    }
-    
-    public int getCommandIndex() {
-        return commandIndex;
+        buffer = new ByteArrayOutputStream();
     }
 
-    public void setCommandIndex(int commandIndex) {
-        this.commandIndex = commandIndex;
+    public ByteArrayOutputStream getBuffer() {
+        return buffer;
+    }
+
+    public IDocumentContext getDocumentContext() {
+        return document;
+    }
+    public void setDocumentContext(IDocumentContext document) {
+        this.document = document;
+    }
+
+    public void setBuffer(ByteArrayOutputStream buffer) {
+        this.buffer = buffer;
     }
 
     public void setProcessOrder(int processOrder) {
@@ -50,7 +61,7 @@ public abstract class BaseCommand implements ICommand {
         return processOrder;
     }
 
-    public abstract void doProcess(OutputStream out) throws IOException;
+    public abstract void doProcess() throws IOException;
 
     public void setContext(IContext ctx) {
         this.ctx = ctx;

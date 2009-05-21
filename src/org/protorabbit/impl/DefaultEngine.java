@@ -19,7 +19,6 @@ import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
@@ -36,8 +35,9 @@ import org.protorabbit.model.ICommand;
 import org.protorabbit.model.IContext;
 import org.protorabbit.model.IParameter;
 import org.protorabbit.model.ITemplate;
+import org.protorabbit.model.IDocumentContext;
 import org.protorabbit.model.impl.FileSystemContext;
-import org.protorabbit.model.impl.ParameterImpl;
+import org.protorabbit.model.impl.Parameter;
 
 /*
  *  DefaultEngine.java
@@ -57,85 +57,112 @@ public class DefaultEngine implements IEngine {
         return logger;
     }
 
-    public void renderTemplate(String tid, Config cfg, OutputStream out, IContext ctx) {
-
+    public void renderTemplate(String tid, IContext ctx, OutputStream out) {
         long startTime = (new Date()).getTime();
+        Config cfg = ctx.getConfig();
+        ctx.setTemplateId(tid);
+        ITemplate template = cfg.getTemplate(tid);
+        StringBuffer buff = template.getContent(ctx);
+        List<ICommand> cmds = gatherCommands(buff,ctx,out);
+        renderCommands(cmds, buff,ctx,out);
+        long stopTime = (new Date()).getTime();
+        getLogger().info(" Render time=" + (stopTime - startTime) + "ms");
+    }
 
+    @SuppressWarnings("unchecked")
+    public List<ICommand> gatherCommands(StringBuffer buff, IContext ctx, OutputStream out) {
+        List<ICommand> cmds = null; 
         try {
+              cmds = getCommands(ctx.getConfig(), buff);
+              List<ICommand> firstCmds = null;
+              List<ICommand> lastCmds = (List<ICommand>)ctx.getAttribute(LAST_COMMAND_LIST);
+             if (lastCmds == null) {
+                 lastCmds = new ArrayList<ICommand>();
+                 ctx.setAttribute(LAST_COMMAND_LIST, lastCmds);
+             }
+             List<ICommand> defaultCmds = (List<ICommand>)ctx.getAttribute(DEFAULT_COMMAND_LIST);
+             if (defaultCmds == null) {
+                 defaultCmds = new ArrayList<ICommand>();
+                 ctx.setAttribute(DEFAULT_COMMAND_LIST, defaultCmds);
+             }
+             if (cmds != null) {
+                   // pre-process to find first and last commands
 
-            ctx.setTemplateId(tid);
-            ITemplate template = cfg.getTemplate(tid);
+                 for (ICommand c : cmds) {
 
-            StringBuffer buff = template.getContent(ctx);
-            List<ICommand> cmds = getCommands(cfg, buff, template.getJSON());
-            List<ICommand> firstCmds = null;
-            List<ICommand> lastCmds = null;
-            List<ICommand> defaultCmds = null;
-            HashMap<Integer, ByteArrayOutputStream> buffers = null;
-            if (cmds != null) {
-                  // pre-process to find first and last commands
-                int cindex = 0;
-                for (ICommand c : cmds) {
-                    c.setCommandIndex(cindex++);
-                    if (c.getProcessOrder() == ICommand.PROCESS_FIRST) {
-                        if (firstCmds == null) {
-                            firstCmds = new ArrayList<ICommand>();
-                        }
-                        firstCmds.add(c);
-                    } else if (c.getProcessOrder() == ICommand.PROCESS_LAST) {
-                        if (lastCmds == null) {
-                            lastCmds = new ArrayList<ICommand>();
-                        }
-                        lastCmds.add(c);
-                    } else {
-                        if (defaultCmds == null) {
-                            defaultCmds = new ArrayList<ICommand>();
-                        }
-                        defaultCmds.add(c);
-                    }
-                }
-                if (buffers == null) {
-                    buffers = new HashMap<Integer, ByteArrayOutputStream>(); 
-                }
-                // first
-                if (firstCmds != null) {
-                    processCommands( ctx, firstCmds, buffers);
-                }
-                // default commands
-                if (defaultCmds != null) {
-                    processCommands( ctx, defaultCmds, buffers);
-                }
-                // last commands
-                if (lastCmds != null) {
-                    processCommands( ctx, lastCmds, buffers);
-                }
+                      if (c.getProcessOrder() == ICommand.PROCESS_FIRST) {
+                          if (firstCmds == null) {
+                              firstCmds = new ArrayList<ICommand>();
+                          }
+                          firstCmds.add(c);
+                      } else if (c.getProcessOrder() == ICommand.PROCESS_LAST) {
 
-                int index = 0;
-                for (ICommand c : cmds) {
+                          lastCmds.add(c);
+                      } else {
+
+                          defaultCmds.add(c);
+                      }
+                  }
+
+                  // first
+                  if (firstCmds != null) {
+                      processCommands( ctx, firstCmds);
+                  }
+                  // default commands
+                  if (defaultCmds != null) {
+                      processCommands( ctx, defaultCmds);
+                  }
+                  // last commands
+                  if (lastCmds != null) {
+                      processCommands( ctx, lastCmds);
+                  }
+              }
+          } catch (Exception e) {
+              getLogger().log(Level.SEVERE, "Error rendering ", e);
+          }
+          return cmds;
+    }
+     public void renderCommands(List<ICommand> cmds, StringBuffer buff, IContext ctx, OutputStream out) {
+         if (cmds == null) {
+             getLogger().warning("List<ICommand passed in as null");
+             return;
+         }
+         try {
+             int index = 0;
+             for (ICommand c : cmds) {
                     // output everything before the first command
-                     out.write(buff.substring(index, c.getStartIndex()).getBytes());
+                    out.write(buff.substring(index, c.getStartIndex()).getBytes());
                     index = c.getEndIndex();
                     try {
-                        ByteArrayOutputStream bos = buffers.get(new Integer(c.getCommandIndex()));
+                        // if we have a sub document context render it
+                        IDocumentContext dc = c.getDocumentContext();
+                        if (dc != null) {
+                            if (dc.getAllCommands() == null ||
+                                dc.getAllCommands() != null && dc.getAllCommands().size() == 0) {
+                                out.write(dc.getDocument().toString().getBytes());
+                            }
+                            renderCommands(dc.getAllCommands(), dc.getDocument(), ctx, out) ;
+                        }
+                        ByteArrayOutputStream bos = c.getBuffer();
                         if (bos != null) {
                             out.write(bos.toByteArray());
                         } else {
-                            getLogger().log(Level.SEVERE, "Error rendering buffer of commandIndex " + c.getCommandIndex());
+                            getLogger().log(Level.SEVERE, "Error rendering buffer of command " + c);
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                }
-            }
+             }
            // now write everything after the last command
-           ICommand lc = cmds.get(cmds.size() -1);
-           out.write(buff.substring(lc.getEndIndex()).getBytes());
+           if (cmds.size() > 0) {
+               ICommand lc = cmds.get(cmds.size() -1);
+               out.write(buff.substring(lc.getEndIndex()).getBytes());
+           }
 
         } catch (Exception e) {
             getLogger().log(Level.SEVERE, "Error rendering ", e);
         }
-        long stopTime = (new Date()).getTime();
-        getLogger().info(" Render time=" + (stopTime - startTime) + "ms");
+
         try {
             out.flush();
             out.close();
@@ -146,16 +173,21 @@ public class DefaultEngine implements IEngine {
     }
 
     void processCommands(IContext ctx,
-                         List<ICommand> cmds,
-                         HashMap<Integer, ByteArrayOutputStream> buffers) {
-
+                         List<ICommand> cmds) {
+        if (cmds == null) {
+            return;
+        }
         for (ICommand c : cmds) {
             c.setContext(ctx);
-            ByteArrayOutputStream 
-                bos = new ByteArrayOutputStream();
             try {
-                c.doProcess(bos);
-                buffers.put(new Integer(c.getCommandIndex()), bos);
+                c.doProcess();
+                IDocumentContext dc = c.getDocumentContext();
+                if (dc != null) {
+                    // make sure sub document commands are processed
+                    processCommands(ctx, dc.getBeforeCommands());
+                    processCommands(ctx, dc.getDefaultCommands());
+                    processCommands(ctx, dc.getAfterCommands());
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -220,7 +252,7 @@ public class DefaultEngine implements IEngine {
 
         getLogger().info("** Config Processing Time : " + (postConfigTime -  startTime) + "\n\n");
         IEngine engine = new DefaultEngine();
-        engine.renderTemplate(targetTemplate, cfg, System.out, ctx);
+        engine.renderTemplate(targetTemplate, ctx, System.out);
 
         long stopTime = (new Date()).getTime();
 
@@ -230,11 +262,11 @@ public class DefaultEngine implements IEngine {
     /*
      * A command looks like 
      * 
-     * <^ include('foo') ^> or <^ include('foo', 'baz', 'bin') ^>
-     * <^ insert('bar') ^>
+     * <^ include("foo") ^> or <^ include("foo", "baz", "bin") ^>
+     * <^ insert("bar") ^>
      * 
      */
-    public static List<ICommand> getCommands(Config cfg, StringBuffer doc, JSONObject template) {
+    public List<ICommand> getCommands(Config cfg, StringBuffer doc) {
 
         List<ICommand> commands = new ArrayList<ICommand>();
         if (doc == null) return  null;
@@ -415,6 +447,7 @@ public class DefaultEngine implements IEngine {
 
     static IParameter getParameter(String text, Character lastToken) {
         Object value = null;
+        text = text.trim();
         int type = -1;
         if (lastToken != null &&
             lastToken.charValue() == '\"') {
@@ -455,7 +488,7 @@ public class DefaultEngine implements IEngine {
             }
         }
         if (type != -1) {
-            return new ParameterImpl(type, value);
+            return new Parameter(type, value);
         } else {
             throw new RuntimeException("Error parsing parameter " + text);
         }

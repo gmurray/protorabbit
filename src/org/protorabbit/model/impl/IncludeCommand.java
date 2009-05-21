@@ -12,19 +12,21 @@
 package org.protorabbit.model.impl;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.protorabbit.Config;
+import org.protorabbit.IEngine;
 import org.protorabbit.accelerator.ResourceManager;
 import org.protorabbit.accelerator.impl.CacheableResource;
 import org.protorabbit.accelerator.impl.DeferredResource;
+import org.protorabbit.model.ICommand;
 import org.protorabbit.model.IParameter;
 import org.protorabbit.model.IProperty;
 import org.protorabbit.model.ITemplate;
+import org.protorabbit.model.IDocumentContext;
 import org.protorabbit.util.IOUtil;
 
 public class IncludeCommand extends BaseCommand {
@@ -41,9 +43,15 @@ public class IncludeCommand extends BaseCommand {
         return logger;
     }
 
+    public IncludeCommand(){
+        super();
+        // set this command to process after everything else
+        setProcessOrder(ICommand.PROCESS_FIRST);
+    }
+
     @SuppressWarnings("unchecked")
     @Override
-    public void doProcess(OutputStream out) throws IOException {
+    public void doProcess() throws IOException {
 
         Config cfg = ctx.getConfig();
         int counter = 0;
@@ -55,11 +63,15 @@ public class IncludeCommand extends BaseCommand {
         String tid = ctx.getTemplateId();
 
         String id = null;
+        boolean parseIncludeFile = false;
         if (params.length > 0 && params[0].getType() == IParameter.STRING) {
             id = params[0].getValue().toString();
         } else {
             getLogger().severe("Error processing property " + params[0].getValue().toString() + " Parameter is not of type String");
             return;
+        }
+        if (params.length > 1 && params[1].getType() == IParameter.BOOLEAN) {
+            parseIncludeFile = ((Boolean) params[1].getValue()).booleanValue();
         }
 
         String resourceName = null;
@@ -129,7 +141,7 @@ public class IncludeCommand extends BaseCommand {
                 crm.putResource(resourceId, cr);
             }
 
-            out.write(("<div id='" + resourceId + "'>" + deferContent.toString() + "</div>").getBytes());
+            buffer.write(("<div id='" + resourceId + "'>" + deferContent.toString() + "</div>").getBytes());
 
             String script = "<script>protorabbit.addDeferredFragement({ include : '" + cfg.getResourceService() + 
                        "?resourceid=" + resourceId + ".htm', elementId : '" + resourceId + "' });</script>";
@@ -138,7 +150,39 @@ public class IncludeCommand extends BaseCommand {
         } else {
             IncludeFile inc = cfg.getIncludeFileContent(ctx.getTemplateId(), id,ctx);
             buff = inc.getContent();
-            out.write(buff.toString().getBytes());
+
+            if (parseIncludeFile) {
+                IDocumentContext document = new DocumentContext();
+                setDocumentContext(document);
+                IEngine engine = cfg.getEngine();
+                StringBuffer doc = inc.getContent();
+                List<ICommand> cmds = engine.getCommands(cfg, doc);
+                document.setAllCommands(cmds);
+                document.setDocument(doc);
+                List<ICommand> lastCmds = null;
+                List<ICommand> defaultCmds = null;
+
+                for (ICommand c : cmds) {
+                    if (c.getProcessOrder() == ICommand.PROCESS_DEFAULT) {
+                        if (defaultCmds == null) {
+                            defaultCmds = new ArrayList<ICommand>();
+                            document.setAfterCommands(defaultCmds);
+                        }
+                        defaultCmds.add(c);
+                    } else if (c.getProcessOrder() == ICommand.PROCESS_LAST) {
+                        if (lastCmds == null) {
+                            lastCmds = new ArrayList<ICommand>();
+                            document.setAfterCommands(lastCmds);
+                        }
+                        lastCmds.add(c);
+                    } else {
+                        getLogger().warning("Unable to process command " + c +
+                                            ". Command processOrder must be of type ICommand.PROCESS_DEFAULT or ICommand.PROCESS_LAST. Command type is " + c.getProcessOrder());
+                    }
+                }
+            } else {
+                buffer.write(buff.toString().getBytes());
+            }
         }
 
     }

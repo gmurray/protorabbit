@@ -2,12 +2,12 @@ package org.protorabbit.model.impl;
 
 import org.protorabbit.model.IParameter;
 
-public class ParameterImpl implements IParameter {
+public class Parameter implements IParameter {
 
     private Object value;
     private int type = -1;
 
-    public ParameterImpl( int type, Object value) {
+    public Parameter( int type, Object value) {
         this.type = type;
         this.value = value;
     }
