@@ -1,13 +1,13 @@
 /*
- * Protorabbit
- *
- * Copyright (c) 2009 Greg Murray (protorabbit.org)
- * 
- * Licensed under the MIT License:
- * 
- *  http://www.opensource.org/licenses/mit-license.php
- *
- */
+* Protorabbit
+*
+* Copyright (c) 2009 Greg Murray (protorabbit.org)
+*
+* Licensed under the MIT License:
+*
+*  http://www.opensource.org/licenses/mit-license.php
+*
+*/
 
 package org.protorabbit.json;
 
@@ -26,107 +26,114 @@ import org.json.JSONObject;
 
 public class DefaultSerializer implements JSONSerializer {
 
-    @SuppressWarnings("unchecked")
-    public Object serialize(Object o) {
+   @SuppressWarnings("unchecked")
+   public Object serialize(Object o) {
 
-        // null is null
-        if (o == null) {
+       // null is null
+       if (o == null) {
 
-            return JSONObject.NULL;
-        }
+           return JSONObject.NULL;
+       }
 
-        // collections
-        if (Collection.class.isAssignableFrom(o.getClass())) {
+       // collections
+       if (Collection.class.isAssignableFrom(o.getClass())) {
 
-            Iterator<?> it =  ((Collection<?>)o).iterator();
-        
-            JSONArray ja = new JSONArray();
-            while(it.hasNext()) {
-                
-                Object i = serialize(it.next());
-                ja.put(i);
-            }
-            return ja;
-        }
+           Iterator<?> it =  ((Collection<?>)o).iterator();
 
-        // maps
-        if (Map.class.isAssignableFrom(o.getClass())) {
-            JSONObject jo = new JSONObject();
-            Map m = ((Map<String, ?>)o);
-            Iterator<String> ki =  m.keySet().iterator();
-            while (ki.hasNext()) {
-                String key = ki.next();
-                Object value = serialize(m.get(key));
-                try {
-                    jo.put(key, value);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-            return jo;
-        }
+           JSONArray ja = new JSONArray();
+           while(it.hasNext()) {
 
-        // primitives
-        if (o instanceof Double ||
-            o instanceof Number ||
-            o instanceof Integer ||
-            o instanceof String || 
-            o instanceof Boolean) {
-            return o;
-        }
+               Object i = serialize(it.next());
+               ja.put(i);
+           }
+           return ja;
+       }
 
-        if (o instanceof Date) {
-            return ((Date)o).getTime();
-        }
+       // maps
+       if (Map.class.isAssignableFrom(o.getClass())) {
+           JSONObject jo = new JSONObject();
+           Map m = ((Map<String, ?>)o);
+           Iterator<String> ki =  m.keySet().iterator();
+           while (ki.hasNext()) {
+               String key = ki.next();
+               Object value = serialize(m.get(key));
+               try {
+                   jo.put(key, value);
+               } catch (JSONException e) {
+                   e.printStackTrace();
+               }
+           }
+           return jo;
+       }
 
-        // serialize using bean like methods
-        return serializePOJO(o);
+       // primitives
+       if (o instanceof Double ||
+           o instanceof Number ||
+           o instanceof Integer ||
+           o instanceof String ||
+           o instanceof Boolean) {
+           return o;
+       }
 
-    }
-    
-    /*
-     * Look at all the public methods in the object
-     * find the ones that start with "get"
-     * 
-     * create a property key for the methods and invoke the method using reflection
-     * to get value.
-     */
-    public Object serializePOJO(Object pojo) {
+       if (o instanceof Date) {
+           return ((Date)o).getTime();
+       }
 
-        Object[] args = {};
-        HashMap<String, Object> map = new HashMap<String, Object>();
+       // serialize using bean like methods
+       return serializePOJO(o);
 
-        Method[] methods = pojo.getClass().getDeclaredMethods();
+   }
 
-        for (int i=0; i < methods.length;i++) {
-            try {
-                Method m = methods[i];
-                if (Modifier.isPublic(m.getModifiers()) &&
-                    !m.getName().equals("getClass")  &&
-                    m.getName().startsWith("get") && m.getName().length() > 3) {
-                    // change the case of the property from camelCase
-                    String key = m.getName().substring(3,4).toLowerCase();
-                    // get the rest of the name;
-                    if (m.getName().length() > 4) {
-                        key += m.getName().substring(4);
-                    }
-                    Object value =  m.invoke(pojo, args);
-                    map.put(key, value);
-                }
-            } catch (IllegalArgumentException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
-            }
-        }
-        // use the serializer itself to serialize a map of properties we created
-        if (map.keySet().size() > 0) {
-            return serialize(map);
-        }
+   /*
+    * Look at all the public methods in the object
+    * find the ones that start with "get"
+    *
+    * create a property key for the methods and invoke the method using reflection
+    * to get value.
+    */
+   public Object serializePOJO(Object pojo) {
 
-        return JSONObject.NULL;
-    }
+       Object[] args = {};
+       HashMap<String, Object> map = new HashMap<String, Object>();
 
+       Method[] methods = pojo.getClass().getMethods();
+
+       for (int i=0; i < methods.length;i++) {
+           try {
+               Method m = methods[i];
+               if (Modifier.isPublic(m.getModifiers()) &&
+                    !"getClass".equals(m.getName()) &&
+                    !"getSystemClassLoader".equals(m.getName()) &&
+                    !"getMethods".equals(m.getName()) &&
+                    !"getDeclaredClasses".equals(m.getName()) &&
+                    !"getConstructors".equals(m.getName()) &&
+                    !"getDeclaringClass".equals(m.getName()) &&
+                    !"getEnclosingClass".equals(m.getName()) &&
+                    !"getClassLoader".equals(m.getName()) &&
+                    m.getName().startsWith("get") && m.getName().length() > 3 &&
+                    m.getParameterTypes().length == 0) {
+                   // change the case of the property from camelCase
+                   String key = m.getName().substring(3,4).toLowerCase();
+                   // get the rest of the name;
+                   if (m.getName().length() > 4) {
+                       key += m.getName().substring(4);
+                   }
+                   Object value =  m.invoke(pojo, args);
+                   map.put(key, value);
+               }
+           } catch (IllegalArgumentException e) {
+               e.printStackTrace();
+           } catch (IllegalAccessException e) {
+               e.printStackTrace();
+           } catch (InvocationTargetException e) {
+               e.printStackTrace();
+           }
+       }
+       // use the serializer itself to serialize a map of properties we created
+       if (map.keySet().size() > 0) {
+           return serialize(map);
+       }
+
+       return JSONObject.NULL;
+   }
 }
