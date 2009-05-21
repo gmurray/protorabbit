@@ -61,4 +61,6 @@ public interface ITemplate {
     public String getURINamespace();
     public void setURINamespace(String namespace);
     public boolean hasUserAgentDependencies(IContext ctx);
+    public void setAttribute(String key, Object value);
+    public Object getAttribute(String key);
 }

@@ -547,6 +547,7 @@ window.protorabbit = function() {
           }
       }
       if (ctx.deferredScripts.length > 0) {
+          ctx.deferredScripts.reverse();
           addLibraries({
              libs : ctx.deferredScripts,
              callback : function(args) {

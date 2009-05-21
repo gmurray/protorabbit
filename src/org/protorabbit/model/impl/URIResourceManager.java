@@ -19,7 +19,9 @@ public class URIResourceManager {
                 while (it.hasNext()) {
 
                     ResourceURI ri = it.next();
-                    if (ri.isWritten()) continue;
+                    if (ri.isWritten()) {               
+                         continue;
+                    }
                     String resource = ri.getUri();
                     String baseURI =  ctx.getContextRoot();
 

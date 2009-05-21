@@ -466,13 +466,11 @@ public class Config {
 
    public String generateScriptReferences(ITemplate template, IContext ctx) {
        List<ResourceURI> scripts = template.getAllScripts(ctx);
-       Collections.reverse(scripts);
        return URIResourceManager.generateReferences(template,ctx,scripts, ResourceURI.SCRIPT);
    }
 
    public String generateStyleReferences(ITemplate template, IContext ctx) {
        List<ResourceURI> styles = template.getAllStyles(ctx);
-       Collections.reverse(styles);
        return URIResourceManager.generateReferences(template, ctx, styles, ResourceURI.LINK);
    }
 

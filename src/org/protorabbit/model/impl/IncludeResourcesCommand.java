@@ -95,6 +95,7 @@ public class IncludeResourcesCommand extends BaseCommand {
             List<ResourceURI> scripts = t.getAllScripts(ctx);
             List<String> deferredScripts = (List<String>)ctx.getAttribute(IncludeCommand.DEFERRED_SCRIPTS);
             Map<String, String> deferredProperties = (Map<String, String>)ctx.getAttribute(InsertCommand.DEFERRED_PROPERTIES);
+
             boolean hasDeferredScripts = false;
 
             if (!deferredWritten) {
@@ -109,6 +110,7 @@ public class IncludeResourcesCommand extends BaseCommand {
                     writeDeferred(cfg, buffer, t);
                 }
            }
+
            if (t.getCombineScripts() != null && t.getCombineScripts()) {
 
                 String hash = crm.processScripts(scripts, ctx, hasDeferredScripts, buffer);

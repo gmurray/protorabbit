@@ -54,6 +54,7 @@ public class Template implements ITemplate {
     private ICacheable templateResource = null;
     private Boolean hasUADependencies = null;
     private String uriNamespace = null;
+    private Map attributes = null;
 
     public Template(String id, String baseURI, JSONObject json, Config cfg) {
 
@@ -61,6 +62,7 @@ public class Template implements ITemplate {
         this.id = id;
         this.baseURI  = baseURI;
         properties = new HashMap<String, IProperty>();
+        attributes = new HashMap<String, Object>();
         this.config  = cfg;
     }
 
@@ -162,26 +164,15 @@ public class Template implements ITemplate {
      *
      */
     public List<ResourceURI> getAllScripts(IContext ctx) {
-        HashMap<String, String> existingRefs = new HashMap<String, String> ();
 
+        HashMap<String, ResourceURI> existingRefs = new HashMap<String, ResourceURI> ();
         List<ResourceURI> ascripts = new ArrayList<ResourceURI>();
-        if (scripts != null) {
-            int size = scripts.size() -1;
-            for (int i = size; i >= 0; i-=1) {
-                ResourceURI ri = scripts.get(i);
-                String id = ri.getId();
-                if (!existingRefs.containsKey(id)) {
-                    if (includeResource(ri,ctx)) {
-                        ascripts.add(ri);
-                        existingRefs.put(id, "");
-                    }
-                }
-            }
-        }
         if (ancestors != null) {
-            Iterator<String> it = ancestors.iterator();
-            while (it.hasNext()) {
-                ITemplate p = config.getTemplate(it.next());
+          //  Iterator<String> it = ancestors.iterator();
+            int size = ancestors.size()-1;
+            for (int i = size; i >= 0; i-=1) {
+                String ancestorId = ancestors.get(i);
+                ITemplate p = config.getTemplate(ancestorId);
                 if (p != null) {
                     List<ResourceURI>pscripts = p.getAllScripts(ctx);
                     Iterator<ResourceURI> pit = pscripts.iterator();
@@ -190,13 +181,35 @@ public class Template implements ITemplate {
                         String id = ri.getId();
                         if (!existingRefs.containsKey(id)) {
                             if (includeResource(ri,ctx)) {
+                                // reset the written flag
+                                ri.setWritten(false);                             
                                 ascripts.add(ri);
+                                existingRefs.put(id, ri);                          
                             }
                         }
                     }
                 }
             }
         }
+        if (scripts != null) {
+            int size = scripts.size();
+            for (int i = 0; i < size; i+=1) {
+                ResourceURI ri = scripts.get(i);
+                String id = ri.getId();
+                
+                if (includeResource(ri,ctx)) {
+                    // template can override
+                    if (existingRefs.containsKey(id)) {                 
+                        ascripts.remove(existingRefs.get(id));
+                    }
+                    // reset the written flag
+                    ri.setWritten(false);                     
+                    ascripts.add(ri);
+                    existingRefs.put(id, ri);
+                }
+            }
+        }
+
         return ascripts;
     }
 
@@ -243,26 +256,16 @@ public class Template implements ITemplate {
     }
 
     public List<ResourceURI> getAllStyles(IContext ctx) {
-        HashMap<String, String> existingRefs = new HashMap<String, String> ();
+
+        HashMap<String, ResourceURI> existingRefs = new HashMap<String, ResourceURI> ();
 
         List<ResourceURI> astyles = new ArrayList<ResourceURI>();
-        if (styles != null) {
-            int size = styles.size() -1;
-            for (int i = size; i >= 0; i-=1) {
-                ResourceURI ri = styles.get(i);
-                String id = ri.getId();
-                if (!existingRefs.containsKey(id)) {
-                    if (includeResource(ri,ctx)) {
-                        astyles.add(ri);
-                        existingRefs.put(id, "");
-                    }
-                }
-            }
-        }
+
         if (ancestors != null) {
-            Iterator<String> it = ancestors.iterator();
-            while (it.hasNext()) {
-                ITemplate p = config.getTemplate(it.next());
+            int size = ancestors.size() -1;
+            for (int i = size; i >= 0; i-=1) {
+                String ancestorId = ancestors.get(i);
+                ITemplate p = config.getTemplate(ancestorId);
                 if (p != null) {
                     List<ResourceURI>pstyles = p.getAllStyles(ctx);
                     Iterator<ResourceURI> pit = pstyles.iterator();
@@ -271,14 +274,42 @@ public class Template implements ITemplate {
                         String id = ri.getId();
                         if (!existingRefs.containsKey(id)) {
                             if (includeResource(ri,ctx)) {
+                                // reset the written flag
+                                ri.setWritten(false);                             
                                 astyles.add(ri);
+                                existingRefs.put(id, ri);
                             }
                         }
                     }
                 }
             }
+        }    
+        if (styles != null) {
+            int size = styles.size();
+            for (int i = 0; i < size; i+=1) {
+                ResourceURI ri = styles.get(i);
+                String id = ri.getId();
+                if (includeResource(ri,ctx)) {
+                    // template can override
+                    if (existingRefs.containsKey(id)) {                 
+                        astyles.remove(existingRefs.get(id));
+                    }
+                    // reset the written flag
+                    ri.setWritten(false);                     
+                    astyles.add(ri);
+                    existingRefs.put(id, ri);
+                }
+            }
         }
         return astyles;
+    }
+
+    public synchronized void setAttribute(String key, Object value) {
+        attributes.put(key, value);
+    }
+
+    public Object getAttribute(String key) {
+        return attributes.get(key);
     }
 
     public List<ResourceURI> getStyles() {
