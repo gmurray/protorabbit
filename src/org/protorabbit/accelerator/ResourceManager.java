@@ -263,6 +263,7 @@ public class ResourceManager {
            if (mediaType == null){
                mediaType = ctx.getConfig().getMediaType();
            }
+System.out.println("#### processing " + resource);           
            if (ri.isDefer()) {
                if (deferredScripts == null) {
                    deferredScripts = new ArrayList<String>();
@@ -273,8 +274,11 @@ public class ResourceManager {
                ri.setWritten(true);
                ctx.setAttribute(IncludeCommand.DEFERRED_SCRIPTS, deferredScripts);
            } else if (!ri.isExternal()){
+System.out.println("getting resource with " + ri.getBaseURI() + " uri=" + ri.getUri()) ;     
                StringBuffer stylesBuffer = ctx.getResource(ri.getBaseURI(), ri.getUri());
+System.out.println("stylesBuffer " +stylesBuffer.length());                
                try {
+System.out.println("baseURI=" +ri.getBaseURI() + " fullURI=" + ri.getFullURI());  
                    stylesBuffer = replaceRelativeLinks(stylesBuffer, ri.getBaseURI(), ctx, ri.getFullURI());
                    styles.appendContent(stylesBuffer.toString());
                    ri.updateLastUpdated(ctx);

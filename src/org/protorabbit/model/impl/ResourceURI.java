@@ -105,7 +105,7 @@ public class ResourceURI implements ITestable {
 
     public String getId() {
         if (id == null) {
-            return uri;
+            return getFullURI();
         } else {
             return id;
         }
