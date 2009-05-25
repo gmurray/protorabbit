@@ -54,7 +54,8 @@ public class Template implements ITemplate {
     private ICacheable templateResource = null;
     private Boolean hasUADependencies = null;
     private String uriNamespace = null;
-    private Map attributes = null;
+    private Map<String, Object> attributes = null;
+    private DocumentContext dc = null;
 
     public Template(String id, String baseURI, JSONObject json, Config cfg) {
 
@@ -152,6 +153,35 @@ public class Template implements ITemplate {
         }
         return null;
     }
+    
+    /**
+     * Look locally for a property with a given id. If not found check all ancestors.
+     * 
+     * This lets us abstract the properties that make up a template from the names used
+     * internally for the templates.
+     * 
+     */
+    public IProperty getPropertyById(String id, IContext ctx) {
+        for (String key : properties.keySet()) {
+            IProperty property = properties.get(key);
+            if (id.equals(property.getId())) {
+                return property;
+            }
+        }
+        if (ancestors == null) {
+            return null;
+        }
+        // check ancestors
+        Iterator<String> it = ancestors.iterator();
+        while (it.hasNext()) {
+            ITemplate t = config.getTemplate(it.next());
+            IProperty p = t.getPropertyById(id, ctx);
+            if (p != null) {
+                return p;
+            }
+        }
+        return null;
+    }
 
     public List<ResourceURI> getScripts() {
         return scripts;
@@ -182,9 +212,9 @@ public class Template implements ITemplate {
                         if (!existingRefs.containsKey(id)) {
                             if (includeResource(ri,ctx)) {
                                 // reset the written flag
-                                ri.setWritten(false);                             
+                                ri.setWritten(false);
                                 ascripts.add(ri);
-                                existingRefs.put(id, ri);                          
+                                existingRefs.put(id, ri);
                             }
                         }
                     }
@@ -199,11 +229,11 @@ public class Template implements ITemplate {
                 
                 if (includeResource(ri,ctx)) {
                     // template can override
-                    if (existingRefs.containsKey(id)) {                 
+                    if (existingRefs.containsKey(id)) {
                         ascripts.remove(existingRefs.get(id));
                     }
                     // reset the written flag
-                    ri.setWritten(false);                     
+                    ri.setWritten(false);
                     ascripts.add(ri);
                     existingRefs.put(id, ri);
                 }
@@ -646,6 +676,14 @@ public class Template implements ITemplate {
 
     public void setCombineResources(Boolean combineResources) {
         this.combineResources = combineResources;
+    }
+
+    public DocumentContext getDocumentContext() {
+        return dc;
+    }
+
+    public void setDocumentContext(DocumentContext dc) {
+        this.dc = dc;
     }
 
 }

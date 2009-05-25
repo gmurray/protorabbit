@@ -26,6 +26,7 @@ public class Property implements IProperty {
     private boolean defer;
     private StringBuffer deferContent = null;
     private String uaTest = null;
+    private String id = null;
 
     public Property(String key, String value, int type, String baseURI, String originalTemplate) {
         this.key = key;
@@ -33,6 +34,14 @@ public class Property implements IProperty {
         this.type = type;
         this.baseURI = baseURI;
         this.originalTemplate = originalTemplate;
+    }
+    
+    public void setId(String id) {
+        this.id = id;
+    }
+    
+    public String getId() {
+        return id;
     }
 
     public String getBaseURI() {

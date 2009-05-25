@@ -14,7 +14,6 @@ package org.protorabbit.accelerator;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Hashtable;
@@ -183,8 +182,6 @@ public class ResourceManager {
 
    @SuppressWarnings("unchecked")
    public CacheableResource getScripts(List<ResourceURI>scriptResources, IContext ctx, OutputStream out) throws IOException {
-       ITemplate template = ctx.getConfig().getTemplate(ctx.getTemplateId());
-
        CacheableResource scripts = new CacheableResource("text/javascript", maxTimeout, getHash(scriptResources));
 
        List<String> deferredScripts = (List<String>)ctx.getAttribute(IncludeCommand.DEFERRED_SCRIPTS);
@@ -239,8 +236,6 @@ public class ResourceManager {
    public CacheableResource getStyles(List<ResourceURI>styleResources, IContext ctx, OutputStream out) throws IOException {
 
        CacheableResource styles = new CacheableResource("text/css", maxTimeout, getHash(styleResources));
-       ITemplate template = ctx.getConfig().getTemplate(ctx.getTemplateId());
-
        List<String> deferredScripts = (List<String>)ctx.getAttribute(IncludeCommand.DEFERRED_SCRIPTS);
        Iterator<ResourceURI> it = styleResources.iterator();
        while (it.hasNext()) {
@@ -263,7 +258,6 @@ public class ResourceManager {
            if (mediaType == null){
                mediaType = ctx.getConfig().getMediaType();
            }
-System.out.println("#### processing " + resource);           
            if (ri.isDefer()) {
                if (deferredScripts == null) {
                    deferredScripts = new ArrayList<String>();
@@ -274,11 +268,8 @@ System.out.println("#### processing " + resource);
                ri.setWritten(true);
                ctx.setAttribute(IncludeCommand.DEFERRED_SCRIPTS, deferredScripts);
            } else if (!ri.isExternal()){
-System.out.println("getting resource with " + ri.getBaseURI() + " uri=" + ri.getUri()) ;     
                StringBuffer stylesBuffer = ctx.getResource(ri.getBaseURI(), ri.getUri());
-System.out.println("stylesBuffer " +stylesBuffer.length());                
                try {
-System.out.println("baseURI=" +ri.getBaseURI() + " fullURI=" + ri.getFullURI());  
                    stylesBuffer = replaceRelativeLinks(stylesBuffer, ri.getBaseURI(), ctx, ri.getFullURI());
                    styles.appendContent(stylesBuffer.toString());
                    ri.updateLastUpdated(ctx);

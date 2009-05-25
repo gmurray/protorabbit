@@ -2,13 +2,14 @@ package org.protorabbit.accelerator.impl;
 
 import java.util.Map;
 import java.util.Iterator;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.*;
 import java.util.logging.*;
 import java.security.Security;
 
-import org.protorabbit.Config;
+import org.protorabbit.accelerator.IHttpClient;
 
    /**
     *
@@ -16,142 +17,81 @@ import org.protorabbit.Config;
     *  with the ability to set pass in headers and set
     *  as a proxy port / host
     */
-   public class HttpClient {
-
-       private String proxyHost = null;
-       private int proxyPort = -1;
-       private boolean isHttps = false;
-       private boolean isProxy = false;
-       private HttpURLConnection urlConnection = null;
-       private Map<String,String> headers;
+    public class HttpClient implements IHttpClient {
+       
+        private String url;
+        private String method = "GET";
+        private String proxyHost = null;
+        private int proxyPort = -1;
+        private String userName = null;
+        private String password = null;
+        private boolean isHttps = false;
+        private HttpURLConnection urlConnection = null;
+        private Map<String,String> headers;
        // fake as IE 8
        private String defaultUserAgent = "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0)";
+       private static Logger logger = null;
 
-       public HttpClient(String url)
-               throws MalformedURLException {
-
-           this(null,-1, url, null,"GET");
+       public static Logger getLogger() {
+           if (logger == null) {
+               logger = Logger.getLogger("org.protrabbit");
+           }
+           return logger;
        }
+
+       public HttpClient() {
+       }
+
 
        /**
         * @param phost PROXY host name
         * @param pport PROXY port string
         * @param url URL string
         * @param headers Map
+        * @throws IOException 
         */
-       public HttpClient(String phost,
-                        int pport,
-                        String url,
-                        Map<String,String> headers,
-                        String method)
-           throws MalformedURLException {
+       void init()
+           throws IOException {
 
-           if (phost != null && pport != -1) {
-               this.isProxy = true;
-           }
-           this.proxyHost = phost;
-           this.proxyPort = pport;
+
            if (url.trim().startsWith("https:")) {
                isHttps = true;
+           }
+           if (proxyHost != null) {
+               System.setProperty("https.proxyHost", proxyHost);
+           }
+           if (proxyPort != -1 ) {
+               System.setProperty("https.proxyPort", proxyPort + "");
            }
            this.urlConnection = getURLConnection(url);
            try {
                this.urlConnection.setRequestMethod(method);
            } catch (java.net.ProtocolException pe) {
-               Config.getLogger().log(Level.SEVERE, "Unable protocol method to " + method, pe);
+               getLogger().log(Level.SEVERE, "Unable protocol method to " + method, pe);
            }
-           this.headers = headers;
-           // seat headers
-           if (headers != null) {
-               Iterator<String> it = headers.keySet().iterator();
-               if (it != null) {
-                   while (it.hasNext()) {
-                       String key = it.next();
-                       String value = headers.get(key);
-                       this.urlConnection.setRequestProperty (key, value);
-                   }
-               }
-           }
-       }
-
-       /**
-        * @param phost PROXY host name
-        * @param pport PROXY port string
-        * @param url URL string
-        * @param headers Map     
-        * @param userName string
-        * @param password string
-        */
-       public HttpClient(String phost,
-                         int pport,
-                         String url,
-                         Map<String, String> headers,
-                         String method,
-                         String userName,
-                         String password)
-           throws MalformedURLException {
-
-           try {
-               if (phost != null && pport != -1) {
-                   this.isProxy = true;
-               }
-               this.proxyHost = phost;
-               this.proxyPort = pport;
-               if (url.trim().startsWith("https:")) {
-                   isHttps = true;
-               }
-               this.urlConnection = getURLConnection(url);
-               try {
-                   this.urlConnection.setRequestMethod(method);
-               } catch (java.net.ProtocolException pe) {
-                   Config.getLogger().severe("Unable protocol method to " + method + " : " + pe);
-               }
+           if (userName != null && password != null) {
                // Send HTTP Basic authentication information
-               String auth = userName + ":" +  password;   
+               String auth = userName + ":" +  password;
                String encoded = new sun.misc.BASE64Encoder().encode (auth.getBytes());
                // set basic authorization
                this.urlConnection.setRequestProperty ("Authorization", "Basic " + encoded);
-               this.headers = headers;
-               // seat headers
-               if (headers != null) {
-                   Iterator<String> it = headers.keySet().iterator();
-                   if (it != null) {
-                       while (it.hasNext()) {
-                           String key = it.next();
-                           String value = headers.get(key);
-                           this.urlConnection.setRequestProperty (key, value);
-                       }
-                   }
-               }
-           } catch (Exception ex) {
-               Config.getLogger().log(Level.SEVERE, "Unable to set basic authorization for " + userName, ex);
            }
+
        }
 
        /**
         * private method to get the URLConnection
         * @param str URL string
+        * @throws IOException 
         */
        private HttpURLConnection getURLConnection(String str) 
-           throws MalformedURLException {
+           throws IOException {
            try {
                if (isHttps) {
-                   /* when communicating with the server which has unsigned or invalid
-                    * certificate (https), SSLException or IOException is thrown.
-                    * the following line is a hack to avoid that
-                    */
+                    // Prevent unassigned ssl certificate SSLException / IOException exceptions 
                    Security.addProvider(new com.sun.net.ssl.internal.ssl.Provider());
                    System.setProperty("java.protocol.handler.pkgs", 
                                       "com.sun.net.ssl.internal.www.protocol");
-                   if (isProxy) {
-                       System.setProperty("https.proxyHost", proxyHost);
-                       System.setProperty("https.proxyPort", proxyPort + "");
-                   }
-               } else {
-                   if (isProxy) {
-                       System.setProperty("http.proxyHost", proxyHost);
-                       System.setProperty("http.proxyPort", proxyPort + "");
-                   }
                }
                URL url = new URL(str);
                HttpURLConnection uc = (HttpURLConnection)url.openConnection();
@@ -164,17 +104,24 @@ import org.protorabbit.Config;
                return uc;
            } catch (MalformedURLException me) {
                throw new MalformedURLException(str + " is not a valid URL");
-           } catch (Exception e) {
-               e.printStackTrace();
-               return null;
            }
        }
 
-       /**
-        * returns the InputStream from URLConnection
-        * @return InputStream
-        */
-       public InputStream getInputStream() {
+       public InputStream getInputStream() throws IOException {
+           if (url == null) {
+               throw new RuntimeException("url must be set before getting input stream");
+           }
+           init();
+           if (headers != null) {
+               Iterator<String> it = headers.keySet().iterator();
+               if (it != null) {
+                   while (it.hasNext()) {
+                       String key = it.next();
+                       String value = headers.get(key);
+                       this.urlConnection.setRequestProperty (key, value);
+                   }
+               }
+           }
            try {
                return (this.urlConnection.getInputStream());
            } catch (Exception e) {
@@ -183,10 +130,6 @@ import org.protorabbit.Config;
            }
        }
 
-       /**
-        * return the OutputStream from URLConnection
-        * @return OutputStream
-        */
        public OutputStream getOutputStream() {
 
            try {
@@ -197,33 +140,61 @@ import org.protorabbit.Config;
            }
        }
 
-       public String getContentEncoding() {
+    public String getContentEncoding() {
            if (this.urlConnection == null) return null;
            return (this.urlConnection.getContentEncoding());
        }
-       public int getContentLength() {
+
+    public int getContentLength() {
            if (this.urlConnection == null) return -1;
            return (this.urlConnection.getContentLength());
        }
 
-       public String getContentType() {
+    public String getContentType() {
            if (this.urlConnection == null) return null;
            return (this.urlConnection.getContentType());
        }
 
-       public long getDate() {
-           if (this.urlConnection == null) return -1;
-           return (this.urlConnection.getDate());
-       }
-
-       public String getHeader(String name) {
+    public String getHeader(String name) {
            if (this.urlConnection == null) return null;
            return (this.urlConnection.getHeaderField(name));
        }
 
-       public long getIfModifiedSince() {
+    public long getIfModifiedSince() {
            if (this.urlConnection == null) return -1;
            return (this.urlConnection.getIfModifiedSince());
-       }
+    }
+
+    public void setHeaders(Map<String, String> headers) {
+        this.headers = headers;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public void setProxyPort(int port) {
+      this.proxyPort = port;
+    }
+
+    public void setProxyServer(String proxyHost) {
+        this.proxyHost = proxyHost;
+    }
+
+    public void setURL(String url) {
+        this.url = url;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public String getMethod() {
+        return method;
+    }
+
+    public void setMethod(String method) {
+        this.method = method;
+    }
 
 }

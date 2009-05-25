@@ -39,6 +39,7 @@ public interface ICommand {
     public void setEndIndex(int index);
     public int getType();
     public void setType(int type);
+    public void reset();
     public IParameter[] getParams();
     public void setParams(IParameter[] params);
     public void doProcess() throws IOException;

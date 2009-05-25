@@ -35,6 +35,11 @@ public abstract class BaseCommand implements ICommand {
     protected int processOrder = ICommand.PROCESS_DEFAULT;
 
     public BaseCommand() {
+        buffer = null;
+        reset();
+    }
+    
+    public void reset() {
         buffer = new ByteArrayOutputStream();
     }
 

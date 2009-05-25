@@ -15,18 +15,20 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.protorabbit.accelerator.ICallback;
+import org.protorabbit.accelerator.IHttpClient;
 import org.protorabbit.accelerator.IWorker;
+import org.protorabbit.model.IContext;
 import org.protorabbit.util.IOUtil;
 
-public class AsyncWorkerImpl implements IWorker, Runnable{
+public class AsyncWorker implements IWorker, Runnable{
 
-    private String resource;
     private ICallback callback = null;
     private String encoding = null;
+    private IHttpClient hc = null;
 
-    public AsyncWorkerImpl(String resource) {
+    public AsyncWorker(String resource, IContext ctx) {
 
-        this.resource = resource;
+        hc = ctx.getConfig().getHttpClient(resource);
     }
 
     public void run(ICallback c) {
@@ -39,7 +41,6 @@ public class AsyncWorkerImpl implements IWorker, Runnable{
     public void run() {
         try {
 
-            HttpClient hc = new HttpClient(resource);
             InputStream is = hc.getInputStream();
             encoding = hc.getContentEncoding();
             StringBuffer buff = IOUtil.loadStringFromInputStream(is,encoding);

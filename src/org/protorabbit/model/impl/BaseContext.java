@@ -15,14 +15,22 @@ import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
-import org.protorabbit.Config;
 import org.protorabbit.model.IContext;
 
 public  abstract class BaseContext implements IContext {
 
     private Map<String, Object>attributes;
     private String templateId;
+    private static Logger logger = null;
+
+    public static Logger getLogger() {
+        if (logger == null) {
+            logger = Logger.getLogger("org.protrabbit");
+        }
+        return logger;
+    }
 
     public BaseContext(){
         this.attributes = new HashMap<String, Object>();
@@ -80,7 +88,7 @@ public  abstract class BaseContext implements IContext {
                     Object o =  parseExpression(expression);
                     return o;
                 } else {
-                	Config.getLogger().warning("Non fatal error parsing " + value + " no closing bracket.");
+                    getLogger().warning("Non fatal error parsing " + value + " no closing bracket.");
                     return null;
                 }
             }

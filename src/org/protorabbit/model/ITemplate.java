@@ -16,6 +16,7 @@ import java.util.List;
 
 import org.json.JSONObject;
 import org.protorabbit.accelerator.ICacheable;
+import org.protorabbit.model.impl.DocumentContext;
 import org.protorabbit.model.impl.ResourceURI;
 
 public interface ITemplate {
@@ -31,6 +32,7 @@ public interface ITemplate {
     public StringBuffer getContent(IContext ctx);
     public void setContent(StringBuffer contents);
     public IProperty getProperty(String id, IContext ctx);
+    public IProperty getPropertyById(String id, IContext ctx);
     public List<ResourceURI> getAllScripts(IContext ctx);
     public List<ResourceURI> getAllStyles(IContext ctx);
     public ResourceURI getTemplateURI();
@@ -63,4 +65,6 @@ public interface ITemplate {
     public boolean hasUserAgentDependencies(IContext ctx);
     public void setAttribute(String key, Object value);
     public Object getAttribute(String key);
+    public DocumentContext getDocumentContext();
+    public void setDocumentContext(DocumentContext dc);
 }

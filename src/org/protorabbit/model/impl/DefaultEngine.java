@@ -9,7 +9,7 @@
  *
  */
 
-package org.protorabbit.impl;
+package org.protorabbit.model.impl;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -29,15 +29,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import org.protorabbit.Config;
-import org.protorabbit.IEngine;
 import org.protorabbit.json.JSONUtil;
 import org.protorabbit.model.ICommand;
 import org.protorabbit.model.IContext;
+import org.protorabbit.model.IEngine;
 import org.protorabbit.model.IParameter;
 import org.protorabbit.model.ITemplate;
 import org.protorabbit.model.IDocumentContext;
-import org.protorabbit.model.impl.FileSystemContext;
-import org.protorabbit.model.impl.Parameter;
 
 /*
  *  DefaultEngine.java
@@ -62,29 +60,73 @@ public class DefaultEngine implements IEngine {
         Config cfg = ctx.getConfig();
         ctx.setTemplateId(tid);
         ITemplate template = cfg.getTemplate(tid);
-        StringBuffer buff = template.getContent(ctx);
-        List<ICommand> cmds = gatherCommands(buff,ctx,out);
-        renderCommands(cmds, buff,ctx,out);
+        DocumentContext dc = getDocumentContext(template,ctx);
+        // go through all the commands and build up the buffers
+        // before
+        if (dc.getBeforeCommands() != null) {
+            processCommands( ctx, dc.getBeforeCommands());
+        }
+        // default commands
+        if (dc.getDefaultCommands() != null) {
+            processCommands( ctx, dc.getDefaultCommands());
+        }
+        // after commands
+        if (dc.getAfterCommands() != null) {
+            processCommands( ctx, dc.getAfterCommands());
+        }
+        renderCommands(dc.getAllCommands(), dc.getDocument(),ctx,out);
+        resetCommands(dc.getAllCommands());
         long stopTime = (new Date()).getTime();
-        getLogger().info(" Render time=" + (stopTime - startTime) + "ms");
+        getLogger().info("Render time=" + (stopTime - startTime) + "ms");
+    }
+
+    private DocumentContext getDocumentContext(ITemplate template, IContext ctx) {
+        DocumentContext dc = null;
+        if (template.getDocumentContext() == null) {
+            dc = new DocumentContext();
+            StringBuffer buff = template.getContent(ctx);
+            dc.setDocument(buff);
+            gatherCommands(buff,ctx,dc);
+            template.setDocumentContext(dc);
+        } else {
+            dc = template.getDocumentContext();
+        }
+        return dc;
+    }
+
+    private void resetCommands(List<ICommand> cmds) {
+        if (cmds == null) {
+            return;
+        }
+        for (ICommand c : cmds) {
+            if (c.getDocumentContext() != null) {
+                List<ICommand> scmds = c.getDocumentContext().getAllCommands();
+                resetCommands(scmds);
+            }
+            c.reset();
+        }
+        
     }
 
     @SuppressWarnings("unchecked")
-    public List<ICommand> gatherCommands(StringBuffer buff, IContext ctx, OutputStream out) {
+    public List<ICommand> gatherCommands(StringBuffer buff, IContext ctx, DocumentContext dc) {
         List<ICommand> cmds = null; 
         try {
               cmds = getCommands(ctx.getConfig(), buff);
+              dc.setAllCommands(cmds);
               List<ICommand> firstCmds = null;
               List<ICommand> lastCmds = (List<ICommand>)ctx.getAttribute(LAST_COMMAND_LIST);
              if (lastCmds == null) {
                  lastCmds = new ArrayList<ICommand>();
                  ctx.setAttribute(LAST_COMMAND_LIST, lastCmds);
              }
+             dc.setAfterCommands(lastCmds);
              List<ICommand> defaultCmds = (List<ICommand>)ctx.getAttribute(DEFAULT_COMMAND_LIST);
              if (defaultCmds == null) {
                  defaultCmds = new ArrayList<ICommand>();
                  ctx.setAttribute(DEFAULT_COMMAND_LIST, defaultCmds);
              }
+             dc.setDefaultCommands(defaultCmds);
              if (cmds != null) {
                    // pre-process to find first and last commands
 
@@ -93,6 +135,7 @@ public class DefaultEngine implements IEngine {
                       if (c.getProcessOrder() == ICommand.PROCESS_FIRST) {
                           if (firstCmds == null) {
                               firstCmds = new ArrayList<ICommand>();
+                              dc.setBeforeCommands(firstCmds);
                           }
                           firstCmds.add(c);
                       } else if (c.getProcessOrder() == ICommand.PROCESS_LAST) {
@@ -103,25 +146,13 @@ public class DefaultEngine implements IEngine {
                           defaultCmds.add(c);
                       }
                   }
-
-                  // first
-                  if (firstCmds != null) {
-                      processCommands( ctx, firstCmds);
-                  }
-                  // default commands
-                  if (defaultCmds != null) {
-                      processCommands( ctx, defaultCmds);
-                  }
-                  // last commands
-                  if (lastCmds != null) {
-                      processCommands( ctx, lastCmds);
-                  }
               }
           } catch (Exception e) {
-              getLogger().log(Level.SEVERE, "Error rendering ", e);
+              getLogger().log(Level.SEVERE, "Error gathering commands ", e);
           }
           return cmds;
     }
+
      public void renderCommands(List<ICommand> cmds, StringBuffer buff, IContext ctx, OutputStream out) {
          if (cmds == null) {
              getLogger().warning("List<ICommand passed in as null");
@@ -466,8 +497,7 @@ public class DefaultEngine implements IEngine {
                 value = new JSONObject(text);
                 type = IParameter.OBJECT;
             } catch (JSONException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                throw new RuntimeException("Error parsing JSON parameter " + text);
             }
         } else if (text.startsWith("[") &&
                 text.endsWith("]")) {
@@ -475,8 +505,7 @@ public class DefaultEngine implements IEngine {
                 value = new JSONArray(text);
                 type = IParameter.ARRAY;
             } catch (JSONException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                throw new RuntimeException("Error parsing JSON parameter " + text);
             }
         } else {
             try {

@@ -52,7 +52,7 @@
      "properties" : {
            "title" : {"type" : "string", "value" : "External Include Test"},
            "message" : { "type" : "string", "value" : "I'm set to only update every 5 seconds."},
-           "body" : { "type" : "include", "value" : "http://ebay.com", "defer" : true, "timeout" : 5000 }
+           "body" : { "id" : "ebay", "type" : "include", "value" : "http://ebay.com", "defer" : true, "timeout" : 5000 }
        }
     }
   ]

@@ -8,7 +8,7 @@ import org.protorabbit.model.IContext;
 import org.protorabbit.model.ITemplate;
 
 public class URIResourceManager {
-	
+
     @SuppressWarnings("unchecked")
     public static String generateReferences(ITemplate template, IContext ctx, List<ResourceURI> resources, int type) {
         String buff = "";
@@ -19,7 +19,7 @@ public class URIResourceManager {
                 while (it.hasNext()) {
 
                     ResourceURI ri = it.next();
-                    if (ri.isWritten()) {               
+                    if (ri.isWritten()) {
                          continue;
                     }
                     String resource = ri.getUri();

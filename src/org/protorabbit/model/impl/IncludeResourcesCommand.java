@@ -33,8 +33,6 @@ public class IncludeResourcesCommand extends BaseCommand {
 
     public static String DEFERRED_WRITTEN = "deferredWritten";
 
-    private String protorabbitClient = "resources/protorabbit.js";
-
     private static Logger logger = null;
 
     protected int commandType = ICommand.INCLUDE_RESOURCES;
@@ -53,7 +51,7 @@ public class IncludeResourcesCommand extends BaseCommand {
     }
 
     private void writeDeferred(Config cfg, OutputStream out, ITemplate t) throws IOException {
-        StringBuffer buff = IOUtil.getClasspathResource(cfg, protorabbitClient);
+        StringBuffer buff = IOUtil.getClasspathResource(cfg, Config.PROTORABBIT_CLIENT);
         if (buff != null) {
             String hash = IOUtil.generateHash(buff.toString());
             ICacheable cr = new CacheableResource("text/javascript", t.getTimeout(), hash);

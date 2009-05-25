@@ -1,10 +1,9 @@
-package org.protorabbit;
+package org.protorabbit.model;
 
 import java.io.OutputStream;
 import java.util.List;
 
-import org.protorabbit.model.ICommand;
-import org.protorabbit.model.IContext;
+import org.protorabbit.Config;
 
 public interface IEngine {
 

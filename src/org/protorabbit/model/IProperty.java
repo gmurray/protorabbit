@@ -17,6 +17,8 @@ public interface IProperty extends ITestable {
     public static final int INCLUDE = 2;
 
     public String getTest();
+    public String getId();
+    public void setId(String id);
     public void setTest(String test);
     public String getBaseURI();
     public Long getTimeout();

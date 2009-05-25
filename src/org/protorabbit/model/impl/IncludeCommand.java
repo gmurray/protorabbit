@@ -18,11 +18,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.protorabbit.Config;
-import org.protorabbit.IEngine;
 import org.protorabbit.accelerator.ResourceManager;
 import org.protorabbit.accelerator.impl.CacheableResource;
 import org.protorabbit.accelerator.impl.DeferredResource;
 import org.protorabbit.model.ICommand;
+import org.protorabbit.model.IEngine;
 import org.protorabbit.model.IParameter;
 import org.protorabbit.model.IProperty;
 import org.protorabbit.model.ITemplate;
@@ -114,37 +114,46 @@ public class IncludeCommand extends BaseCommand {
                 deferredScripts = new ArrayList<String>();
                 ctx.setAttribute(DEFERRED_SCRIPTS, deferredScripts);
             }
-            String hash = "";
+
             String resourceId = "";
 
             if (useThreadedDefer) {
-                hash  = IOUtil.generateHash(baseDir + resourceName);
-                resourceId = hash;
+                if (property.getId() != null) {
+                    resourceId = property.getId();
+                } else {
+                    String hash = "";
+                    hash  = IOUtil.generateHash(baseDir + resourceName);
+                    resourceId = hash;
+                }
                 ResourceManager crm = cfg.getCombinedResourceManager();
                 Long timeout = property.getTimeout();
                 if (timeout == null) {
                     timeout = 0L;
                 }
                 DeferredResource dr = new DeferredResource(baseDir, resourceName, ctx, timeout);
-                crm.putResource(resourceId, dr);
+                crm.putResource(ctx.getTemplateId() + "_" + resourceId, dr);
             } else {
                 IncludeFile inc = cfg.getIncludeFileContent(ctx.getTemplateId(), id,ctx);
                 buff = inc.getContent();
-                hash = IOUtil.generateHash(buff.toString());
-                resourceId = hash;
+                String hash  = IOUtil.generateHash(buff.toString());
+                if (property.getId() != null) {
+                    resourceId = property.getId();
+                } else {
+                    resourceId = hash;
+                }
                 if (inc.getDeferContent() != null) {
                     deferContent = inc.getDeferContent();
                 }
                 ResourceManager crm = cfg.getCombinedResourceManager();
                 CacheableResource cr = new CacheableResource("text/html", inc.getTimeout(), hash);
                 cr.setContent( buff );
-                crm.putResource(resourceId, cr);
+                crm.putResource(ctx.getTemplateId() + "_" + resourceId , cr);
             }
 
             buffer.write(("<div id='" + resourceId + "'>" + deferContent.toString() + "</div>").getBytes());
 
             String script = "<script>protorabbit.addDeferredFragement({ include : '" + cfg.getResourceService() + 
-                       "?resourceid=" + resourceId + ".htm', elementId : '" + resourceId + "' });</script>";
+                       "?resourceid=" + resourceId + ".htm&tid=" + ctx.getTemplateId() + "', elementId : '" + resourceId + "' });</script>";
             deferredScripts.add(script);
             ctx.setAttribute(COUNTER, new Integer(counter + 1));
         } else {

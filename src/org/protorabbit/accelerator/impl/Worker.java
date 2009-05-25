@@ -17,14 +17,14 @@ import org.protorabbit.accelerator.ICallback;
 import org.protorabbit.accelerator.IWorker;
 import org.protorabbit.model.IContext;
 
-public class WorkerImpl implements IWorker{
+public class Worker implements IWorker{
 
     private IContext ctx = null;
     private String baseDir;
     private String resource;
     private ICallback callback = null;
 
-    public WorkerImpl(String baseDir, 
+    public Worker(String baseDir, 
                       String resource,
                       IContext ctx) {
         this.ctx = ctx;

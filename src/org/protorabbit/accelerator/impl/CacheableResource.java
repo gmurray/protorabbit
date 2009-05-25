@@ -2,6 +2,7 @@ package org.protorabbit.accelerator.impl;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.logging.Logger;
 
 import org.protorabbit.Config;
 import org.protorabbit.accelerator.CacheContext;
@@ -30,6 +31,14 @@ public class CacheableResource implements ICacheable {
 
     private long lastAccessed = -1;
     private Long timeout = null;
+    private static Logger logger = null;
+
+    public static Logger getLogger() {
+        if (logger == null) {
+            logger = Logger.getLogger("org.protrabbit");
+        }
+        return logger;
+    }
 
     public CacheableResource() {}
 
@@ -68,7 +77,6 @@ public class CacheableResource implements ICacheable {
         lastAccessed = -1;
         this.content = new StringBuffer();
         this.gzippedContent = null;
-        Config.getLogger().info("Resetting " + hash);
         cc.reset();
     }
 

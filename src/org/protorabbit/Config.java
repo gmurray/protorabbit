@@ -11,12 +11,12 @@
 
 package org.protorabbit;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,9 +24,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import org.protorabbit.accelerator.IHttpClient;
 import org.protorabbit.accelerator.ResourceManager;
 import org.protorabbit.model.ICommand;
 import org.protorabbit.model.IContext;
+import org.protorabbit.model.IEngine;
 import org.protorabbit.model.IProperty;
 import org.protorabbit.model.ITemplate;
 import org.protorabbit.model.impl.IncludeFile;
@@ -34,11 +36,11 @@ import org.protorabbit.model.impl.Property;
 import org.protorabbit.model.impl.ResourceURI;
 import org.protorabbit.model.impl.Template;
 import org.protorabbit.model.impl.URIResourceManager;
+import org.protorabbit.util.IOUtil;
 
 public class Config {
 
-   private static Logger logger = null;
-
+   public static final String PROTORABBIT_CLIENT = "resources/protorabbit.js";
    public static long DEFAULT_TIMEOUT = 60 * 1000 * 15;
    boolean gzip = true;
    boolean defaultCombineResources = false;
@@ -50,7 +52,9 @@ public class Config {
    private String resourceService =  "prt";
    String defaultMediaType = "screen, projection";
    String commandBase = "";
-   private String engineClassName = "org.protorabbit.impl.DefaultEngine";
+   private String engineClassName = "org.protorabbit.model.impl.DefaultEngine";
+   private String httpClientClassName = "org.protorabbit.accelerator.impl.HttpClient";
+   private static Logger logger = null;
 
    public static Logger getLogger() {
        if (logger == null) {
@@ -213,20 +217,30 @@ public class Config {
                    }
                }
                String includeFile = prop.getValue();
-
-               String tBase = "";
-               if (!includeFile.startsWith("/")) {
-                   tBase = prop.getBaseURI();
-               }
-
-               String uri = tBase + includeFile;
                IncludeFile inc = null;
+               String tBase = "";
+               String uri = includeFile;
+               if (!includeFile.startsWith("/") && !includeFile.startsWith("http")) {
+                   tBase = prop.getBaseURI();
+                   uri = tBase + includeFile;
+               }
                if (includeFiles.containsKey(uri)) {
                    inc =  includeFiles.get(uri);
                }
+               // synchronously load a resource
+               if (includeFile.startsWith("http")) {
+                   IHttpClient hc = getHttpClient(includeFile);
+                   InputStream is = hc.getInputStream();
+                   StringBuffer buff = null;
+                   buff = IOUtil.loadStringFromInputStream(is,getEncoding());
+                   inc = new IncludeFile(uri, buff);
+                   includeFiles.put(includeFile, inc);
+                   return inc;
+               }
                if (inc == null || (inc != null && inc.isStale(ctx))) {
 
-                   StringBuffer buff = ctx.getResource(tBase, includeFile);
+                   StringBuffer buff = null;
+                   buff = ctx.getResource(tBase, includeFile);
                    if (inc == null) {
                        inc = new IncludeFile(uri, buff);
                        if (inc.getTimeout() != null) {
@@ -424,7 +438,9 @@ public class Config {
                            long timeout = so.getLong("timeout");
                            pi.setTimeout(timeout);
                        }
-
+                       if (so.has("id")) {
+                           pi.setId(so.getString("id"));
+                       }
                        if (so.has("uaTest")) {
                            pi.setUATest(so.getString("uaTest"));
                        }
@@ -557,6 +573,7 @@ public class Config {
        this.resourceService = resourceService;
    }
 
+    @SuppressWarnings("unchecked")
     public IEngine getEngine() {
         if (engine == null) {
             Class<IEngine> clazz = null;
@@ -577,9 +594,29 @@ public class Config {
         return engine;
     }
 
-    @SuppressWarnings("unchecked")
     public void setEngineClassName(String engineClassName) {
         this.engineClassName = engineClassName;
+    }
+
+    @SuppressWarnings("unchecked")
+    public IHttpClient getHttpClient(String url) {
+        IHttpClient hc = null;
+        Class<IHttpClient> clazz = null;
+        try {
+            clazz = (Class<IHttpClient>) Class.forName(httpClientClassName);
+            hc = clazz.newInstance();
+        } catch (ClassNotFoundException cnfe) {
+            getLogger().severe("Fatal Error: Unable to find engine class " + httpClientClassName);
+            throw new RuntimeException("Fatal Error: Unable to find http client class " + httpClientClassName);
+        } catch (InstantiationException e) {
+            getLogger().log(Level.SEVERE, "Fatal Error: Instantiation exception for http class " + httpClientClassName, e);
+            throw new RuntimeException("Fatal Error: Instantiation exception for http class " + httpClientClassName, e);
+        } catch (IllegalAccessException e) {
+            getLogger().log(Level.SEVERE, "Fatal Error: Unable to access http class " + httpClientClassName, e);
+            throw new RuntimeException("Fatal Error: Unable to access http class " + httpClientClassName, e);
+        }
+        hc.setURL(url);
+        return hc;
     }
 
 }

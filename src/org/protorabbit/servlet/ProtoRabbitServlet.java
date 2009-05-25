@@ -36,12 +36,15 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.protorabbit.Config;
-import org.protorabbit.IEngine;
 import org.protorabbit.accelerator.CacheContext;
 import org.protorabbit.accelerator.ICacheable;
+import org.protorabbit.accelerator.ResourceManager;
 import org.protorabbit.accelerator.impl.CacheableResource;
 import org.protorabbit.json.JSONUtil;
+import org.protorabbit.model.IEngine;
+import org.protorabbit.model.IProperty;
 import org.protorabbit.model.ITemplate;
+import org.protorabbit.model.impl.IncludeFile;
 import org.protorabbit.util.IOUtil;
 
 public class ProtoRabbitServlet extends HttpServlet {
@@ -220,11 +223,46 @@ public class ProtoRabbitServlet extends HttpServlet {
         if (lastDot != -1) {
             id = id.substring(0, lastDot);
         }
+        String resourceId = id;
+        String templateId = req.getParameter("tid");
+        if (templateId != null ) {
+            resourceId = templateId + "_" + resourceId;
+        }
+        ResourceManager crm = jcfg.getCombinedResourceManager();
+        ICacheable cr = crm.getResource(resourceId);
 
-        ICacheable cr = jcfg.getCombinedResourceManager().getResource(id);
-
-        if (cr == null) {
-            getLogger().severe("could not find resource " + id);
+        // re-constitute the resource. This case will happen across server restarts
+        // where a client may have a resource reference with a long cache time
+        if (cr == null && templateId != null && resourceId != null) {
+            getLogger().fine("Re-constituting " + id + " from  template " + templateId);
+            ITemplate t = jcfg.getTemplate(templateId);
+            IProperty property = t.getPropertyById(id, wc);
+            StringBuffer buff = null;
+            IncludeFile inc = jcfg.getIncludeFileContent(templateId, property.getKey(),wc);
+            buff = inc.getContent();
+            String hash  = IOUtil.generateHash(buff.toString());
+            if (property.getId() != null) {
+                resourceId = property.getId();
+            } else {
+                resourceId = hash;
+            }
+            cr = new CacheableResource("text/html", inc.getTimeout(), hash);
+            cr.setContent( buff );
+            crm.putResource(templateId + "_" + resourceId , cr);
+        } else if ("protorabbit".equals(id)) { 
+            StringBuffer buff = IOUtil.getClasspathResource(jcfg, Config.PROTORABBIT_CLIENT);
+            if (buff != null) {
+                String hash = IOUtil.generateHash(buff.toString());
+                cr = new CacheableResource("text/javascript", jcfg.getMaxAge(), hash);
+                jcfg.getCombinedResourceManager().putResource("protorabbit", cr);
+                cr.setContent(buff);
+            } else {
+                getLogger().severe("Unable to find protorabbit client script");
+            }
+        } else if (cr == null) {
+            getLogger().severe("could not find resource " + id + " with template " + templateId);
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
         }
 
         if (cr != null) {
@@ -279,11 +317,6 @@ public class ProtoRabbitServlet extends HttpServlet {
                 out.write(cr.getContent().toString().getBytes());
             }
 
-        } else {
-            getLogger().warning("resource " + id +
-                    " requested but not found.");
-            resp.sendError(HttpServletResponse.SC_NOT_FOUND);
-            return;
         }
         long now = (new Date()).getTime();
         if (now - lastCleanup > cleanupTimeout) {

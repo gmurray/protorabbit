@@ -21,7 +21,7 @@ public class DeferredResource extends CacheableResource {
 
     public static final int LOADING = 100;
     public static final int LOADED = 200;
-    
+
     private int status;
     private IWorker worker;
     private ICallback callback;
@@ -31,11 +31,11 @@ public class DeferredResource extends CacheableResource {
         cc = new CacheContext(timeout, hash);
         callback = new DeferredCallback(this);
         if (resource.startsWith("http")) {
-            worker = new AsyncWorkerImpl(resource);
+            worker = new AsyncWorker(resource, ctx);
             // start immediately
             this.refresh(ctx);
         } else {
-            worker = new WorkerImpl(baseDir,resource,ctx);
+            worker = new Worker(baseDir,resource,ctx);
         }
     }
 
