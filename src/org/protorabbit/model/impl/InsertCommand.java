@@ -97,7 +97,7 @@ public class InsertCommand extends BaseCommand {
                 value = evalue;
             }
         }
-        if (p != null && p.getDefer()) {
+        if (p != null && p.getDefer() != null && p.getDefer() == true) {
             Map<String, String> deferredProperties = (Map<String, String>)ctx.getAttribute(DEFERRED_PROPERTIES);
             if (deferredProperties == null) {
                 deferredProperties = new HashMap<String,String>();

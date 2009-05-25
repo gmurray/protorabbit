@@ -23,7 +23,7 @@ public class Property implements IProperty {
     private String originalTemplate = null;
     private Long timeout = null;
     private String test = null;
-    private boolean defer;
+    private Boolean defer = null;
     private StringBuffer deferContent = null;
     private String uaTest = null;
     private String id = null;
@@ -84,11 +84,11 @@ public class Property implements IProperty {
         this.test = t;
     }
 
-    public void setDefer(boolean defer) {
+    public void setDefer(Boolean defer) {
         this.defer = defer;
     }
 
-    public boolean getDefer() {
+    public Boolean getDefer() {
         return defer;
     }
 

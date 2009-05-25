@@ -302,8 +302,9 @@ public class ResourceManager {
                                IContext ctx,
                                OutputStream out) throws java.io.IOException {
 
+       ITemplate t = ctx.getConfig().getTemplate(ctx.getTemplateId());
        ICacheable csr;
-       String hash = getHash(styleResources);
+       String resourceId = "styles";
        // check if any of the combined resources are expired if dev mode
        if (ctx.getConfig().getDevMode()) {
            boolean requiresRefresh = false;
@@ -314,13 +315,12 @@ public class ResourceManager {
                }
            }
            // remove the hash
-           if (requiresRefresh && hash != null) {
-               combinedResources.remove(hash);
+           if (requiresRefresh && resourceId != null) {
+               combinedResources.remove(t.getId() + "_" +resourceId);
            }
        }
-
-       if (combinedResources.get(hash) != null) {
-           csr = combinedResources.get(hash);
+       if (combinedResources.get(t.getId() + "_" +resourceId) != null) {
+           csr = combinedResources.get(t.getId() + "_" +resourceId);
 
            if (csr.getCacheContext().isExpired()) {
                csr.reset();
@@ -330,7 +330,7 @@ public class ResourceManager {
            csr = getStyles(styleResources,ctx, out);
        }
        boolean gzip = false;
-       ITemplate t = ctx.getConfig().getTemplate(ctx.getTemplateId());
+
        if (t != null) {
            if (t.gzipStyles() != null) {
                gzip = t.gzipStyles();
@@ -339,8 +339,8 @@ public class ResourceManager {
            }
            csr.setGzipResources(gzip);
 
-           combinedResources.put(hash, csr);
-          return hash;
+           combinedResources.put(t.getId() + "_" + resourceId, csr);
+          return resourceId;
        } else {
            return null;
        }
@@ -353,9 +353,10 @@ public class ResourceManager {
        if (scriptResources.size() == 0 ) {
            return null;
        }
-
+       ITemplate t = ctx.getConfig().getTemplate(ctx.getTemplateId());
        ICacheable csr;
-       String hash = getHash(scriptResources);
+      // String hash = //getHash(scriptResources);
+       String resourceId = "scripts";
        // check if any of the combined resources are expired if dev mode
        if (ctx.getConfig().getDevMode()) {
            boolean requiresRefresh = false;
@@ -366,13 +367,14 @@ public class ResourceManager {
                }
            }
            // remove the hash
-           if (requiresRefresh && hash != null) {
-               combinedResources.remove(hash);
+           if (requiresRefresh && resourceId != null) {
+               combinedResources.remove(t.getId() + "_" + resourceId);
            }
        }
-       if (combinedResources.get(hash) != null) {
 
-           csr = combinedResources.get(hash);
+       if (combinedResources.get(t.getId() + "_" +resourceId) != null) {
+
+           csr = combinedResources.get(t.getId() + "_" + resourceId);
 
            if (csr.getCacheContext().isExpired()) {
                csr.reset();
@@ -382,7 +384,7 @@ public class ResourceManager {
            csr = getScripts(scriptResources,ctx, out);
        }
 
-       ITemplate t = ctx.getConfig().getTemplate(ctx.getTemplateId());
+
        if (t != null) {
 
            boolean gzip = false;
@@ -393,8 +395,8 @@ public class ResourceManager {
                gzip = t.gzipScripts();
            }
            csr.setGzipResources(gzip);
-           combinedResources.put(hash, csr);
-           return hash;
+           combinedResources.put(t.getId() + "_" +resourceId, csr);
+           return resourceId;
        } else {
            return null;
        }

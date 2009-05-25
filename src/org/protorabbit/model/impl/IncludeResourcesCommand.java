@@ -111,16 +111,16 @@ public class IncludeResourcesCommand extends BaseCommand {
 
            if (t.getCombineScripts() != null && t.getCombineScripts()) {
 
-                String hash = crm.processScripts(scripts, ctx, hasDeferredScripts, buffer);
+                String resourceId = crm.processScripts(scripts, ctx, hasDeferredScripts, buffer);
 
-                if (!hasDeferredScripts && hash != null) {
+                if (!hasDeferredScripts && resourceId != null) {
                     String uri = "<script src=\"" + 
-                    cfg.getResourceService() + "?resourceid=" + hash +  ".js\"></script>";
+                    cfg.getResourceService() + "?resourceid=" + resourceId +  ".js&tid=" + t.getId() + "\"></script>";
                     buffer.write(uri.getBytes());
 
-               } else if (hash != null){
+               } else if (resourceId != null){
                    buffer.write(("<script>protorabbit.addDeferredScript('" + cfg.getResourceService() +
-                              "?resourceid=" + hash + ".js');</script>").getBytes());
+                              "?resourceid=" + resourceId + ".js&tid=" + t.getId() + "');</script>").getBytes());
                }
 
            } else {
@@ -137,12 +137,12 @@ public class IncludeResourcesCommand extends BaseCommand {
                JSONSerializer js = factory.getInstance();
                JSONObject jo = (JSONObject)js.serialize(deferredProperties);
                String content = jo.toString();
-               String hash = IOUtil.generateHash(content);
-               CacheableResource cr = new CacheableResource("text/html", cfg.getResourceTimeout(), hash);
+               String resourceId = "messages";
+               CacheableResource cr = new CacheableResource("application/json", cfg.getResourceTimeout(), resourceId);
                cr.setContent( new StringBuffer(content) );
-               crm.putResource(hash, cr);
+               crm.putResource(t.getId() + "_" + resourceId, cr);
                buffer.write(("<script>protorabbit.addDeferredProperties('" + cfg.getResourceService() +
-                       "?resourceid=" + hash + ".json', '" + ctx.getTemplateId() +"');</script>").getBytes());
+                       "?resourceid=" + resourceId + ".json&tid=" + t.getId() + "', '" + ctx.getTemplateId() +"');</script>").getBytes());
            }
         } else if ("styles".equals(target)) {
             List<ResourceURI> styles = t.getAllStyles(ctx);
@@ -162,15 +162,15 @@ public class IncludeResourcesCommand extends BaseCommand {
             }
 
             if (t.getCombineStyles() != null && t.getCombineStyles()) {
-                String hash = crm.processStyles(styles, ctx, buffer);
-                if (!hasDeferredStyles && hash != null) {
+                String resourceId = crm.processStyles(styles, ctx, buffer);
+                if (!hasDeferredStyles && resourceId != null) {
                     String uri = "<link rel=\"stylesheet\" type=\"text/css\" href=\"" +
-                    cfg.getResourceService() + "?resourceid=" + hash + 
-                    ".css\"/>";
+                    cfg.getResourceService() + "?resourceid=" + resourceId + 
+                    ".css&tid=" + t.getId() + "\"/>";
                     buffer.write(uri.getBytes());
-               } else if (hash != null){
+               } else if (resourceId != null){
                    String uri = "<script>protorabbit.addDeferredStyle('" + 
-                   cfg.getResourceService() + "?resourceid=" + hash + ".css')</script>";
+                   cfg.getResourceService() + "?resourceid=" + resourceId + ".css&tid=" + t.getId() + "')</script>";
                    buffer.write(uri.getBytes());
                }
             } else {

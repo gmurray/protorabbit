@@ -248,7 +248,9 @@ public class Config {
                        } else {
                            inc.setTimeout(0L);
                        }
-                       inc.setDefer(prop.getDefer());
+                       if (prop.getDefer() != null) {
+                           inc.setDefer(prop.getDefer());
+                       }
                        inc.setDeferContent(prop.getDeferContent());
                        includeFiles.put(uri, inc);
                    } else {

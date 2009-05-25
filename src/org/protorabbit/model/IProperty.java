@@ -28,8 +28,8 @@ public interface IProperty extends ITestable {
     public String getKey();
     public void setValue(String value);
     public String originalTemplateId();
-    public void setDefer(boolean defer);
+    public void setDefer(Boolean defer);
     public void setDeferContent(StringBuffer deferContent);
-    public boolean getDefer();
+    public Boolean getDefer();
     public StringBuffer getDeferContent();
 }

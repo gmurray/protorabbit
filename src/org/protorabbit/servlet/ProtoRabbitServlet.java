@@ -19,9 +19,11 @@ import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -40,11 +42,14 @@ import org.protorabbit.accelerator.CacheContext;
 import org.protorabbit.accelerator.ICacheable;
 import org.protorabbit.accelerator.ResourceManager;
 import org.protorabbit.accelerator.impl.CacheableResource;
+import org.protorabbit.json.JSONSerializer;
 import org.protorabbit.json.JSONUtil;
+import org.protorabbit.json.SerializationFactory;
 import org.protorabbit.model.IEngine;
 import org.protorabbit.model.IProperty;
 import org.protorabbit.model.ITemplate;
 import org.protorabbit.model.impl.IncludeFile;
+import org.protorabbit.model.impl.ResourceURI;
 import org.protorabbit.util.IOUtil;
 
 public class ProtoRabbitServlet extends HttpServlet {
@@ -236,20 +241,40 @@ public class ProtoRabbitServlet extends HttpServlet {
         if (cr == null && templateId != null && resourceId != null) {
             getLogger().fine("Re-constituting " + id + " from  template " + templateId);
             ITemplate t = jcfg.getTemplate(templateId);
-            IProperty property = t.getPropertyById(id, wc);
-            StringBuffer buff = null;
-            IncludeFile inc = jcfg.getIncludeFileContent(templateId, property.getKey(),wc);
-            buff = inc.getContent();
-            String hash  = IOUtil.generateHash(buff.toString());
-            if (property.getId() != null) {
-                resourceId = property.getId();
+            if ("styles".equals(id)) {
+                List<ResourceURI> styles = t.getAllStyles(wc);
+                crm.processStyles(styles, wc, out);
+                cr = crm.getResource(resourceId);
+            } else if ("scripts".equals(id)){
+                List<ResourceURI> scripts = t.getAllScripts(wc);
+                crm.processStyles(scripts, wc, out);
+                cr = crm.getResource(resourceId);
+            } else if ("messages".equals(id)) {
+                SerializationFactory factory = new SerializationFactory();
+                List<IProperty> deferredProperties = new ArrayList<IProperty>();
+                t.getDeferProperties(deferredProperties, wc);
+                JSONSerializer js = factory.getInstance();
+                JSONObject jo = (JSONObject)js.serialize(deferredProperties);
+                String content = jo.toString();
+                cr = new CacheableResource("application/json", jcfg.getResourceTimeout(), resourceId);
+                cr.setContent( new StringBuffer(content) );
+                crm.putResource(resourceId, cr);
             } else {
-                resourceId = hash;
+                IProperty property = t.getPropertyById(id, wc);
+                StringBuffer buff = null;
+                IncludeFile inc = jcfg.getIncludeFileContent(templateId, property.getKey(),wc);
+                buff = inc.getContent();
+                String hash  = IOUtil.generateHash(buff.toString());
+                if (property.getId() != null) {
+                    resourceId = property.getId();
+                } else {
+                    resourceId = hash;
+                }
+                cr = new CacheableResource("text/html", inc.getTimeout(), hash);
+                cr.setContent( buff );
+                crm.putResource(templateId + "_" + resourceId , cr);
             }
-            cr = new CacheableResource("text/html", inc.getTimeout(), hash);
-            cr.setContent( buff );
-            crm.putResource(templateId + "_" + resourceId , cr);
-        } else if ("protorabbit".equals(id)) { 
+        } else if ("protorabbit".equals(id)) {
             StringBuffer buff = IOUtil.getClasspathResource(jcfg, Config.PROTORABBIT_CLIENT);
             if (buff != null) {
                 String hash = IOUtil.generateHash(buff.toString());

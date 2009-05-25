@@ -108,7 +108,7 @@ public class IncludeCommand extends BaseCommand {
 
         StringBuffer buff = new StringBuffer("");
         StringBuffer deferContent = new StringBuffer("");
-        if (property.getDefer()){
+        if (property.getDefer() != null && property.getDefer().booleanValue() == true){
             List<String> deferredScripts = (List<String>)ctx.getAttribute(DEFERRED_SCRIPTS);
             if (deferredScripts == null) {
                 deferredScripts = new ArrayList<String>();
@@ -121,9 +121,7 @@ public class IncludeCommand extends BaseCommand {
                 if (property.getId() != null) {
                     resourceId = property.getId();
                 } else {
-                    String hash = "";
-                    hash  = IOUtil.generateHash(baseDir + resourceName);
-                    resourceId = hash;
+                    resourceId = property.getKey();
                 }
                 ResourceManager crm = cfg.getCombinedResourceManager();
                 Long timeout = property.getTimeout();
@@ -139,7 +137,7 @@ public class IncludeCommand extends BaseCommand {
                 if (property.getId() != null) {
                     resourceId = property.getId();
                 } else {
-                    resourceId = hash;
+                    resourceId = property.getKey();
                 }
                 if (inc.getDeferContent() != null) {
                     deferContent = inc.getDeferContent();

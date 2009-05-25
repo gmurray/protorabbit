@@ -18,6 +18,7 @@ import org.json.JSONObject;
 import org.protorabbit.accelerator.ICacheable;
 import org.protorabbit.model.impl.DocumentContext;
 import org.protorabbit.model.impl.ResourceURI;
+import org.protorabbit.servlet.WebContext;
 
 public interface ITemplate {
 
@@ -67,4 +68,5 @@ public interface ITemplate {
     public Object getAttribute(String key);
     public DocumentContext getDocumentContext();
     public void setDocumentContext(DocumentContext dc);
+    public void getDeferProperties(List<IProperty> deferredProperties, IContext ctx);
 }

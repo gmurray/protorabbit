@@ -183,6 +183,24 @@ public class Template implements ITemplate {
         return null;
     }
 
+    public void getDeferProperties(List<IProperty> dprops, IContext ctx) {
+        for (String key : properties.keySet()) {
+            IProperty p = properties.get(key);
+            if (p.getDefer() != null && p.getDefer().booleanValue() == true) {
+                dprops.add(p);
+            }
+        }
+        if (ancestors != null) {
+
+            // check ancestors
+            Iterator<String> it = ancestors.iterator();
+            while (it.hasNext()) {
+                ITemplate t = config.getTemplate(it.next());
+                t.getDeferProperties(dprops, ctx);
+            }
+        }
+    }
+
     public List<ResourceURI> getScripts() {
         return scripts;
     }
@@ -305,7 +323,7 @@ public class Template implements ITemplate {
                         if (!existingRefs.containsKey(id)) {
                             if (includeResource(ri,ctx)) {
                                 // reset the written flag
-                                ri.setWritten(false);                             
+                                ri.setWritten(false);
                                 astyles.add(ri);
                                 existingRefs.put(id, ri);
                             }
@@ -321,11 +339,11 @@ public class Template implements ITemplate {
                 String id = ri.getId();
                 if (includeResource(ri,ctx)) {
                     // template can override
-                    if (existingRefs.containsKey(id)) {                 
+                    if (existingRefs.containsKey(id)) {
                         astyles.remove(existingRefs.get(id));
                     }
                     // reset the written flag
-                    ri.setWritten(false);                     
+                    ri.setWritten(false);
                     astyles.add(ri);
                     existingRefs.put(id, ri);
                 }
