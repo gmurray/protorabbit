@@ -7,7 +7,7 @@
       "combineResources" : true,
       "styles" : {
         "libs" : [
-           { "url" : "lib/reset.css" },
+           { "url" : "lib/reset.css", "combine" : false },
            { "url" : "lib/typography.css" },
            { "url" : "lib/plugins/fancy-type/fancy-type.css" },
            { "id" : "blueprint", "url" : "lib/grid.css"},

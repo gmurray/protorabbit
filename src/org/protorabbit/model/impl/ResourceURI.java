@@ -24,7 +24,7 @@ public class ResourceURI implements ITestable {
     private String baseURI = null;
 
     private boolean written = false;
-    private boolean combine = false;
+    private Boolean combine = null;
     private boolean gzip = false;
     private int type = -1;
     private String id = null;
@@ -57,7 +57,7 @@ public class ResourceURI implements ITestable {
         this.written = written;
     }
 
-    public String getUri() {
+    public String getURI() {
         return uri;
     }
     public void setUri(String uri) {
@@ -71,10 +71,10 @@ public class ResourceURI implements ITestable {
     public void setbaseURI(String baseURI) {
         this.baseURI = baseURI;
     }
-    public boolean isCombine() {
+    public Boolean getCombine() {
         return combine;
     }
-    public void setCombine(boolean combine) {
+    public void setCombine(Boolean combine) {
         this.combine = combine;
     }
     public int getType() {

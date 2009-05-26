@@ -13,6 +13,7 @@ package org.protorabbit.model.impl;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -90,7 +91,29 @@ public class IncludeResourcesCommand extends BaseCommand {
                 ctx.getAttribute(DEFERRED_WRITTEN) == Boolean.TRUE);
 
         if ("scripts".equals(target)) {
+
             List<ResourceURI> scripts = t.getAllScripts(ctx);
+            List<ResourceURI> combineURIs= new ArrayList<ResourceURI>();
+            List<ResourceURI> linkURIs = new ArrayList<ResourceURI>();
+
+            for (ResourceURI ri : scripts) {
+                if (ri.getCombine() != null){
+                    if (ri.getCombine().booleanValue() == true) {
+                        combineURIs.add(ri);
+                    } else {
+                        linkURIs.add(ri);
+                    }
+                } else {
+                    if ( t.getCombineScripts() != null &&
+                         t.getCombineScripts().booleanValue() == true) {
+                        combineURIs.add(ri);
+                    } else {
+                        linkURIs.add(ri);
+                    }
+                }
+
+            }
+
             List<String> deferredScripts = (List<String>)ctx.getAttribute(IncludeCommand.DEFERRED_SCRIPTS);
             Map<String, String> deferredProperties = (Map<String, String>)ctx.getAttribute(InsertCommand.DEFERRED_PROPERTIES);
 
@@ -108,10 +131,13 @@ public class IncludeResourcesCommand extends BaseCommand {
                     writeDeferred(cfg, buffer, t);
                 }
            }
+           if (linkURIs.size() > 0 ){
+                String links = URIResourceManager.generateReferences(t, ctx, linkURIs, ResourceURI.SCRIPT);
+                buffer.write(links.getBytes());
+           }
+           if (combineURIs.size() > 0) {
 
-           if (t.getCombineScripts() != null && t.getCombineScripts()) {
-
-                String resourceId = crm.processScripts(scripts, ctx, hasDeferredScripts, buffer);
+                String resourceId = crm.processScripts(combineURIs, ctx, hasDeferredScripts, buffer);
 
                 if (!hasDeferredScripts && resourceId != null) {
                     String uri = "<script src=\"" + 
@@ -123,9 +149,6 @@ public class IncludeResourcesCommand extends BaseCommand {
                               "?resourceid=" + resourceId + ".js&tid=" + t.getId() + "');</script>").getBytes());
                }
 
-           } else {
-                String tFile = cfg.getResourceReferences(ctx.getTemplateId(), target, ctx);
-                buffer.write(tFile.getBytes());
            }
            if (deferredScripts != null) {
                for (String s : deferredScripts) {
@@ -147,7 +170,43 @@ public class IncludeResourcesCommand extends BaseCommand {
         } else if ("styles".equals(target)) {
             List<ResourceURI> styles = t.getAllStyles(ctx);
             boolean hasDeferredStyles = false;
+            List<ResourceURI> combineURIs= new ArrayList<ResourceURI>();
+            List<ResourceURI> linkURIs = new ArrayList<ResourceURI>();
 
+            for (ResourceURI ri : styles) {
+                if (ri.getCombine() != null){
+                    if (ri.getCombine().booleanValue() == true) {
+                        combineURIs.add(ri);
+                    } else {
+                        linkURIs.add(ri);
+                    }
+                } else {
+                    if ( t.getCombineStyles() != null &&
+                         t.getCombineStyles().booleanValue() == true) {
+                        combineURIs.add(ri);
+                    } else {
+                        linkURIs.add(ri);
+                    }
+                }
+
+            }
+            if (linkURIs.size() > 0) {
+                String links = URIResourceManager.generateReferences(t, ctx, linkURIs, ResourceURI.LINK);
+                buffer.write(links.getBytes());
+            }
+            if (combineURIs.size() > 0) {
+                String resourceId = crm.processStyles(styles, ctx, buffer);
+                if (!hasDeferredStyles && resourceId != null) {
+                    String uri = "<link rel=\"stylesheet\" type=\"text/css\" href=\"" +
+                    cfg.getResourceService() + "?resourceid=" + resourceId + 
+                    ".css&tid=" + t.getId() + "\" media=\"" + cfg.getMediaType() + "\"/>";
+                    buffer.write(uri.getBytes());
+               } else if (resourceId != null){
+                   String uri = "<script>protorabbit.addDeferredStyle('" + 
+                   cfg.getResourceService() + "?resourceid=" + resourceId + ".css&tid=" + t.getId() + "')</script>";
+                   buffer.write(uri.getBytes());
+               }
+            }
             if (!deferredWritten) {
 
                 for (ResourceURI r : styles) {
@@ -161,22 +220,6 @@ public class IncludeResourcesCommand extends BaseCommand {
                 }
             }
 
-            if (t.getCombineStyles() != null && t.getCombineStyles()) {
-                String resourceId = crm.processStyles(styles, ctx, buffer);
-                if (!hasDeferredStyles && resourceId != null) {
-                    String uri = "<link rel=\"stylesheet\" type=\"text/css\" href=\"" +
-                    cfg.getResourceService() + "?resourceid=" + resourceId + 
-                    ".css&tid=" + t.getId() + "\"/>";
-                    buffer.write(uri.getBytes());
-               } else if (resourceId != null){
-                   String uri = "<script>protorabbit.addDeferredStyle('" + 
-                   cfg.getResourceService() + "?resourceid=" + resourceId + ".css&tid=" + t.getId() + "')</script>";
-                   buffer.write(uri.getBytes());
-               }
-            } else {
-                String uri = cfg.getResourceReferences(ctx.getTemplateId(), target, ctx);
-                buffer.write(uri.getBytes());
-            }
         }
 
     }

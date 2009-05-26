@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.logging.Logger;
 
-import org.protorabbit.Config;
 import org.protorabbit.accelerator.CacheContext;
 import org.protorabbit.accelerator.ICacheable;
 import org.protorabbit.model.IContext;

@@ -35,7 +35,6 @@ import org.protorabbit.model.impl.IncludeFile;
 import org.protorabbit.model.impl.Property;
 import org.protorabbit.model.impl.ResourceURI;
 import org.protorabbit.model.impl.Template;
-import org.protorabbit.model.impl.URIResourceManager;
 import org.protorabbit.util.IOUtil;
 
 public class Config {
@@ -299,6 +298,9 @@ public class Config {
                if (so.has("defer")) {
                    ri.setDefer(so.getBoolean("defer"));
                }
+               if (so.has("combine")) {
+                   ri.setCombine(so.getBoolean("combine"));
+               }
                refs.add(ri);
            }
        }
@@ -482,17 +484,6 @@ public class Config {
        return null;
    }
 
-   public String generateScriptReferences(ITemplate template, IContext ctx) {
-       List<ResourceURI> scripts = template.getAllScripts(ctx);
-       return URIResourceManager.generateReferences(template,ctx,scripts, ResourceURI.SCRIPT);
-   }
-
-   public String generateStyleReferences(ITemplate template, IContext ctx) {
-       List<ResourceURI> styles = template.getAllStyles(ctx);
-       return URIResourceManager.generateReferences(template, ctx, styles, ResourceURI.LINK);
-   }
-
-
    public String getTemplateURI(JSONObject template) {
        if (template.has("template")) {
            try {
@@ -526,17 +517,6 @@ public class Config {
             p = template.getProperty(id, ctx);
        }
        return p;
-   }
-
-   public String getResourceReferences(String tid, String pid, IContext ctx) {
-       ITemplate template = getTemplate(tid);
-       String rtype = pid.toLowerCase();
-       if (template != null && "scripts".equals(rtype)) {
-           return generateScriptReferences(template, ctx);
-       } else if (template != null && "styles".equals(rtype)) {
-           return generateStyleReferences(template, ctx);
-       }
-       return null;
    }
 
    public String getEncoding() {

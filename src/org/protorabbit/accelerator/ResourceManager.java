@@ -190,7 +190,7 @@ public class ResourceManager {
        while (it.hasNext()) {
            ResourceURI ri = it.next();
            if (ri.isWritten()) continue;
-           String resource = ri.getUri();
+           String resource = ri.getURI();
            String baseURI =  ctx.getContextRoot();
 
            if (!ri.isExternal()){
@@ -215,12 +215,12 @@ public class ResourceManager {
                ctx.setAttribute(IncludeCommand.DEFERRED_SCRIPTS, deferredScripts);
           
            } else if (!ri.isExternal()){
-               StringBuffer scriptBuffer = ctx.getResource(ri.getBaseURI(), ri.getUri());
+               StringBuffer scriptBuffer = ctx.getResource(ri.getBaseURI(), ri.getURI());
                try {
                    scripts.appendContent(scriptBuffer.toString());
                    ri.updateLastUpdated(ctx);
                } catch (Exception ioe) {
-                  getLogger().warning("Unable to locate resource " + ri.getUri());
+                  getLogger().warning("Unable to locate resource " + ri.getURI());
                }
            } else {
                String script = "<script type=\"text/javascript\" src=\"" +
@@ -242,7 +242,7 @@ public class ResourceManager {
            ResourceURI ri = it.next();
            if (ri.isWritten()) continue;
            String mediaType = ri.getMediaType();
-           String resource = ri.getUri();
+           String resource = ri.getURI();
            String baseURI =  ctx.getContextRoot();
 
            if (!ri.isExternal()){
@@ -268,13 +268,13 @@ public class ResourceManager {
                ri.setWritten(true);
                ctx.setAttribute(IncludeCommand.DEFERRED_SCRIPTS, deferredScripts);
            } else if (!ri.isExternal()){
-               StringBuffer stylesBuffer = ctx.getResource(ri.getBaseURI(), ri.getUri());
+               StringBuffer stylesBuffer = ctx.getResource(ri.getBaseURI(), ri.getURI());
                try {
                    stylesBuffer = replaceRelativeLinks(stylesBuffer, ri.getBaseURI(), ctx, ri.getFullURI());
                    styles.appendContent(stylesBuffer.toString());
                    ri.updateLastUpdated(ctx);
                } catch (Exception ioe) {
-                   Config.getLogger().warning("Non Fatal Error : Unable to locate resource "  +ri.getUri());
+                   Config.getLogger().warning("Non Fatal Error : Unable to locate resource "  +ri.getURI());
                }
            } else {
                String uri = "<link rel=\"stylesheet\" type=\"text/css\" href=\"" +

@@ -22,7 +22,7 @@ public class URIResourceManager {
                     if (ri.isWritten()) {
                          continue;
                     }
-                    String resource = ri.getUri();
+                    String resource = ri.getURI();
                     String baseURI =  ctx.getContextRoot();
 
                     if (!ri.isExternal()){

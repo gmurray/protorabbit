@@ -80,10 +80,10 @@ public class Template implements ITemplate {
             } else {
                 if (requiresRefresh(ctx)) {
                     try {
-                        contents = ctx.getResource(tri.getBaseURI(), tri.getUri());
+                        contents = ctx.getResource(tri.getBaseURI(), tri.getURI());
                         lastUpdate = (new Date()).getTime();
                     } catch (IOException e) {
-                        Config.getLogger().log(Level.SEVERE, "Error retrieving template with baseURI of " + tri.getBaseURI() + " and name " + tri.getUri(), e);
+                        Config.getLogger().log(Level.SEVERE, "Error retrieving template with baseURI of " + tri.getBaseURI() + " and name " + tri.getURI(), e);
                         String message = "Error retriving template " + id + " please see log files for more details.";
                         contents = new StringBuffer(message);
                     }
@@ -497,10 +497,10 @@ public class Template implements ITemplate {
         if (ctx.getConfig().getDevMode()) {
             String base = tri.getBaseURI();
             // if context root then don't include the base
-            if (tri.getUri().startsWith("/")) {
+            if (tri.getURI().startsWith("/")) {
                 base = "";
             }
-            isUpdated = ctx.isUpdated(base + tri.getUri(), lastUpdate);
+            isUpdated = ctx.isUpdated(base + tri.getURI(), lastUpdate);
         }
         // check against the timeout
         long ltimeout = 0;
