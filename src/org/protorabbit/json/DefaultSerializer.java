@@ -19,6 +19,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Arrays;
+import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -31,13 +33,11 @@ public class DefaultSerializer implements JSONSerializer {
 
        // null is null
        if (o == null) {
-
            return JSONObject.NULL;
        }
 
        // collections
        if (Collection.class.isAssignableFrom(o.getClass())) {
-
            Iterator<?> it =  ((Collection<?>)o).iterator();
 
            JSONArray ja = new JSONArray();
@@ -79,6 +79,13 @@ public class DefaultSerializer implements JSONSerializer {
            return ((Date)o).getTime();
        }
 
+       // convert arrays to collections
+       boolean b = o.getClass().isArray();
+       if (b) {
+           Object[] objs = (Object[])o;
+           List l = Arrays.asList(objs);
+           return serialize(l);
+       }
        // serialize using bean like methods
        return serializePOJO(o);
 
