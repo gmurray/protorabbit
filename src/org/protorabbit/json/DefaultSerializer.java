@@ -71,6 +71,7 @@ public class DefaultSerializer implements JSONSerializer {
            o instanceof Number ||
            o instanceof Integer ||
            o instanceof String ||
+           o instanceof Enum ||
            o instanceof Boolean) {
            return o;
        }
