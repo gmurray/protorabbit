@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <html>
  <head>
-  <title>Protorabbit</title>
+  <title>Protorabbit Monitor</title>
   
 
 <script type="text/javascript" src="lib/yui/utilities/utilities.js"></script>
@@ -33,6 +33,20 @@ div.blockBox {
     border : 2px solid #ccc;
 }
 
+div.cacheBlockBox {
+    /* WireIt */
+    margin : 5px;
+    z-index: 1;
+    opacity: 0.9;
+    float : left;
+    /* Others */
+    width: 870px;
+    background : #FFF
+    cursor: move;
+    padding: 5px;
+    border : 2px solid #ccc;
+}
+
 .blockTitle {
   padding : 2px;
   background : #333;
@@ -48,24 +62,31 @@ div.blockBox {
   background : #fff;
 }
 
+.cacheBlockBody {
+  padding : 10px;
+  width : 850px;
+  font-size : 1em;
+  background : #fff;
+}
+
 
 .propertiesTitle {
   padding-top : 3px;
-  padding-bototm : 3px;
+  padding-bottom : 3px;
   color : #333;
   font-size : .9em;
 }
 
 .stylesTitle {
   padding-top : 3px;
-  padding-bototm : 3px;
+  padding-bottom : 3px;
   color : #333;
   font-size : .9em;
 }
 
 .scriptsTitle {
   padding-top : 3px;
-  padding-bototm : 3px;
+  padding-bottom : 3px;
   color : #333;
   font-size : .9em;
 }
@@ -110,6 +131,110 @@ var propTypes = {
  1 : 'insert',
  2 : 'include'
 
+}
+
+function createResourcesBlock(t) {
+
+    var te = document.createElement("div");
+    te.className = "cacheBlockBox";
+    document.body.appendChild(te);
+    
+    var title = document.createElement("div");
+    title.innerHTML = "Cached Resources";
+    title.className = "blockTitle";
+    te.appendChild(title);
+  
+    var bb = document.createElement("div");
+    bb.className = "cacheBodyBlock";
+    te.appendChild(bb);
+
+    var globalContentLength = 0;
+
+    var cachedResources = document.createElement("div");
+    cachedResources.innerHTML = "Cached Resources";
+    cachedResources.className = "propertiesTitle";
+    bb.appendChild(cachedResources);
+
+    var s3tableElement = document.createElement("div");
+    if (t.cachedResources) {
+        s3tableElement.className = "blockTable";
+        var s3table = new tablebuilder();
+        s3table.setHeader(["id", "Content Type", "expires", "created", "Max Age", "Last Accessed", "Status", "Content Length"]);
+        var rowCount = 0;
+        for (var i in t.cachedResources) {
+            var s =t.cachedResources[i];
+            var cc = s.cacheContext;
+            var cl =  s.contentLength;
+            if (typeof cl == "number") {
+                globalContentLength += cl;
+            }
+            s3table.addRow([   i || '',
+                              s.contentType || '',
+                              cc.expires|| '',
+                              (new Date(cc.created)),
+                              cc.maxAge || '',
+                              (new Date(s.lastAccessed)),
+                              s.status || '',
+                              cl || ''
+                              ]);
+            rowCount += 1;
+        }
+        if (rowCount > 0) {
+            s3tableElement.innerHTML = s3table.toString();
+        } else {
+            s3tableElement.innerHTML = "N/A";
+        }
+
+    } else {
+      s3tableElement.innerHTML = "N/A";  
+    }
+    bb.appendChild(s3tableElement);
+
+    var cachedTemplates = document.createElement("div");
+    cachedTemplates.innerHTML = "Cached Templates";
+    cachedTemplates.className = "propertiesTitle";
+    bb.appendChild(cachedTemplates);
+    
+    var s4tableElement = document.createElement("div");
+    if (t.includeFiles) {
+        s4tableElement.className = "blockTable";
+        var s4table = new tablebuilder();
+        s4table.setHeader(["id", "url", "timeout", "Created", "Last Refresh", "Content Length"]);
+        var rowCount = 0;
+        for (var i in t.includeFiles) {
+            var s =t.includeFiles[i];
+            var cc = s.cacheContext;
+            var cl =  s.contentLength;
+            if (typeof cl == "number") {
+                globalContentLength += cl;
+            }
+            s4table.addRow([   i || '',
+                               s.uRI || '',
+                               s.timeout || '',
+                              (new Date(s.created)),
+                              (new Date(s.lastRefresh)),
+                              cl || ''
+                              ]);
+            rowCount +=1;
+        }
+        if (rowCount > 0) {
+            s4tableElement.innerHTML = s4table.toString();
+        } else {
+            s4tableElement.innerHTML = "N/A";
+        }
+    } else {
+      s4tableElement.innerHTML = "N/A";
+    }
+    bb.appendChild(s4tableElement);
+    
+    var total = document.createElement("div");
+    var gcl = globalContentLength + " bytes";
+    if (globalContentLength > 1024) {
+        gcl = (globalContentLength / 1024).toFixed(2) + " kb";
+    }
+    total.innerHTML = "Total Cached Content " + gcl;
+    total.className = "propertiesTitle";
+    bb.appendChild(total);
 }
 
 function createBlock(t) {
@@ -254,7 +379,9 @@ function loadData() {
             url : "../prt?command=stats",
             callback : function(req) {
                 var model = eval("(" + req.responseText + ")");
+                createResourcesBlock(model);
                 render(model);
+
             }
         }); 
 }
@@ -301,7 +428,7 @@ window.onload = function() {
  </head>
  <body>
 <div>
-  <div style="float:right"><a href="#" onclick="loadData()">Refresh</a></div>
+  <div style="float:right"><a href="index.html">Refresh</a></div>
 </div>
  </body>
 </html>

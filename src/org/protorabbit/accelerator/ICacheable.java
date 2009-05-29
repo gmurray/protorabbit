@@ -23,7 +23,6 @@ public interface ICacheable {
 
     public void setTimeout(Long timeout);
 
-
     public void setGzipResources(boolean gzip);
 
     public void reset();
@@ -32,7 +31,7 @@ public interface ICacheable {
 
     public void appendContent(String ncontent);
 
-    public long getContentLegth();
+    public long getContentLength();
 
     public String getContentType();
 

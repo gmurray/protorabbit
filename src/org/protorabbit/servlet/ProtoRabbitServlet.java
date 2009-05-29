@@ -364,9 +364,9 @@ public class ProtoRabbitServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-System.out.println("do get here");
+
         if ( "stats".equals(req.getParameter("command") ) ) {
-System.out.println("returning stats");
+
             Map<String, Object> stats = new HashMap<String, Object> ();
             stats.put("cachedResources",  jcfg.getCombinedResourceManager().getResources());
             stats.put("templates",  jcfg.getTemplates());
@@ -379,7 +379,7 @@ System.out.println("returning stats");
             resp.getWriter().write(jo.toString());
             return;
         }
-System.out.println("after");
+
         // check for updates to the templates.json file
         if (isDevMode) {
             updateConfig();

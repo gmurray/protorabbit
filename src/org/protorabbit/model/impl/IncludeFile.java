@@ -24,21 +24,34 @@ public class IncludeFile {
     private int loadIndex;
     private boolean defer = false;
     private StringBuffer deferContent = null;
+    private long created;
 
     public IncludeFile(String uri,
                        StringBuffer content) {
 
         this.content = content;
         this.uri = uri;
-        lastRefresh = (new Date()).getTime();
+        lastRefresh = created = (new Date()).getTime();
     }
 
     public String getURI() {
         return uri;
     }
 
+    public long getCreated() {
+        return created;
+    }
+
     public StringBuffer getContent() {
         return content;
+    }
+
+    public long getContentLength() {
+        if (content != null) {
+            return content.toString().getBytes().length;
+        } else {
+            return 0;
+        }
     }
 
     public void setContent(StringBuffer content) {
@@ -58,7 +71,7 @@ public class IncludeFile {
     public long getLastRefresh() {
         return lastRefresh;
     }
-    
+
     public boolean isStale(IContext ctx) {
         if (ctx.getConfig().getDevMode()) {
             boolean isUpdated = ctx.isUpdated( uri, lastRefresh);
