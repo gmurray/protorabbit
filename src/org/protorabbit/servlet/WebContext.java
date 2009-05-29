@@ -81,7 +81,7 @@ public class WebContext extends BaseContext {
                 long lastMod = uc.getLastModified();
                 return (lastMod > lastUpdate);
             } else {
-                Config.getLogger().warning("Error locating resource : " + name);
+                getLogger().warning("Error locating resource : " + name);
                 return true;
             }
         } catch (MalformedURLException e) {
@@ -100,7 +100,7 @@ public class WebContext extends BaseContext {
                 long lastMod = uc.getLastModified();
                 return lastMod;
             } else {
-                Config.getLogger().warning("Error locating resource : " + name);
+                getLogger().warning("Error locating resource : " + name);
                 return -1;
             }
         } catch (MalformedURLException e) {
@@ -147,7 +147,7 @@ public class WebContext extends BaseContext {
                    return new StringBuffer(contents);
             } else {
                 // don't throw out the resource name to end user
-                Config.getLogger().log(Level.SEVERE, "Error loading " + resourceName);
+                getLogger().log(Level.SEVERE, "Error loading " + resourceName);
                 throw new IOException("Error loading resource. Please notify the administrator that there was an issue.");
             }
         }
@@ -206,14 +206,14 @@ public class WebContext extends BaseContext {
                 if (start < path.length) {
                     targetMethod = path[start];
                 } else {
-                    Config.getLogger().warning("Non Fatal Error looking up property : " + className + ". No property.");
+                    getLogger().warning("Non Fatal Error looking up property : " + className + ". No property.");
                     return null;
                 }
                try {
                    Class<?> c = Class.forName(className);
                    target = getObject(c, null,targetMethod);
                } catch (ClassNotFoundException cfe) {
-                   Config.getLogger().warning("Non Fatal Error looking up property : " + className);
+                   getLogger().warning("Non Fatal Error looking up property : " + className);
                    return null;
                }
             } else {
@@ -259,13 +259,13 @@ public class WebContext extends BaseContext {
                     return value;
                 }
             } catch (IllegalArgumentException e) {
-                Config.getLogger().warning("Non Fatal Error looking up property : " + target + " on object " + pojo + " " + e);
+                getLogger().warning("Non Fatal Error looking up property : " + target + " on object " + pojo + " " + e);
             } catch (IllegalAccessException e) {
-               Config.getLogger().warning("Non Fatal Error looking up property : " + target + " on object " + pojo + " " + e);
+               getLogger().warning("Non Fatal Error looking up property : " + target + " on object " + pojo + " " + e);
             } catch (InvocationTargetException e) {
-                Config.getLogger().warning("Non Fatal Error looking up property : " + target + " on object " + pojo + " " + e);
+                getLogger().warning("Non Fatal Error looking up property : " + target + " on object " + pojo + " " + e);
             } catch (Exception e) {
-                Config.getLogger().warning("Non Fatal Error looking up property : " + target + " on object " + pojo + " " + e);
+                getLogger().warning("Non Fatal Error looking up property : " + target + " on object " + pojo + " " + e);
             }
         }
         return null;
@@ -303,9 +303,9 @@ public class WebContext extends BaseContext {
         lvalue = findValue(lvalueString);
         rvalue = findValue(rvalueString);
 
-        if (Config.getLogger().isLoggable(Level.FINEST )) {
-            Config.getLogger().log(Level.FINEST, "rvalue=" + lvalueString + " result=" + lvalue);
-            Config.getLogger().log(Level.FINEST, "lvalue=" + lvalueString + " result=" + rvalue);
+        if (getLogger().isLoggable(Level.FINEST )) {
+            getLogger().log(Level.FINEST, "rvalue=" + lvalueString + " result=" + lvalue);
+            getLogger().log(Level.FINEST, "lvalue=" + lvalueString + " result=" + rvalue);
         }
 
         if (lvalue != null && rvalue != null &&

@@ -238,7 +238,7 @@ window.protorabbit = function() {
   *  System with IE7
   *
   */
- function getXHR () {
+ function getXHR() {
      if (window.XMLHttpRequest &&
           !( ctx.MSIE &&
              ctx.forceActiveXXHR === true )) {

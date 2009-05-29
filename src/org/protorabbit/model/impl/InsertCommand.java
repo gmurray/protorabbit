@@ -26,7 +26,7 @@ public class InsertCommand extends BaseCommand {
 
     private static Logger logger = null;
 
-    public static final Logger getLogger() {
+    static Logger getLogger() {
         if (logger == null) {
             logger = Logger.getLogger("org.protrabbit");
         }
@@ -112,7 +112,7 @@ public class InsertCommand extends BaseCommand {
             buffer.write(value.getBytes());
         } else {
             String message = "InsertWarning: Unable find property " + params[0];
-            Config.getLogger().warning(message);
+            getLogger().warning(message);
         }
     }
 

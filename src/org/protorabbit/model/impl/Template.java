@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.json.JSONObject;
 import org.protorabbit.Config;
@@ -56,6 +57,7 @@ public class Template implements ITemplate {
     private String uriNamespace = null;
     private Map<String, Object> attributes = null;
     private DocumentContext dc = null;
+    private static Logger logger = null;
 
     public Template(String id, String baseURI, JSONObject json, Config cfg) {
 
@@ -65,6 +67,13 @@ public class Template implements ITemplate {
         properties = new HashMap<String, IProperty>();
         attributes = new HashMap<String, Object>();
         this.config  = cfg;
+    }
+
+    static Logger getLogger() {
+        if (logger == null) {
+            logger = Logger.getLogger("org.protrabbit");
+        }
+        return logger;
     }
 
     public void setContent(StringBuffer contents) {
@@ -83,7 +92,7 @@ public class Template implements ITemplate {
                         contents = ctx.getResource(tri.getBaseURI(), tri.getURI());
                         lastUpdate = (new Date()).getTime();
                     } catch (IOException e) {
-                        Config.getLogger().log(Level.SEVERE, "Error retrieving template with baseURI of " + tri.getBaseURI() + " and name " + tri.getURI(), e);
+                        getLogger().log(Level.SEVERE, "Error retrieving template with baseURI of " + tri.getBaseURI() + " and name " + tri.getURI(), e);
                         String message = "Error retriving template " + id + " please see log files for more details.";
                         contents = new StringBuffer(message);
                     }

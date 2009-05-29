@@ -19,6 +19,7 @@ import java.util.Date;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import org.protorabbit.Config;
@@ -41,7 +42,7 @@ public class ResourceManager {
    private Hashtable<String, ICacheable> combinedResources = null;
    private static Logger logger = null;
 
-   public static final Logger getLogger() {
+   static final Logger getLogger() {
        if (logger == null) {
            logger = Logger.getLogger("org.protrabbit");
        }
@@ -65,6 +66,9 @@ public class ResourceManager {
 
    }
 
+   public Map<String, ICacheable> getResources() {
+       return combinedResources;
+   }
    /*
     *
     * Reset resources that have exceeded their max timeout and
@@ -133,7 +137,7 @@ public class ResourceManager {
            // don't replace externalized resources
            if (!url.startsWith("http")) {
                if ( resourceDir.startsWith("/WEB-INF") && !url.startsWith("/")) {
-                   Config.getLogger().warning("Non Fatal error replacing style references. Reference to url "  + url +
+                   getLogger().warning("Non Fatal error replacing style references. Reference to url "  + url +
                                            " in " + resourceName + " is located in a private directory '/WEB-INF'. " +
                                            " Place the resource in an accesible location or use a non relative link or place" +
                                            " the css template in a public directory.");
@@ -159,8 +163,6 @@ public class ResourceManager {
     * @return MD5 Hash or null
     */
    public String getHash(List<ResourceURI> uriResources) {
-
-       //Collections.sort(uriResources, new ResourceURIComparator());
 
            Iterator<ResourceURI> it = uriResources.iterator();
            String namesString = "";
@@ -274,7 +276,7 @@ public class ResourceManager {
                    styles.appendContent(stylesBuffer.toString());
                    ri.updateLastUpdated(ctx);
                } catch (Exception ioe) {
-                   Config.getLogger().warning("Non Fatal Error : Unable to locate resource "  +ri.getURI());
+                   getLogger().warning("Non Fatal Error : Unable to locate resource "  +ri.getURI());
                }
            } else {
                String uri = "<link rel=\"stylesheet\" type=\"text/css\" href=\"" +

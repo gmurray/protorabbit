@@ -82,10 +82,15 @@ public class DefaultSerializer implements JSONSerializer {
 
        // convert arrays to collections
        boolean b = o.getClass().isArray();
+
        if (b) {
-           Object[] objs = (Object[])o;
-           List l = Arrays.asList(objs);
-           return serialize(l);
+           try {
+               Object[] objs = (Object[])o;
+               List l = Arrays.asList(objs);
+               return serialize(l);
+           } catch (ClassCastException e) {
+               return JSONObject.NULL;
+           }
        }
        // serialize using bean like methods
        return serializePOJO(o);
@@ -105,7 +110,6 @@ public class DefaultSerializer implements JSONSerializer {
        HashMap<String, Object> map = new HashMap<String, Object>();
 
        Method[] methods = pojo.getClass().getMethods();
-
        for (int i=0; i < methods.length;i++) {
            try {
                Method m = methods[i];

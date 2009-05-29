@@ -55,7 +55,7 @@ public class Config {
    private String httpClientClassName = "org.protorabbit.accelerator.impl.HttpClient";
    private static Logger logger = null;
 
-   public static Logger getLogger() {
+   static Logger getLogger() {
        if (logger == null) {
            logger = Logger.getLogger("org.protrabbit");
        }
@@ -97,6 +97,13 @@ public class Config {
 
        tmap = new HashMap<String, ITemplate>();
        includeFiles = new HashMap<String, IncludeFile>();
+   }
+   
+   public Map<String, IncludeFile> getIncludeFiles() {
+       return includeFiles;
+   }
+   public Map<String, ITemplate> getTemplates() {
+       return tmap;
    }
 
    public Object getGlobalAttribute(String key) {

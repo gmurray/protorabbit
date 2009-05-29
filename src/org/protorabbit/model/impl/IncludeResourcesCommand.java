@@ -44,7 +44,7 @@ public class IncludeResourcesCommand extends BaseCommand {
         setProcessOrder(ICommand.PROCESS_LAST);
     }
 
-    public static final Logger getLogger() {
+    static final Logger getLogger() {
         if (logger == null) {
             logger = Logger.getLogger("org.protrabbit");
         }

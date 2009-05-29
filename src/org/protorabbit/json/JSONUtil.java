@@ -114,7 +114,7 @@ public class JSONUtil {
             FileInputStream in = new FileInputStream(f);
             return loadFromInputStream(in);
         } catch (Exception e) {
-            Config.getLogger().severe("JSONUtil: error loading JSON from file " + e);
+            getLogger().severe("JSONUtil: error loading JSON from file " + e);
         }
         return null;
     }
@@ -175,7 +175,7 @@ public class JSONUtil {
             }
             return new JSONObject(out.toString());
         } catch (Exception e) {
-            Config.getLogger().severe("JSONUtil: error reading in JSON from stream : " + e);
+            getLogger().severe("JSONUtil: error reading in JSON from stream : " + e);
         } finally {
             try {
                 if (in != null) {
@@ -193,7 +193,7 @@ public class JSONUtil {
 
     private static Logger logger;
 
-    public static Logger getLogger() {
+    static Logger getLogger() {
         if (logger == null) {
             logger = Logger.getLogger("org.protorabbit");
         }

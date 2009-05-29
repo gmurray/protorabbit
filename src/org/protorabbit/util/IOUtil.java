@@ -22,6 +22,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.GZIPOutputStream;
 
 import org.protorabbit.Config;
@@ -29,6 +30,14 @@ import org.protorabbit.Config;
 public class IOUtil {
 
     private static SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss  z");
+    private static Logger logger = null;
+
+    static Logger getLogger() {
+        if (logger == null) {
+            logger = Logger.getLogger("org.protrabbit");
+        }
+        return logger;
+    }
 
     public static byte[] getGZippedContent(byte[] content) throws IOException{
         byte[] gzippedContent = null;
@@ -114,7 +123,7 @@ public class IOUtil {
             try {
                 resource = new StringBuffer(bos.toString(cfg.getEncoding()));
             } catch (UnsupportedEncodingException e) {
-                Config.getLogger().log(Level.SEVERE, "Error loading Resoruce", e);
+                getLogger().log(Level.SEVERE, "Error loading Resoruce", e);
             }
         }
         return resource;

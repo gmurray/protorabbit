@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -60,6 +61,7 @@ public class ProtoRabbitServlet extends HttpServlet {
     private boolean isDevMode = false;
     private HashMap<String, Long> lastUpdated;
     private IEngine engine;
+    private JSONSerializer json = null;
 
     private static Logger logger = null;
 
@@ -85,7 +87,7 @@ public class ProtoRabbitServlet extends HttpServlet {
     private long cleanupTimeout = 3600000;
     private long lastCleanup = -1;
 
-    private String version = "0.7-dev";
+    private String version = "0.7-dev-b";
 
     public void init(ServletConfig cfg) throws ServletException {
 
@@ -250,11 +252,13 @@ public class ProtoRabbitServlet extends HttpServlet {
                 crm.processStyles(scripts, wc, out);
                 cr = crm.getResource(resourceId);
             } else if ("messages".equals(id)) {
-                SerializationFactory factory = new SerializationFactory();
+                if (json == null) {
+                    SerializationFactory factory = new SerializationFactory();
+                    json = factory.getInstance();
+                }
                 List<IProperty> deferredProperties = new ArrayList<IProperty>();
                 t.getDeferProperties(deferredProperties, wc);
-                JSONSerializer js = factory.getInstance();
-                JSONObject jo = (JSONObject)js.serialize(deferredProperties);
+                JSONObject jo = (JSONObject)json.serialize(deferredProperties);
                 String content = jo.toString();
                 cr = new CacheableResource("application/json", jcfg.getResourceTimeout(), resourceId);
                 cr.setContent( new StringBuffer(content) );
@@ -360,7 +364,22 @@ public class ProtoRabbitServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-
+System.out.println("do get here");
+        if ( "stats".equals(req.getParameter("command") ) ) {
+System.out.println("returning stats");
+            Map<String, Object> stats = new HashMap<String, Object> ();
+            stats.put("cachedResources",  jcfg.getCombinedResourceManager().getResources());
+            stats.put("templates",  jcfg.getTemplates());
+            stats.put("includeFiles", jcfg.getIncludeFiles());
+            if (json == null) {
+                SerializationFactory factory = new SerializationFactory();
+                json = factory.getInstance();
+            }
+            Object jo = json.serialize(stats);
+            resp.getWriter().write(jo.toString());
+            return;
+        }
+System.out.println("after");
         // check for updates to the templates.json file
         if (isDevMode) {
             updateConfig();

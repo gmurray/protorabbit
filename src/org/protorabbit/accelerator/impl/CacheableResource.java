@@ -32,7 +32,7 @@ public class CacheableResource implements ICacheable {
     private Long timeout = null;
     private static Logger logger = null;
 
-    public static Logger getLogger() {
+    static Logger getLogger() {
         if (logger == null) {
             logger = Logger.getLogger("org.protrabbit");
         }

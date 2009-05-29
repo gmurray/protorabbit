@@ -25,7 +25,7 @@ public  abstract class BaseContext implements IContext {
     private String templateId;
     private static Logger logger = null;
 
-    public static Logger getLogger() {
+    protected static Logger getLogger() {
         if (logger == null) {
             logger = Logger.getLogger("org.protrabbit");
         }
