@@ -96,6 +96,7 @@ div.cacheBlockBox {
   border : 1px solid #333;
   width : 99%;
   font-size : .8em;
+  overflow : hidden;
 }
 
 .blockTable td {
@@ -190,10 +191,10 @@ function createResourcesBlock(t) {
     }
     bb.appendChild(s3tableElement);
 
-    var cachedTemplates = document.createElement("div");
-    cachedTemplates.innerHTML = "Cached Templates";
-    cachedTemplates.className = "propertiesTitle";
-    bb.appendChild(cachedTemplates);
+    var cachedFragments = document.createElement("div");
+    cachedFragments.innerHTML = "Cached Fragments";
+    cachedFragments.className = "propertiesTitle";
+    bb.appendChild(cachedFragments);
     
     var s4tableElement = document.createElement("div");
     if (t.includeFiles) {
@@ -203,7 +204,6 @@ function createResourcesBlock(t) {
         var rowCount = 0;
         for (var i in t.includeFiles) {
             var s =t.includeFiles[i];
-            var cc = s.cacheContext;
             var cl =  s.contentLength;
             if (typeof cl == "number") {
                 globalContentLength += cl;
@@ -226,6 +226,45 @@ function createResourcesBlock(t) {
       s4tableElement.innerHTML = "N/A";
     }
     bb.appendChild(s4tableElement);
+
+    var cachedTemplates = document.createElement("div");
+    cachedTemplates.innerHTML = "Cached Templates";
+    cachedTemplates.className = "propertiesTitle";
+    bb.appendChild(cachedTemplates);
+    
+    var s5tableElement = document.createElement("div");
+    if (t.templates) {
+        s5tableElement.className = "blockTable";
+        var s5table = new tablebuilder();
+        s5table.setHeader(["id", "Created", "Last Refresh", "Content Length"]);
+        var rowCount = 0;
+        for (var i in t.templates) {
+            var s = t.templates[i].documentContext;
+            if (s == null) {
+                continue;
+            }
+            var cl =  s.contentLength;
+            if (typeof cl == "number") {
+                globalContentLength += cl;
+            }
+            s5table.addRow([   i || '',
+                              (new Date(s.created)),
+                              (new Date(s.lastRefresh)),
+                              cl || ''
+                              ]);
+            rowCount +=1;
+        }
+        if (rowCount > 0) {
+            s5tableElement.innerHTML = s5table.toString();
+        } else {
+            s5tableElement.innerHTML = "N/A";
+        }
+    } else {
+      s5tableElement.innerHTML = "N/A";
+    }
+    bb.appendChild(s5tableElement);
+
+  
     
     var total = document.createElement("div");
     var gcl = globalContentLength + " bytes";
@@ -253,7 +292,7 @@ function createBlock(t) {
     te.appendChild(bb);
   
     var template = document.createElement("div");
-    template.innerHTML = "Template : " + t.templateURI.fullURI;
+    template.innerHTML = "Template : " + ((t.templateURI != null) ? t.templateURI.fullURI : '');
     template.className = "scriptsTitle";  
     bb.appendChild(template);
 
@@ -274,7 +313,7 @@ function createBlock(t) {
         stable.setHeader(["id", "url", "defer", "test", "uaTest"]);
         for (var i=0; i < t.scripts.length; i+=1) {
             var s = t.scripts[i];
-            stable.addRow([ s.id || '', s.fullURI, (s.defer != null) ? s.defer + '' : '', s.test + '' || '', s.uaTest || '' ]);
+            stable.addRow([ s.id || '', s.fullURI, (s.defer != null) ? s.defer + '' : '', (s.test != null) ? s.test : '' || '', s.uaTest || '' ]);
         }
         stableElement.innerHTML = stable.toString();
 
@@ -319,9 +358,9 @@ function createBlock(t) {
         s3tableElement.innerHTML = s3table.toString();
 
     } else {
-      s3tableElement.innerHTML = "N/A";  
+      s3tableElement.innerHTML = "N/A";
     }
-    bb.appendChild(s3tableElement);    
+    bb.appendChild(s3tableElement);
     
     terminals[t.id] = [ new WireIt.Terminal(te, {direction: [1,0], offsetPosition: [blockWidth - 15,45]})];
     // Make the block2 draggable

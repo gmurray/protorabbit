@@ -134,6 +134,13 @@ public class ResourceManager {
            if (url.endsWith("\"") || url.endsWith("\'")) {
                url = url.substring(url.length() -1);
            }
+           // handle cases where resource dirs not specified 
+           if ("".equals(resourceDir) ) {
+               int lastSep = resourceName.lastIndexOf("/");
+               if (lastSep != -1) {
+                   resourceDir = resourceName.substring(0, lastSep + 1);
+               } 
+           }
            // don't replace externalized resources
            if (!url.startsWith("http")) {
                if ( resourceDir.startsWith("/WEB-INF") && !url.startsWith("/")) {

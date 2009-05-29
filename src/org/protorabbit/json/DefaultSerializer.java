@@ -108,13 +108,13 @@ public class DefaultSerializer implements JSONSerializer {
 
        Object[] args = {};
        HashMap<String, Object> map = new HashMap<String, Object>();
-
        Method[] methods = pojo.getClass().getMethods();
        for (int i=0; i < methods.length;i++) {
            try {
                Method m = methods[i];
                if (Modifier.isPublic(m.getModifiers()) &&
                     !"getClass".equals(m.getName()) &&
+                    !"getParent".equals(m.getName()) &&
                     !"getSystemClassLoader".equals(m.getName()) &&
                     !"getMethods".equals(m.getName()) &&
                     !"getDeclaredClasses".equals(m.getName()) &&

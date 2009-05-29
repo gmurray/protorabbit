@@ -7,6 +7,10 @@ public interface IDocumentContext {
     public int getIndex();
     public void setIndex(int index);
     public StringBuffer getDocument();
+    public long getContentLength();
+    public long getCreated();
+    public long getLastAccessed();
+    public long getLastRefresh();
     public void setDocument(StringBuffer document);
 
     public List<ICommand> getAllCommands();
