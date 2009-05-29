@@ -296,10 +296,10 @@ function createBlock(t) {
     template.className = "scriptsTitle";  
     bb.appendChild(template);
 
-    var extends = document.createElement("div");
-    extends.innerHTML = "Extends : " + (t.ancestors || '');
-    extends.className = "scriptsTitle";  
-    bb.appendChild(extends);
+    var ediv = document.createElement("div");
+    ediv = "Extends : " + (t.ancestors || '');
+    ediv.className = "scriptsTitle";  
+    bb.appendChild(ediv);
   
     var scripts = document.createElement("div");
     scripts.innerHTML = "Scripts";

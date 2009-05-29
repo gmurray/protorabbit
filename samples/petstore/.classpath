@@ -7,6 +7,6 @@
 	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.module.container"/>
 	<classpathentry exported="true" kind="lib" path="web/WEB-INF/lib/org.json-0.0.2.jar"/>
 	<classpathentry kind="lib" path="/protorabbit/lib/servlet-api-2.4.jar"/>
-	<classpathentry kind="lib" path="/protorabbit/dist/protorabbit-0.6.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="/protorabbit/dist/protorabbit-0.7.0.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>
