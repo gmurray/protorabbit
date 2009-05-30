@@ -3,6 +3,7 @@
 
     {
      "combineResources" : true,
+     "timeout" : 150000,
      "id" : "welcome",
      "extends" : "blueprints-css",
      "properties" : {

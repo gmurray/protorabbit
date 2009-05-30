@@ -160,14 +160,18 @@ function createResourcesBlock(t) {
     if (t.cachedResources) {
         s3tableElement.className = "blockTable";
         var s3table = new tablebuilder();
-        s3table.setHeader(["id", "Content Type", "expires", "created", "Max Age", "Last Accessed", "Status", "Content Length"]);
+        s3table.setHeader(["id", "Content Type", "expires", "created", "Max Age", "Last Accessed", "timeout", "Status", "Content Length", "Gzip Content Length", "Access Count", "Gzip Access Count"]);
         var rowCount = 0;
         for (var i in t.cachedResources) {
             var s =t.cachedResources[i];
             var cc = s.cacheContext;
             var cl =  s.contentLength;
+            var gcl = s.gzipContentLength;
             if (typeof cl == "number") {
                 globalContentLength += cl;
+            }
+            if (typeof gcl == "number") {
+                globalContentLength += gcl;
             }
             s3table.addRow([   i || '',
                               s.contentType || '',
@@ -175,8 +179,12 @@ function createResourcesBlock(t) {
                               (new Date(cc.created)),
                               cc.maxAge || '',
                               (new Date(s.lastAccessed)),
+                              s.timeout || '',
                               s.status || '',
-                              cl || ''
+                              cl || '',
+                              gcl || '',
+                              s.accessCount,
+                              s.gzipAccessCount
                               ]);
             rowCount += 1;
         }
@@ -191,6 +199,55 @@ function createResourcesBlock(t) {
     }
     bb.appendChild(s3tableElement);
 
+
+    var s6TitleElement = document.createElement("div");
+    s6TitleElement.className = "propertiesTitle";
+    s6TitleElement.innerHTML = "Cached Templates";
+    bb.appendChild(s6TitleElement);
+    
+    var templateResources = [];
+    for (var k in t.templates) {
+        if (t.templates[k].templateResource) {
+            templateResources.push({ id: k, templateResource : t.templates[k].templateResource});
+        }
+    }
+   var s6tableElement = document.createElement("div");
+    
+    if (templateResources.length > 0) {
+        s6tableElement.className = "blockTable";
+        var s6table = new tablebuilder();
+        s6table.setHeader(["id", "Content Type", "expires", "created", "Max Age", "Last Accessed", "timeout", "Status", "Content Length", "Gzip Content Length", "Access Count", "Gzip Access Count"]);
+        for (var l=0; l < templateResources.length; l+=1 ) {
+            var s = templateResources[l].templateResource;
+            var cl =  s.contentLength;
+            var gcl = s.gzipContentLength;
+            if (typeof cl == "number") {
+                globalContentLength += cl;
+            }
+            if (typeof gcl == "number") {
+                globalContentLength += gcl;
+            }
+            s6table.addRow([   templateResources[l].id || '',
+                               s.contentType,
+                               s.cacheContext.expires,
+                               (new Date(s.cacheContext.created)),
+                               s.cacheContext.maxAge,
+                               (new Date(s.lastAccessed)),
+                               s.timeout || '',
+                               s.status,
+                               cl || '',
+                               gcl || '',
+                               s.accessCount,
+                               s.gzipAccessCount
+                              ]);
+        }
+        s6tableElement.innerHTML = s6table.toString();
+    } else {
+      s6tableElement.innerHTML = "N/A";
+    }
+    bb.appendChild(s6tableElement);
+
+    // list the fragments
     var cachedFragments = document.createElement("div");
     cachedFragments.innerHTML = "Cached Fragments";
     cachedFragments.className = "propertiesTitle";
@@ -200,7 +257,7 @@ function createResourcesBlock(t) {
     if (t.includeFiles) {
         s4tableElement.className = "blockTable";
         var s4table = new tablebuilder();
-        s4table.setHeader(["id", "url", "timeout", "Created", "Last Refresh", "Content Length"]);
+        s4table.setHeader(["id", "timeout", "Created", "Last Refresh", "Content Length"]);
         var rowCount = 0;
         for (var i in t.includeFiles) {
             var s =t.includeFiles[i];
@@ -209,7 +266,6 @@ function createResourcesBlock(t) {
                 globalContentLength += cl;
             }
             s4table.addRow([   i || '',
-                               s.uRI || '',
                                s.timeout || '',
                               (new Date(s.created)),
                               (new Date(s.lastRefresh)),
@@ -228,7 +284,7 @@ function createResourcesBlock(t) {
     bb.appendChild(s4tableElement);
 
     var cachedTemplates = document.createElement("div");
-    cachedTemplates.innerHTML = "Cached Templates";
+    cachedTemplates.innerHTML = "Cached Template Skeletons (excluding fragments)";
     cachedTemplates.className = "propertiesTitle";
     bb.appendChild(cachedTemplates);
     
@@ -264,8 +320,6 @@ function createResourcesBlock(t) {
     }
     bb.appendChild(s5tableElement);
 
-  
-    
     var total = document.createElement("div");
     var gcl = globalContentLength + " bytes";
     if (globalContentLength > 1024) {
@@ -297,7 +351,7 @@ function createBlock(t) {
     bb.appendChild(template);
 
     var ediv = document.createElement("div");
-    ediv = "Extends : " + (t.ancestors || '');
+    ediv.innerHTML = "Extends : " + (t.ancestors || '');
     ediv.className = "scriptsTitle";  
     bb.appendChild(ediv);
   

@@ -27,11 +27,16 @@ public interface ICacheable {
 
     public void reset();
 
+    public long getAccessCount();
+    public long getGzipAccessCount();
+
     public CacheContext getCacheContext();
 
     public void appendContent(String ncontent);
 
     public long getContentLength();
+
+    public long getGzipContentLength();
 
     public String getContentType();
 

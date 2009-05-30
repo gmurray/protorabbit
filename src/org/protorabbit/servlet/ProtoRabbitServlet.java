@@ -263,20 +263,23 @@ public class ProtoRabbitServlet extends HttpServlet {
                 cr = new CacheableResource("application/json", jcfg.getResourceTimeout(), resourceId);
                 cr.setContent( new StringBuffer(content) );
                 crm.putResource(resourceId, cr);
+                // assume this is a request for a deferred resource that hasn't been created
             } else {
                 IProperty property = t.getPropertyById(id, wc);
                 StringBuffer buff = null;
                 IncludeFile inc = jcfg.getIncludeFileContent(templateId, property.getKey(),wc);
-                buff = inc.getContent();
-                String hash  = IOUtil.generateHash(buff.toString());
-                if (property.getId() != null) {
-                    resourceId = property.getId();
-                } else {
-                    resourceId = hash;
+                if (inc != null) {
+                    buff = inc.getContent();
+                    String hash  = IOUtil.generateHash(buff.toString());
+                    if (property.getId() != null) {
+                        resourceId = property.getId();
+                    } else {
+                        resourceId = hash;
+                    }
+                    cr = new CacheableResource("text/html", inc.getTimeout(), hash);
+                    cr.setContent( buff );
+                    crm.putResource(templateId + "_" + resourceId , cr);
                 }
-                cr = new CacheableResource("text/html", inc.getTimeout(), hash);
-                cr.setContent( buff );
-                crm.putResource(templateId + "_" + resourceId , cr);
             }
         } else if ("protorabbit".equals(id)) {
             StringBuffer buff = IOUtil.getClasspathResource(jcfg, Config.PROTORABBIT_CLIENT);
@@ -325,6 +328,7 @@ public class ProtoRabbitServlet extends HttpServlet {
             if (etag != null &&
                 ifNoneMatch != null && 
                 ifNoneMatch.equals(etag)) {
+
                 resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
             }
             if (etag != null) {
@@ -377,6 +381,9 @@ public class ProtoRabbitServlet extends HttpServlet {
             }
             Object jo = json.serialize(stats);
             resp.getWriter().write(jo.toString());
+            return;
+        } else if ("version".equals(req.getParameter("command") ) ) {
+            resp.getWriter().write(version);
             return;
         }
 
@@ -501,7 +508,7 @@ public class ProtoRabbitServlet extends HttpServlet {
             // if the client has the same resource as the one on the server return a 304
             // get the If-None-Match header
             String etag = tr.getContentHash();
-            
+
             String ifNoneMatch = req.getHeader("If-None-Match");
             if (etag != null && ifNoneMatch != null &&
                 ifNoneMatch.equals(etag)) {
