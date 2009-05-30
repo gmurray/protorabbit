@@ -156,8 +156,12 @@ public class IncludeCommand extends BaseCommand {
             ctx.setAttribute(COUNTER, new Integer(counter + 1));
         } else {
             IncludeFile inc = cfg.getIncludeFileContent(ctx.getTemplateId(), id,ctx);
-            buff = inc.getContent();
-
+            if (inc != null) {
+                buff = inc.getContent();
+            } else {
+                 getLogger().severe("Unable to fine Include file with id " + id + ".");
+                 return;
+            }
             if (parseIncludeFile) {
                 IDocumentContext document = new DocumentContext();
                 setDocumentContext(document);
@@ -170,12 +174,13 @@ public class IncludeCommand extends BaseCommand {
                 List<ICommand> defaultCmds = null;
 
                 for (ICommand c : cmds) {
-                    if (c.getProcessOrder() == ICommand.PROCESS_DEFAULT) {
+                    if (c.getProcessOrder() == ICommand.PROCESS_DEFAULT ||
+                        c.getProcessOrder() == ICommand.PROCESS_FIRST) {
                         if (defaultCmds == null) {
                             defaultCmds = new ArrayList<ICommand>();
                             document.setAfterCommands(defaultCmds);
                         }
-                        defaultCmds.add(c);
+                        defaultCmds.add(c);                   
                     } else if (c.getProcessOrder() == ICommand.PROCESS_LAST) {
                         if (lastCmds == null) {
                             lastCmds = new ArrayList<ICommand>();
