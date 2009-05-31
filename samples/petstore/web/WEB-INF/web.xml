@@ -32,6 +32,11 @@
         <url-pattern>/prt</url-pattern>
     </servlet-mapping>
 
+    <servlet-mapping>
+        <servlet-name>ProtoRabbit Servlet</servlet-name>
+        <url-pattern>/prt/*</url-pattern>
+    </servlet-mapping>
+
     <servlet>
         <servlet-name>Pestore Servlet</servlet-name>
         <servlet-class>petstore.ControllerServlet</servlet-class>

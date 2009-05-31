@@ -65,7 +65,7 @@ public class ProtoRabbitServlet extends HttpServlet {
 
     private static Logger logger = null;
 
-    public static final Logger getLogger() {
+    static final Logger getLogger() {
         if (logger == null) {
             logger = Logger.getLogger("org.protrabbit");
         }
@@ -87,7 +87,9 @@ public class ProtoRabbitServlet extends HttpServlet {
     private long cleanupTimeout = 3600000;
     private long lastCleanup = -1;
 
-    private String version = "0.7-dev-b";
+    private String version = "0.7-dev-c";
+
+    private String[] writeHeaders = { "gif", "jpg", "png"};
 
     public void init(ServletConfig cfg) throws ServletException {
 
@@ -340,6 +342,7 @@ public class ProtoRabbitServlet extends HttpServlet {
             if (jcfg.getGzip() && canGzip && cr.gzipResources()) {
                 resp.setHeader("Content-Encoding", "gzip");
                 byte[] bytes = cr.getGZippedContent();
+                cr.incrementAccessCount();
                 if (bytes != null) {
                     ByteArrayInputStream bis = new ByteArrayInputStream(
                             bytes);
@@ -364,11 +367,21 @@ public class ProtoRabbitServlet extends HttpServlet {
         doGet(req,resp);
     }
 
+    private void writeHeaders(HttpServletRequest req, HttpServletResponse resp, String path) throws ServletException, IOException {
+
+        String expires = IOUtil.getExpires(jcfg.getResourceTimeout());
+        resp.setHeader("Expires", expires);
+        resp.setHeader("Cache-Control", "public,max-age=" + expires);
+        req.getRequestDispatcher(path).forward(req, resp);
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
+        String path = req.getServletPath();
+        String pathInfo = req.getPathInfo();
         if ( "stats".equals(req.getParameter("command") ) ) {
 
             Map<String, Object> stats = new HashMap<String, Object> ();
@@ -385,6 +398,13 @@ public class ProtoRabbitServlet extends HttpServlet {
         } else if ("version".equals(req.getParameter("command") ) ) {
             resp.getWriter().write(version);
             return;
+        } else if (pathInfo != null) {
+            for (String t : writeHeaders) {
+               if (pathInfo.endsWith(t)) {
+                   writeHeaders(req, resp, pathInfo);
+                   return;
+               }
+            }
         }
 
         // check for updates to the templates.json file
@@ -410,12 +430,10 @@ public class ProtoRabbitServlet extends HttpServlet {
             return;
         }
 
-        String path = req.getServletPath();
         if (("/" + serviceURI).equals(path)) {
             path = req.getPathInfo();
         }
         int lastSep = path.lastIndexOf("/");
-
         String namespace = null;
         if (lastSep != -1 && lastSep < path.length() - 1) {
             int nextDot = path.indexOf(".", lastSep + 1);
@@ -484,6 +502,7 @@ public class ProtoRabbitServlet extends HttpServlet {
 
             if (canGzip  &&  t.gzipTemplate() != null && t.gzipTemplate()) {
                 byte[] bytes = cr.getGZippedContent();
+                cr.incrementAccessCount();
                 resp.setContentLength(bytes.length);
                 OutputStream out = resp.getOutputStream();
                 if (bytes != null) {
@@ -494,6 +513,7 @@ public class ProtoRabbitServlet extends HttpServlet {
             } else {
                 OutputStream out = resp.getOutputStream();
                 byte[] bytes = cr.getContent().toString().getBytes();
+                cr.incrementAccessCount();
                 resp.setContentLength(bytes.length);
                 if (bytes != null) {
                     ByteArrayInputStream bis = new ByteArrayInputStream(

@@ -112,7 +112,6 @@ public class CacheableResource implements ICacheable {
      * @see org.protorabbit.accelerator.ICacheable#getContentType()
      */
     public String getContentType() {
-        accessCount +=1;
         return contentType;
     }
     
@@ -149,7 +148,6 @@ public class CacheableResource implements ICacheable {
             gzippedContent = IOUtil.getGZippedContent(content.toString().getBytes());
 
         }
-        gzipAccessCount +=1;
         Date now = new Date();
         setLastAccessed(now.getTime());
         return gzippedContent;
@@ -197,15 +195,25 @@ public class CacheableResource implements ICacheable {
         return timeout;
     }
 
-	public long getAccessCount() {
-		return accessCount;
-	}
-	
-	public long getGzipAccessCount() {
-		return gzipAccessCount;
-	}
+    public long getAccessCount() {
+        return accessCount;
+    }
+    
+    public long getGzipAccessCount() {
+        return gzipAccessCount;
+    }
 
-	public long getGzipContentLength() {
-		return gzippedContent.length;
-	}
+    public long getGzipContentLength() {
+        return gzippedContent.length;
+    }
+
+    public void incrementAccessCount() {
+        accessCount +=1;
+        
+    }
+
+    public void incrementGzipAccessCount() {
+        gzipAccessCount +=1;
+        
+    }
 }

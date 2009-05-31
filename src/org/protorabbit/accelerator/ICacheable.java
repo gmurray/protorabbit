@@ -28,7 +28,12 @@ public interface ICacheable {
     public void reset();
 
     public long getAccessCount();
+
+    public void incrementAccessCount();
+
     public long getGzipAccessCount();
+
+    public void incrementGzipAccessCount();
 
     public CacheContext getCacheContext();
 
