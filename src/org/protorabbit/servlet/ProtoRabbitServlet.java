@@ -88,7 +88,7 @@ public class ProtoRabbitServlet extends HttpServlet {
     private long cleanupTimeout = 3600000;
     private long lastCleanup = -1;
 
-    private String version = "0.7-dev-e";
+    private String version = "0.7-dev-g";
 
     // these file types will be provided with the default expires time if run
     // through the servlet
@@ -493,7 +493,7 @@ public class ProtoRabbitServlet extends HttpServlet {
                 t.requiresRefresh(wc) ||
                 t.hasUserAgentDependencies(wc) )) {
 
-            if (canGzip && t.gzipTemplate() != null && t.gzipTemplate()) {
+            if (canGzip && t.gzipTemplate() != null && t.gzipTemplate() == true) {
                 resp.setHeader("Vary", "Accept-Encoding");
                 resp.setHeader("Content-Encoding", "gzip");
             }
@@ -514,7 +514,7 @@ public class ProtoRabbitServlet extends HttpServlet {
             cr.setContent(new StringBuffer(content));
             t.setTemplateResource(cr);
 
-            if (canGzip  &&  t.gzipTemplate() != null && t.gzipTemplate()) {
+            if (canGzip  &&  t.gzipTemplate() != null && t.gzipTemplate() == true) {
                 byte[] bytes = cr.getGZippedContent();
                 cr.incrementAccessCount();
                 resp.setContentLength(bytes.length);
@@ -556,7 +556,7 @@ public class ProtoRabbitServlet extends HttpServlet {
             resp.setHeader("Expires", tr.getCacheContext().getExpires());
             resp.setHeader("Cache-Control", "public,max-age=" + tr.getCacheContext().getMaxAge());
 
-            if (canGzip) {
+            if (canGzip &&  t.gzipTemplate() != null && t.gzipTemplate() == true) {
 
                 OutputStream out = resp.getOutputStream();
                 resp.setHeader("Content-Encoding", "gzip");
