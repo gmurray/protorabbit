@@ -56,7 +56,8 @@ public class ControllerServlet extends HttpServlet {
      * @param id
      * @return
      */
-    JSONObject findCatalogItem(String id) {
+    @SuppressWarnings("unchecked")
+	JSONObject findCatalogItem(String id) {
 
         if (catalog !=null) {
             Iterator<String> keys = catalog.keys();
