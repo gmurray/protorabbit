@@ -87,7 +87,7 @@ public class ProtoRabbitServlet extends HttpServlet {
     private long cleanupTimeout = 3600000;
     private long lastCleanup = -1;
 
-    private String version = "0.7-dev-c";
+    private String version = "0.7-dev-d";
 
     private String[] writeHeaders = { "gif", "jpg", "png"};
 

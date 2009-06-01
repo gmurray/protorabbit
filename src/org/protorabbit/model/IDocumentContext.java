@@ -2,6 +2,8 @@ package org.protorabbit.model;
 
 import java.util.List;
 
+import org.protorabbit.model.impl.ResourceURI;
+
 public interface IDocumentContext {
 
     public int getIndex();
@@ -22,4 +24,7 @@ public interface IDocumentContext {
     public void setBeforeCommands(List<ICommand> cmds);
     public void setDefaultCommands(List<ICommand> cmds);
     public void setAfterCommands(List<ICommand> cmds);
+    public void setURI(ResourceURI uri);
+    public ResourceURI getURI();
+
 }

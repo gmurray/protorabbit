@@ -82,10 +82,22 @@ public class DefaultEngine implements IEngine {
 
     private DocumentContext getDocumentContext(ITemplate template, IContext ctx) {
         DocumentContext dc = null;
-        if (template.getDocumentContext() == null) {
+        boolean requiresRefresh = false;
+        if (ctx.getConfig().getDevMode() && 
+            template.getDocumentContext() != null ) {
+            ResourceURI uri = template.getDocumentContext().getURI();
+            if (uri != null) {
+                requiresRefresh = ctx.isUpdated(uri.getFullURI(), template.getDocumentContext().getLastRefresh() );
+                if (requiresRefresh) {
+                    getLogger().info("Reloading resource : " + uri.getFullURI());
+                }
+            }
+        }
+        if (template.getDocumentContext() == null || requiresRefresh) {
             dc = new DocumentContext();
             StringBuffer buff = template.getContent(ctx);
             dc.setDocument(buff);
+            dc.setURI(template.getTemplateURI());
             gatherCommands(buff,ctx,dc);
             template.setDocumentContext(dc);
         } else {

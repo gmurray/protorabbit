@@ -16,21 +16,23 @@ public class DocumentContext implements IDocumentContext {
     private long created;
     private long lastAccessed;
     private long lastRefresh;
+    private ResourceURI uri = null;
 
     public int index = 0;
  
     public DocumentContext() {
-        Date now = new Date();     
+        Date now = new Date();
         created = lastRefresh = now.getTime();
     }
- 
+
     public void setDocument(StringBuffer document) {
-        Date now = new Date();     
+        Date now = new Date();
         lastRefresh = now.getTime();
         this.document = document;
     }
+
     public StringBuffer getDocument() {
-        Date now = new Date();     
+        Date now = new Date();
         lastAccessed = now.getTime();
         return document;
     }
@@ -46,30 +48,34 @@ public class DocumentContext implements IDocumentContext {
     public long getCreated() {
         return created;
     }
-    
+
     public long getLastRefresh() {
         return lastRefresh;
     }
-    
+
     public long getLastAccessed() {
         return lastAccessed;
     }
-    
+
     public void setDefaultCommands(List<ICommand> defaultCommands) {
         this.defaultCommands = defaultCommands;
     }
     public List<ICommand> getDefaultCommands() {
         return defaultCommands;
     }
+
     public void setBeforeCommands(List<ICommand> beforeCommands) {
         this.beforeCommands = beforeCommands;
     }
+
     public List<ICommand> getBeforeCommands() {
         return beforeCommands;
     }
+
     public void setAfterCommands(List<ICommand> afterCommands) {
         this.afterCommands = afterCommands;
     }
+
     public List<ICommand> getAfterCommands() {
         return afterCommands;
     }
@@ -88,6 +94,14 @@ public class DocumentContext implements IDocumentContext {
 
     public int getIndex() {
         return index;
+    }
+
+    public void setURI(ResourceURI uri) {
+        this.uri = uri;
+    }
+
+    public ResourceURI getURI() {
+        return uri;
     }
 
 }

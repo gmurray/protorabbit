@@ -4,6 +4,7 @@
     {
      "combineResources" : true,
      "timeout" : 150000,
+     "gzip" : false,
      "id" : "welcome",
      "extends" : "blueprints-css",
      "properties" : {

@@ -3,10 +3,7 @@
   "templates" : [
      {
       "id" : "blueprints-css",
-      "timeout" : 100000,
-      "gzip" : true,
       "styles" : {
-        "combineResources" : true,
         "libs" : [
            { "url" : "lib/reset.css" },
            { "url" : "lib/typography.css" },
