@@ -79,7 +79,8 @@ public class ProtoRabbitServlet extends HttpServlet {
     private String defaultTemplateURI = "/WEB-INF/templates.json";
     private String serviceURI = "prt";
 
-    private long maxAge = 1225000;
+    // in seconds - default is 14 days
+    private long maxAge = 1209600;
     private int maxTries = 300;
     // in milliseconds
     private long tryTimeout = 20;
@@ -87,9 +88,11 @@ public class ProtoRabbitServlet extends HttpServlet {
     private long cleanupTimeout = 3600000;
     private long lastCleanup = -1;
 
-    private String version = "0.7-dev-d";
+    private String version = "0.7-dev-e";
 
-    private String[] writeHeaders = { "gif", "jpg", "png"};
+    // these file types will be provided with the default expires time if run
+    // through the servlet
+    private String[] writeHeaders = { "gif", "jpg", "png", "css", "js"};
 
     public void init(ServletConfig cfg) throws ServletException {
 
@@ -106,6 +109,15 @@ public class ProtoRabbitServlet extends HttpServlet {
             }
             if (ctx.getInitParameter("prt-service-uri") != null) {
                 serviceURI = ctx.getInitParameter("prt-service-uri");
+            }
+            if (ctx.getInitParameter("prt-expires-mappings") != null) {
+                String expiresMappings = ctx.getInitParameter("prt-expires-mappings");
+                if (expiresMappings.indexOf(",") != -1) {
+                    writeHeaders = expiresMappings.split(",");
+                } else {
+                    writeHeaders = new String[1];
+                    writeHeaders[0] = expiresMappings;
+                }
             }
             if (ctx.getInitParameter("prt-engine-class") != null) {
                 engineClassName = ctx.getInitParameter("prt-engine-class");
@@ -392,6 +404,8 @@ public class ProtoRabbitServlet extends HttpServlet {
                 SerializationFactory factory = new SerializationFactory();
                 json = factory.getInstance();
             }
+            resp.setHeader("pragma", "NO-CACHE");
+            resp.setHeader("Cache-Control", "no-cache");
             Object jo = json.serialize(stats);
             resp.getWriter().write(jo.toString());
             return;
@@ -547,6 +561,8 @@ public class ProtoRabbitServlet extends HttpServlet {
                 OutputStream out = resp.getOutputStream();
                 resp.setHeader("Content-Encoding", "gzip");
                 resp.setHeader("Vary", "Accept-Encoding");
+
+                tr.incrementAccessCount();
                 byte[] bytes = tr.getGZippedContent();
 
                 if (bytes != null) {
@@ -559,6 +575,7 @@ public class ProtoRabbitServlet extends HttpServlet {
             } else {
 
                 OutputStream out = resp.getOutputStream();
+                tr.incrementAccessCount();
                 byte[] bytes =tr.getContent().toString().getBytes();
                 resp.setContentLength(bytes.length);
                 if (bytes != null) {

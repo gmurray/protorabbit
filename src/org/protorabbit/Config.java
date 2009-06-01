@@ -46,8 +46,8 @@ public class Config {
    boolean devMode = false;
    private String encoding = "UTF-8";
    private long resourceTimeout = DEFAULT_TIMEOUT;
-   // in seconds
-   private long maxAge = 1225000;
+   // in seconds - default is 14 days
+   private long maxAge = 1209600;
    private String resourceService =  "prt";
    String defaultMediaType = "screen, projection";
    String commandBase = "";

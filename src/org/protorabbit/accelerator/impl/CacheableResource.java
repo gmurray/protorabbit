@@ -31,7 +31,7 @@ public class CacheableResource implements ICacheable {
     private long lastAccessed = -1;
     private Long timeout = null;
     private static Logger logger = null;
-    
+
     private long accessCount = 0;
     private long gzipAccessCount = 0;
 
