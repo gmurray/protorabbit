@@ -1,1 +1,1 @@
-~/appengine-java-sdk-1.2.0/bin/appcfg.sh --passin update build/war
+~/appengine-java-sdk-1.2.1/bin/appcfg.sh --passin update build/war

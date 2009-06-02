@@ -1,0 +1,26 @@
+.jmaki-charting-y1-axis-label {
+  z-index : 99999;
+  position : absolute;
+}
+
+.jmaki-charting-y2-axis-label {
+  z-index : 99999;
+  position : absolute;
+  top : 30px;
+  left: 30px;
+  width : 15px;
+}
+
+.jmaki-charting-x1-axis-label {
+  z-index : 99999;
+  text-align : center;
+  position : absolute;
+  top : 30px;
+  left: 330px;
+}
+
+.jmaki-charting-x2-axis-label {
+  z-index : 99999;
+  text-align : center;
+  position : absolute;
+}

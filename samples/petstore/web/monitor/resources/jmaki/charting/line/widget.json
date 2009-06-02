@@ -1,0 +1,80 @@
+{
+    "name": "LIne Chart",
+    "type": "jMaki",
+    "image": "images/jmaki-pie-chart.jpg",
+    "description": "A pie chart.",
+    "url": "https://jmaki-charting.dev.java.net",
+    "version" : "0.9.5",
+    "jmakiVersion" : "1.8.1",
+    "author" : "Greg Murray",    
+    "docs" : {
+      "modelURL" : "http://wiki.java.net/bin/view/Projects/jMakiChartModel",
+      "usageDoc" : "https://jmaki-charting.dev.java.net/about.html"
+    }, 
+    "args": [
+        {"axisLabelFontSize":{"type":"NUMBER", "defaultValue" : 9, "description": "The font size for the labels."}},
+        {"axisLineWidth":{"type":"NUMBER", "defaultValue" : .1, "description": "The line width of the axes."}},
+        {"axisLabelColor":{"type":"STRING",  "description": "The color for the labels \"rgb(0,0, 0)\"."}},
+        {"axisColor":{"type":"STRING",  "description": "The color of the axes \"rgb(0,0, 0)\"."}},
+        {"backgroundColor":{"type":"STRING",  "description": "The color of the background \"rgb(0,0, 0)\"."}},
+        {"drawXAxis":{"type":"BOOLEAN", "default" : true,  "description": "Draw the x axis."}},
+        {"drawYAxis":{"type":"BOOLEAN", "default" : true,  "description": "Draw the y axis."}},
+        {"height":{"type":"NUMBER", "description": "The default height."}},
+        {"width":{"type":"NUMBER",  "description": "The default width."}},
+    	   {"paddingRight":{"type":"NUMBER", "defaultValue": 30, "description": "The right padding."}},
+    	   {"paddingLeft":{"type":"NUMBER", "defaultValue": 50, "description": "The left padding."}},
+    	   {"paddingBottom":{"type":"NUMBER", "description": "The bottom padding."}},
+    	   {"legend":{"type":"STRING",  "description": "The id of a HTML component to add the legend to. If not found the legend will be added to the document body."}},
+        {"colorScheme": {"type":"NUMBER", "defaultValue": 0,
+                  "values": [
+                    {"name" : "Office Basic", "value" : 0, "description" : "Office Blue"},
+                    {"name" : "Office Red", "value" : 1, "description" : "Office Red"},
+                    {"name" : "Office Green", "value" : 2, "description" : "Office Green"},
+                    {"name" : "Office Purple", "value" : 3, "description" : "Office Purple"},
+                    {"name" : "Office Cyan", "value" : 4, "description" : "Office Cyan"},
+                    {"name" : "Office Orange", "value" : 5, "description" : "Office Orange"},
+                    {"name" : "Office Black", "value" : 6, "description" : "Office Black"}
+                    ]
+                    }},
+       {"backgroundColor":{"type":"STRING",  "description": "The color pattern for the background like \"rgb(255,255, 255)\"."}}
+     ],
+     "value": {"required":"false", "type": "Object",
+              "description":"An object containing chart data and the x and y axis information.",
+              "defaultValue": {
+                  "xAxis" : {
+               "labels" : [{"label" : "January"},
+                          {"label" : "February"},
+                          {"label" : "March"}, 
+                          {"label" : "April"},
+                          {"label" : "May"},
+                          {"label" : "June"},
+                          {"label" : "July"},
+                          {"label" : "August"},
+                          {"label" : "September"},
+                          {"label" : "October"},
+                          {"label" : "November"},
+                          {"label" : "December"}
+                          
+                         ]
+                  },
+                  "data" : [
+                      {"label" : "Dataset 1" , "values" : [25 , 45 , 25 , 45 , 50 , 25 , 35 , 25 , 25 , 20 , 35 , 45]}
+                  ]   
+              }
+     },
+     "hasCSS" : false,
+     "config" : {
+   	    "type": 
+	        {"id": "flot",
+	        "styles" : [
+	             "../assets/styles.css"
+	         ],
+	         "libs": [
+               "../assets/base.js",
+	           "../assets/excanvas.js",
+	           "../assets/jquery.js",
+	           "../assets/jquery.flot.js"
+	          ]                
+	        }
+	 }
+}
