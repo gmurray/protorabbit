@@ -93,7 +93,7 @@ public class ProtoRabbitServlet extends HttpServlet {
     private long cleanupTimeout = 3600000;
     private long lastCleanup = -1;
 
-    private String version = "0.7.2-dev-i";
+    private String version = "0.7.2-dev-b";
 
     // these file types will be provided with the default expires time if run
     // through the servlet
@@ -544,6 +544,7 @@ public class ProtoRabbitServlet extends HttpServlet {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
         ICacheable tr = t.getTemplateResource();
+        resp.setHeader("Content-Type", "text/html");
 
         // get the initial content or get the content if it is expired
         if (t.getTimeout() != null && 
@@ -559,8 +560,6 @@ public class ProtoRabbitServlet extends HttpServlet {
 
             resp.setHeader("Expires", IOUtil.getExpires(t.getTimeout()));
             resp.setHeader("Cache-Control", "public,max-age=" + IOUtil.getMaxAge(t.getTimeout()));
-
-            resp.setHeader("Content-Type", "text/html");
 
             // headers after this point do not get written
             engine.renderTemplate(id, wc, bos);
