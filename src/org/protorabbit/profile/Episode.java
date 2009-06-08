@@ -1,12 +1,15 @@
 package org.protorabbit.profile;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class Episode{
 
+    private MarkComparator mc = null;
     private long timeStamp;
     private String clientId;
     private String uri;
@@ -22,7 +25,28 @@ public class Episode{
         this.starts = starts;
     }
 
+    @SuppressWarnings("unchecked")
+    class MarkComparator implements Comparator {
+
+        public int compare(Object o1, Object o2){
+            long t1 = ( (Mark) o1).getStartTime();
+            long t2 = ( (Mark) o2).getStartTime();
+            if ( t1 > t2 ) {
+            return 1;
+            } else if( t1 < t2 ) {
+            return -1;
+            } else {
+                return 0;
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
     public List<Mark> getStarts() {
+        if (mc == null) {
+            mc = new MarkComparator();
+        }
+        Collections.sort(starts, mc);
         return starts;
     }
     

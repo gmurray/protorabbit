@@ -91,7 +91,7 @@ public class Config {
    }
 
    public boolean profile() {
-       return false;
+       return true;
    }
 
    void init() {
