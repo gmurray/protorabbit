@@ -14,7 +14,6 @@ package org.protorabbit.accelerator;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -37,6 +36,8 @@ import org.protorabbit.util.IOUtil;
 *
 */
 public class ResourceManager {
+
+    public static String DEFERRED_WRITTEN = "deferredWritten";
 
    private String resourceService;
    private Hashtable<String, ICacheable> combinedResources = null;
@@ -69,6 +70,23 @@ public class ResourceManager {
    public Map<String, ICacheable> getResources() {
        return combinedResources;
    }
+
+   public static void writeDeferred(IContext ctx, OutputStream out, ITemplate t) throws IOException {
+       StringBuffer buff = IOUtil.getClasspathResource(ctx.getConfig(), Config.PROTORABBIT_CLIENT);
+       if (buff != null) {
+           String hash = IOUtil.generateHash(buff.toString());
+           ICacheable cr = new CacheableResource("text/javascript", t.getTimeout(), hash);
+           ctx.getConfig().getCombinedResourceManager().putResource("protorabbit", cr);
+           cr.setContent(buff);
+           String uri = "<script src=\"" + 
+           ctx.getConfig().getResourceService() + "?resourceid=protorabbit.js\"></script>";
+           out.write(uri.getBytes());
+           ctx.setAttribute(DEFERRED_WRITTEN, Boolean.TRUE);
+       } else {
+           getLogger().severe("Unable to find protorabbit client script " + Config.PROTORABBIT_CLIENT);
+       }
+   }
+
    /*
     *
     * Reset resources that have exceeded their max timeout and
@@ -180,15 +198,6 @@ public class ResourceManager {
 
    }
 
-   class ResourceURIComparator implements Comparator<ResourceURI> {
-
-       public int compare(ResourceURI o1, ResourceURI o2) {
-           String uri1 = o1.getFullURI();
-           String uri2 = o2.getFullURI();
-           return uri1.compareTo(uri2);
-       }
-   }
-
    @SuppressWarnings("unchecked")
    public CacheableResource getScripts(List<ResourceURI>scriptResources, IContext ctx, OutputStream out) throws IOException {
        CacheableResource scripts = new CacheableResource("text/javascript", maxTimeout, getHash(scriptResources));
@@ -232,10 +241,22 @@ public class ResourceManager {
                   getLogger().warning("Unable to locate resource " + ri.getURI());
                }
            } else {
+               if (ctx.getConfig().profile()) {
+                   String measure =  "<script>" +
+                       "window.postMessage(\"EPISODES:mark:" + resource + "\", \"*\");" +
+                   "</script>\n";
+                   out.write(measure.getBytes());
+               }
                String script = "<script type=\"text/javascript\" src=\"" +
                                resource + "\"></script>";
                out.write(script.getBytes());
                ri.setWritten(true);
+               if (ctx.getConfig().profile()) {
+                   String measure =  "<script>" +
+                       "window.postMessage(\"EPISODES:measure:" + resource + "\", \"*\");" +
+                   "</script>\n";
+                   out.write(measure.getBytes());
+              }
            }
        }
        return scripts;
@@ -286,10 +307,22 @@ public class ResourceManager {
                    getLogger().warning("Non Fatal Error : Unable to locate resource "  +ri.getURI());
                }
            } else {
+               if (ctx.getConfig().profile()) {
+                   String measure =  "<script>" +
+                       "window.postMessage(\"EPISODES:mark:" + resource + "\", \"*\");" +
+                   "</script>\n";
+                   out.write(measure.getBytes());
+              }
                String uri = "<link rel=\"stylesheet\" type=\"text/css\" href=\"" +
                    resource + "\"/>";
                 out.write(uri.getBytes());
                 ri.setWritten(true);
+                if (ctx.getConfig().profile()) {
+                    String measure =  "<script>" +
+                        "window.postMessage(\"EPISODES:measure:" + resource + "\", \"*\");" +
+                    "</script>\n";
+                    out.write(measure.getBytes());
+               }
            }
        }
        return styles;

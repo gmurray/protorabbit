@@ -602,6 +602,7 @@ window.protorabbit = function() {
       addDeferredStyle : addDeferredStyle,
       addDeferredProperties : addDeferredProperties,
       publish : publish,
+      doAjax : doAjax,
       subscribe : subscribe,
       log : log
   };

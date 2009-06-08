@@ -12,7 +12,6 @@
 package org.protorabbit.model.impl;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -21,18 +20,16 @@ import java.util.logging.Logger;
 import org.json.JSONObject;
 import org.protorabbit.Config;
 import org.protorabbit.accelerator.ResourceManager;
-import org.protorabbit.accelerator.ICacheable;
 import org.protorabbit.accelerator.impl.CacheableResource;
 import org.protorabbit.json.JSONSerializer;
 import org.protorabbit.json.SerializationFactory;
 import org.protorabbit.model.ICommand;
 import org.protorabbit.model.IParameter;
 import org.protorabbit.model.ITemplate;
+import org.protorabbit.profile.Episode;
 import org.protorabbit.util.IOUtil;
 
 public class IncludeResourcesCommand extends BaseCommand {
-
-    public static String DEFERRED_WRITTEN = "deferredWritten";
 
     private static Logger logger = null;
 
@@ -49,22 +46,6 @@ public class IncludeResourcesCommand extends BaseCommand {
             logger = Logger.getLogger("org.protrabbit");
         }
         return logger;
-    }
-
-    private void writeDeferred(Config cfg, OutputStream out, ITemplate t) throws IOException {
-        StringBuffer buff = IOUtil.getClasspathResource(cfg, Config.PROTORABBIT_CLIENT);
-        if (buff != null) {
-            String hash = IOUtil.generateHash(buff.toString());
-            ICacheable cr = new CacheableResource("text/javascript", t.getTimeout(), hash);
-            cfg.getCombinedResourceManager().putResource("protorabbit", cr);
-            cr.setContent(buff);
-            String uri = "<script src=\"" + 
-            cfg.getResourceService() + "?resourceid=protorabbit.js\"></script>";
-            out.write(uri.getBytes());
-            ctx.setAttribute(DEFERRED_WRITTEN, Boolean.TRUE);
-        } else {
-            getLogger().severe("Unable to find protorabbit client script");
-        }
     }
 
     @SuppressWarnings("unchecked")
@@ -87,8 +68,8 @@ public class IncludeResourcesCommand extends BaseCommand {
         ITemplate t = cfg.getTemplate(ctx.getTemplateId());
         ResourceManager crm = cfg.getCombinedResourceManager();
 
-        boolean deferredWritten = (ctx.getAttribute(DEFERRED_WRITTEN) != null &&
-                ctx.getAttribute(DEFERRED_WRITTEN) == Boolean.TRUE);
+        boolean deferredWritten = (ctx.getAttribute(ResourceManager.DEFERRED_WRITTEN) != null &&
+                ctx.getAttribute(ResourceManager.DEFERRED_WRITTEN) == Boolean.TRUE);
 
         if ("scripts".equals(target)) {
 
@@ -128,7 +109,7 @@ public class IncludeResourcesCommand extends BaseCommand {
                 }
 
                 if ((hasDeferredScripts  || deferredScripts != null || deferredProperties != null)) {
-                    writeDeferred(cfg, buffer, t);
+                    ResourceManager.writeDeferred(ctx, buffer, t);
                 }
            }
            if (linkURIs.size() > 0 ){
@@ -151,6 +132,10 @@ public class IncludeResourcesCommand extends BaseCommand {
 
            }
            if (deferredScripts != null) {
+
+               if (!deferredWritten) {
+                   ResourceManager.writeDeferred(ctx, buffer, t);
+               }
                for (String s : deferredScripts) {
                    buffer.write(s.getBytes());
                }
@@ -197,10 +182,25 @@ public class IncludeResourcesCommand extends BaseCommand {
             if (combineURIs.size() > 0) {
                 String resourceId = crm.processStyles(styles, ctx, buffer);
                 if (!hasDeferredStyles && resourceId != null) {
+
+                     if (ctx.getConfig().profile()) {
+                         String measure =  "<script>" +
+                             "window.postMessage(\"EPISODES:mark:" + resourceId + "\", \"*\");" +
+                         "</script>\n";
+                         buffer.write(measure.getBytes());
+                    }
+
                     String uri = "<link rel=\"stylesheet\" type=\"text/css\" href=\"" +
                     cfg.getResourceService() + "?resourceid=" + resourceId + 
                     ".css&tid=" + t.getId() + "\" media=\"" + cfg.getMediaType() + "\"/>";
                     buffer.write(uri.getBytes());
+                    if (ctx.getConfig().profile()) {
+                        String measure =  "<script>" +
+                            "window.postMessage(\"EPISODES:measure:" + resourceId + "\", \"*\");" +
+                        "</script>\n";
+                        buffer.write(measure.getBytes());
+                   }
+                    
                } else if (resourceId != null){
                    String uri = "<script>protorabbit.addDeferredStyle('" + 
                    cfg.getResourceService() + "?resourceid=" + resourceId + ".css&tid=" + t.getId() + "')</script>";
@@ -216,8 +216,16 @@ public class IncludeResourcesCommand extends BaseCommand {
                 }
 
                 if (hasDeferredStyles) {
-                    writeDeferred(cfg,buffer, t);
+                    ResourceManager.writeDeferred(ctx,buffer, t);
                 }
+            }
+            if (ctx.getConfig().profile()) {
+                if (!deferredWritten) {
+                    ResourceManager.writeDeferred(ctx, buffer, t);
+                }
+                String timestamp = "<script>var serverTimestamp = " + ((Episode)ctx.getAttribute(Config.EPISODE)).getTimestamp() + ";</script>";
+                StringBuffer buff =  IOUtil.getClasspathResource(cfg, Config.EPISODES_VIEWER);
+                buffer.write((timestamp + buff.toString()).getBytes());
             }
 
         }

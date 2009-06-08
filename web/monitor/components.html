@@ -1,0 +1,339 @@
+<html>
+ <head>
+  <title>Protorabbit Resources</title>
+  
+
+<script type="text/javascript" src="resources/wireit/yui/utilities/utilities.js"></script>
+<!-- Excanvas -->
+<!--[if IE]><script type="text/javascript" src="resources/wireit/excanvas.js"></script><![endif]-->
+
+<!-- WireIt -->
+<script type="text/javascript" src="resources/wireit/WireIt.js"></script>
+<script type="text/javascript" src="resources/wireit/CanvasElement.js"></script>
+<script type="text/javascript" src="resources/wireit/Wire.js"></script>
+<script type="text/javascript" src="resources/wireit/Terminal.js"></script>
+<script type="text/javascript" src="resources/wireit/util/DD.js"></script>
+
+<link rel="stylesheet" type="text/css" href="resources/css/WireIt.css" />
+
+<style>
+
+.pmenu {
+  padding:3px;
+  height:40px;
+  font-size:2em;
+  background:#333;
+  color:#fff
+}
+
+.pmenu a {
+  color : #fff;
+  font-size:0.4em;
+}
+
+.pmenu a:visited {
+  color : #fff;
+}
+
+div.blockBox {
+    /* WireIt */
+    margin : 5px;
+    z-index: 1;
+    opacity: 0.9;
+    float : left;
+    /* Others */
+    width: 350px;
+    background : #FFF
+    cursor: move;
+    border : 2px solid #ccc;
+}
+
+div.cacheBlockBox {
+    /* WireIt */
+    margin : 5px;
+    z-index: 1;
+    opacity: 0.9;
+    float : left;
+    /* Others */
+    width: 870px;
+    background : #FFF
+    cursor: move;
+    padding: 5px;
+    border : 2px solid #ccc;
+}
+
+.blockTitle {
+  padding : 2px;
+  background : #333;
+  color : #fff;
+  font-size : 1.2em;
+  font-weight : bold;
+}
+
+.blockBody {
+  padding : 10px;
+  width : 330px;
+  font-size : 1em;
+  background : #fff;
+}
+
+.propertiesTitle {
+  padding-top : 3px;
+  padding-bottom : 3px;
+  color : #333;
+  font-size : .9em;
+}
+
+.stylesTitle {
+  padding-top : 3px;
+  padding-bottom : 3px;
+  color : #333;
+  font-size : .9em;
+}
+
+.scriptsTitle {
+  padding-top : 3px;
+  padding-bottom : 3px;
+  color : #333;
+  font-size : .9em;
+}
+
+.blockTable {
+  background : #eee;
+  border : 1px solid #333;
+  width : 99%;
+  font-size : .8em;
+  overflow : hidden;
+}
+
+.blockTable td {
+  background : #fff;
+}
+</style>
+
+<script>
+
+window.tablebuilder = function() {
+
+    var _header;
+    var _rows = [];
+
+    this.setHeader = function(_headers) {
+        _header = "<tr><th>" + _headers.join("</th><th>") + "</tr>";
+    };
+
+    this.addRow = function(_cells) {
+        _rows.push("<tr><td>" + _cells.join("</td><td>") + "</td></tr>");
+    };
+
+    this.toString = function() {
+        return  "<table>" + _header + 
+          "<tbody>" + _rows.join("") + "</tbody>" +
+          "</table>";
+    };
+};
+
+var blockWidth = 350;
+var terminals = {};
+var propTypes = {
+ 1 : 'insert',
+ 2 : 'include'
+}
+
+function createBlock(t) {
+
+    var te = document.createElement("div");
+    te.className = "blockBox";
+    document.body.appendChild(te);
+
+    var title = document.createElement("div");
+    title.innerHTML = t.id;
+    title.className = "blockTitle";
+    te.appendChild(title);
+  
+    var bb = document.createElement("div");
+    bb.className = "blockBody";
+    te.appendChild(bb);
+  
+    var template = document.createElement("div");
+    template.innerHTML = "Template : " + ((t.templateURI != null) ? t.templateURI.fullURI : '');
+    template.className = "scriptsTitle";  
+    bb.appendChild(template);
+
+    var ediv = document.createElement("div");
+    ediv.innerHTML = "Extends : " + (t.ancestors || '');
+    ediv.className = "scriptsTitle";  
+    bb.appendChild(ediv);
+  
+    var scripts = document.createElement("div");
+    scripts.innerHTML = "Scripts";
+    scripts.className = "scriptsTitle";  
+    bb.appendChild(scripts);
+
+    var stableElement = document.createElement("div");
+    if (t.scripts && t.scripts.length > 0) {
+        stableElement.className = "blockTable";
+        var stable = new tablebuilder();
+        stable.setHeader(["id", "url", "defer", "test", "uaTest"]);
+        for (var i=0; i < t.scripts.length; i+=1) {
+            var s = t.scripts[i];
+            stable.addRow([ s.id || '', s.fullURI, (s.defer != null) ? s.defer + '' : '', (s.test != null) ? s.test : '' || '', s.uaTest || '' ]);
+        }
+        stableElement.innerHTML = stable.toString();
+
+    } else {
+      stableElement.innerHTML = "N/A";  
+    }
+    bb.appendChild(stableElement);
+
+    var styles = document.createElement("div");
+    styles.innerHTML = "Styles";
+    styles.className = "stylesTitle";  
+    bb.appendChild(styles);
+    var s2tableElement = document.createElement("div");
+    if (t.styles && t.styles.length > 0) {
+        s2tableElement.className = "blockTable";
+        var stable = new tablebuilder();
+        stable.setHeader(["id", "url", "defer", "test", "uaTest"]);
+        for (var i=0; i < t.styles.length; i+=1) {
+            var s =t.styles[i];
+            stable.addRow([ s.id || '', s.fullURI, (s.defer != null) ? s.defer + '' : '', s.test || '', s.uaTest || '' ]);
+        }
+        s2tableElement.innerHTML = stable.toString();
+
+    } else {
+      s2tableElement.innerHTML = "N/A";  
+    }
+    bb.appendChild(s2tableElement);
+
+    var properties = document.createElement("div");
+    properties.innerHTML = "Properties";
+    properties.className = "propertiesTitle";  
+    bb.appendChild(properties);  
+    var s3tableElement = document.createElement("div");
+    if (t.properties) {
+        s3tableElement.className = "blockTable";
+        var s3table = new tablebuilder();
+        s3table.setHeader(["id", "type", "key", "value", "defer", "test", "uaTest"]);
+        for (var i in t.properties) {
+            var s =t.properties[i];
+            s3table.addRow([ s.id || '', propTypes[s.type] || '', i, s.value || '', (s.defer != null) ? s.defer + '' : '',  s.test || '', s.uaTest || '' ]);
+        }
+        s3tableElement.innerHTML = s3table.toString();
+
+    } else {
+      s3tableElement.innerHTML = "N/A";
+    }
+    bb.appendChild(s3tableElement);
+    
+    terminals[t.id] = [ new WireIt.Terminal(te, {direction: [1,0], offsetPosition: [blockWidth - 15,45]})];
+    // Make the block2 draggable
+    new WireIt.util.DD(terminals[t.id],te);
+    return te;
+}
+
+function getPosition(_e){
+         var pX = 0;
+         var pY = 0;
+         if(_e.offsetParent) {
+             while(true){
+                 pY += _e.offsetTop;
+                 pX += _e.offsetLeft;
+                 if(_e.offsetParent === null){
+                     break;
+                 }
+                 _e = _e.offsetParent;
+             }
+         } else if(_e.y) {
+                 pY += _e.y;
+                 pX += _e.x;
+         }
+         return  {x: pX, y: pY};
+}
+
+function getXHR () {
+    if (window.XMLHttpRequest) {
+        return new window.XMLHttpRequest();
+    } else if (window.ActiveXObject) {
+        return new window.ActiveXObject("Microsoft.XMLHTTP");
+    } else {
+        return null;
+    }
+}
+
+function ajax(args) {
+    var _req = getXHR();
+    _req.onreadystatechange = function() { 
+        if (_req.readyState == 4) {
+            if ((_req.status == 200 || _req.status === 0) &&
+                    args.callback) {
+              args.callback(_req);
+            } else if (_req.status != 200) {
+                alert("Error making request. Please try again later");
+            }
+        }
+    };
+    _req.open("GET", args.url, true);
+    _req.send(null);
+}
+
+function loadData() {
+    var req = new ajax({ 
+            url : "../prt?command=stats",
+            callback : function(req) {
+                var model = eval("(" + req.responseText + ")");
+                render(model);
+            }
+        }); 
+}
+
+function render(model) {
+    var elements = [];
+
+    for (var i in model.templates) {
+       var te = createBlock(model.templates[i]);
+       te.pos = getPosition(te);
+       elements.push(te);
+    }
+    
+    for (var i=0; i < elements.length; i+=1) {
+        var el = elements[i];
+        el.style.position = "absolute";
+        el.style.top = el.pos.y + "px";
+        el.style.left = el.pos.x + "px";
+    }
+
+    // wire up the terminals
+    for (var ii in model.templates) {
+        var t = model.templates[ii];
+        if (t.ancestors) {
+           var lterminal = terminals[t.id];
+           for (var j=0; j < t.ancestors.length;j++) {
+               var ater = terminals[t.ancestors[j]];
+               if (ater) {
+                   var w1 = new WireIt.Wire(lterminal[0], ater[0], document.body);
+                   w1.redraw();
+               }
+           }
+        }
+    }
+}
+
+window.onload = function() {
+    loadData();
+};
+
+</script>
+
+ </head>
+ <body>
+  <div class="pmenu">
+   <div style="float:left">Protorabbit Components</div>
+    <div style="float:right">
+    <a href="components.html">Components</a>
+    <a href="resources.html">Resources</a>
+    <a href="../"> Home</a>
+   </div>
+  </div>
+ </body>
+</html>

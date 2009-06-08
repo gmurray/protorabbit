@@ -47,16 +47,15 @@
   </target>
 
   <target name="test-welcome" depends="compile">
-      <java classname="org.protorabbit.Engine"
+      <java classname="org.protorabbit.model.impl.DefaultEngine"
           fork="true"
           classpath="build/classes:lib/org.json-0.0.2.jar">
           <arg value="-template"/>
           <arg value="web/resources/blueprint/blueprint-templates.json" />
           <arg value="-documentRoot"/>
           <arg value="web/"/>
-          <arg value="base" />
+          <arg value="blueprints-css" />
       </java>
   </target>
 
-    
 </project>

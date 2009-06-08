@@ -60,22 +60,26 @@ public class DefaultEngine implements IEngine {
         Config cfg = ctx.getConfig();
         ctx.setTemplateId(tid);
         ITemplate template = cfg.getTemplate(tid);
-        DocumentContext dc = getDocumentContext(template,ctx);
-        // go through all the commands and build up the buffers
-        // before
-        if (dc.getBeforeCommands() != null) {
-            processCommands( ctx, dc.getBeforeCommands());
+        if (template != null) {
+            DocumentContext dc = getDocumentContext(template,ctx);
+            // go through all the commands and build up the buffers
+            // before
+            if (dc.getBeforeCommands() != null) {
+                processCommands( ctx, dc.getBeforeCommands());
+            }
+            // default commands
+            if (dc.getDefaultCommands() != null) {
+                processCommands( ctx, dc.getDefaultCommands());
+            }
+            // after commands
+            if (dc.getAfterCommands() != null) {
+                processCommands( ctx, dc.getAfterCommands());
+            }
+            renderCommands(dc.getAllCommands(), dc.getDocument(),ctx,out);
+            resetCommands(dc.getAllCommands());
+        } else {
+            getLogger().info("Unable to find template " + tid);
         }
-        // default commands
-        if (dc.getDefaultCommands() != null) {
-            processCommands( ctx, dc.getDefaultCommands());
-        }
-        // after commands
-        if (dc.getAfterCommands() != null) {
-            processCommands( ctx, dc.getAfterCommands());
-        }
-        renderCommands(dc.getAllCommands(), dc.getDocument(),ctx,out);
-        resetCommands(dc.getAllCommands());
         long stopTime = (new Date()).getTime();
         getLogger().info("Render time=" + (stopTime - startTime) + "ms");
     }
@@ -174,7 +178,22 @@ public class DefaultEngine implements IEngine {
              int index = 0;
              for (ICommand c : cmds) {
                     // output everything before the first command
-                    out.write(buff.substring(index, c.getStartIndex()).getBytes());
+                    // include profiler episodes.js
+                    if (ctx.getConfig().profile()) {
+                        String preText =  buff.substring(index, c.getStartIndex());
+                        int headStart = preText.indexOf("<head>");
+                        if (headStart != -1) {
+                            preText = preText.substring(0, headStart + 6) + 
+                                      "<script src=\"prt?resourceid=episodes.js\"></script>" +
+                                      "<script>var t_firstbyte = Number(new Date());" +
+                                      "window.postMessage(\"EPISODES:mark:firstbyte:\" + t_firstbyte, \"*\");" +
+                                      "</script> "+
+                                      preText.substring(headStart + 6, preText.length());
+                        }
+                        out.write(preText.getBytes());
+                    } else {
+                        out.write(buff.substring(index, c.getStartIndex()).getBytes());
+                    }
                     index = c.getEndIndex();
                     try {
                         // if we have a sub document context render it
@@ -210,7 +229,6 @@ public class DefaultEngine implements IEngine {
             out.flush();
             out.close();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
@@ -266,7 +284,7 @@ public class DefaultEngine implements IEngine {
         }
         Config cfg = new Config();
         FileSystemContext ctx = new FileSystemContext(cfg, documentRoot);
-        
+
         if (cTemplates.size() == 0) {
             System.out.println("Error: You need to specify at least 1 template file.");
             System.exit(0);

@@ -46,7 +46,19 @@ public class URIResourceManager {
                             ri.setWritten(true);
                             ctx.setAttribute(IncludeCommand.DEFERRED_SCRIPTS, deferredScripts);
                         } else {
+                            if (ctx.getConfig().profile()) {
+                                String measure =  "<script>" +
+                                "window.postMessage(\"EPISODES:mark:" + resource + "\", \"*\");" +
+                                "</script>\n";
+                                buff += measure;
+                            }
                             buff += "<script type=\"text/javascript\" src=\"" + baseURI + resource + "\"></script>\n";
+                            if (ctx.getConfig().profile()) {
+                                String measure =  "<script>" +
+                                "window.postMessage(\"EPISODES:measure:" + resource + "\", \"*\");" +
+                                "</script>\n";
+                                buff += measure;
+                            }
                         }
                     } else if (type == ResourceURI.LINK) {
                         String mediaType = ri.getMediaType();
@@ -64,7 +76,19 @@ public class URIResourceManager {
                             ctx.setAttribute(IncludeCommand.DEFERRED_SCRIPTS, deferredScripts);
 
                         } else {
+                            if (ctx.getConfig().profile()) {
+                                String measure =  "<script>" +
+                                "window.postMessage(\"EPISODES:mark:" + resource + "\", \"*\");" +
+                                "</script>\n";
+                                buff += measure;
+                            }
                             buff += "<link rel=\"stylesheet\" type=\"text/css\"  href=\"" + baseURI + resource + "\" media=\"" + mediaType + "\" />\n";
+                            if (ctx.getConfig().profile()) {
+                                String measure =  "<script>" +
+                                "window.postMessage(\"EPISODES:measure:" + resource + "\", \"*\");" +
+                                "</script>\n";
+                                buff += measure;
+                            }
                         }
                     }
                 }

@@ -40,6 +40,10 @@ import org.protorabbit.util.IOUtil;
 public class Config {
 
    public static final String PROTORABBIT_CLIENT = "resources/protorabbit.js";
+   public static final String EPISODES_CLIENT = "resources/episodes.js";
+   public static final String EPISODES_VIEWER = "resources/episodes-viewer.js";
+   public static final String EPISODE = "org.protorabbit.profile.episode";
+
    public static long DEFAULT_TIMEOUT = 60 * 1000 * 15;
    boolean gzip = true;
    boolean defaultCombineResources = false;
@@ -48,7 +52,7 @@ public class Config {
    private long resourceTimeout = DEFAULT_TIMEOUT;
    // in seconds - default is 14 days
    private long maxAge = 1209600;
-   private String resourceService =  "prt";
+   private String resourceService = "prt";
    String defaultMediaType = "screen, projection";
    String commandBase = "";
    private String engineClassName = "org.protorabbit.model.impl.DefaultEngine";
@@ -84,6 +88,10 @@ public class Config {
        crm = new ResourceManager(this,
                                  resourceService,
                                  getMaxAge());
+   }
+
+   public boolean profile() {
+       return false;
    }
 
    void init() {

@@ -115,9 +115,12 @@ public class IOUtil {
      *  Load a classpath based resource.
      */
     public static StringBuffer getClasspathResource(Config cfg, String name) throws IOException {
+
         InputStream is  = cfg.getClass().getResourceAsStream(name);
+
         StringBuffer resource = null;
         if (is != null) {
+
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             writeBinaryResource(is,bos);
             try {
