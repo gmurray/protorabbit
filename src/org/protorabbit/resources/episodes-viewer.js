@@ -1,10 +1,7 @@
-<div id="results" style="padding:4px;background:#fff;width:99%;bottom:0px;border : 2px solid #333;position: absolute;height:400px;overflow-y:auto">
-</div>
-<script>
+
 function doOnload() { 
     // Measure "timefromfirstbyte" as now - firstbyte.
     window.postMessage("EPISODES:measure:frontend:firstbyte", "*");
-    window.postMessage("EPISODES:done", "*");
 }
 
 function doneWithEverything() {
@@ -23,7 +20,7 @@ EPISODES.addEventListener("load", doOnload, false);
 function handleEpisodeResults(event) {
     if ( "EPISODES:done" === event.data ) {
 
-        drawEpisodicTimes();
+        //drawEpisodicTimes();
         var data = JSON.stringify({
                                    starts : EPISODES.getStarts(),
                                    uri : window.location.href,
@@ -40,50 +37,7 @@ function handleEpisodeResults(event) {
 }
 EPISODES.addEventListener("message", handleEpisodeResults, false);
 
-function drawEpisodicTimes() {
-    var starts = EPISODES.getStarts();
-    var measures = EPISODES.getMeasures();
 
-    // Put the episodes in order by start time and duration.
-    var tFirst, tLast;
-    var aEpisodes = new Array(); // in order
-    for ( var episodeName in measures ) {
-        var episodeStart = starts[episodeName];
-        var episodeEnd = starts[episodeName] + measures[episodeName];
-        tFirst = ( "undefined" === typeof(tFirst) || tFirst > episodeStart ? episodeStart : tFirst );
-        tLast = ( "undefined" === typeof(tLast) || tLast < episodeEnd ? episodeEnd : tLast );
-
-        var index = 0;
-        for ( var i = 0; i < aEpisodes.length; i++ ) {
-            var curName = aEpisodes[i];
-            if ( episodeStart < starts[curName] ||
-                 ( episodeStart == starts[curName] && episodeEnd > starts[curName]+measures[curName] ) ) {
-                break;
-            }
-            index++;
-        }
-        aEpisodes.splice(index, 0, episodeName);
-    }
-
-    var div = document.getElementById("results");
-    var nPixels = (div.clientWidth || div.offsetWidth) - 44;
-    var PxlPerMs = nPixels / (tLast - tFirst);
-console.log("tFirst=" + tFirst + " tLast=" + tLast);
-    var sHtml = "";
-    for ( var i = 0; i < aEpisodes.length; i++ ) {
-        var episodeName = aEpisodes[i];
-        var leftPx = parseInt(PxlPerMs * (starts[episodeName] - tFirst)) + 40;
-        var widthPx = parseInt(PxlPerMs * measures[episodeName]);
-        sHtml += '<div style="background: #EEE; border: 1px solid; padding-bottom: 2px; font-size: 10pt; position: absolute; left: ' + leftPx + 
-            'px; top: ' + (i*30) + 
-            'px; width: ' + widthPx +
-            'px; height: 16px;"><nobr>&nbsp;' + episodeName + 
-            //' (' + starts[episodeName] + ', ' + measures[episodeName] + ')' +
-            ' - ' + measures[episodeName] + 'ms' +
-            '</nobr></div>\n';
-    }
-    div.innerHTML = sHtml;
-}
 
 /*
 http://www.JSON.org/json2.js
@@ -408,6 +362,3 @@ replace(/(?:^|:|,)(?:\s*\[)+/g, ''))) {
     };
 }
 }());
-
-
-</script>

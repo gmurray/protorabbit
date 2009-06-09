@@ -22,6 +22,10 @@ public class EpisodeManager {
         return episodes;
     }
 
+    public void addEpisode(Episode e) {
+        episodes.add(e);
+    }
+
     public Episode getEpisode(String clientId, long timestamp) {
         if (episodes == null) {
             return null;
@@ -36,17 +40,15 @@ public class EpisodeManager {
     }
 
     @SuppressWarnings("unchecked")
-    public void addEpisode(String clientId, long timestamp, JSONObject json) {
+    public void updateEpisode(String clientId, long timestamp, JSONObject json) {
         Episode e = getEpisode(clientId, timestamp);
         if (e == null) {
-            e = new Episode(timestamp);
+        	    System.out.println("Creating new Episode for clientId" + clientId + " with timestamp=" + timestamp);
+            //e = new Episode(timestamp);
         }
-        String uri = null;
         try {
-            uri = json.getString("uri");
             JSONObject starts = json.getJSONObject("starts");
             Iterator<String> keys = starts.keys();
-           // List<Mark> marks = new ArrayList<Mark>();
             while (keys.hasNext()) {
                 String key = keys.next();
                 long timeStamp = starts.getLong(key);
@@ -55,17 +57,17 @@ public class EpisodeManager {
             }
             JSONObject jmeasures = json.getJSONObject("measures");
             keys = jmeasures.keys();
-            //Map<String,Measure> measures = new HashMap<String,Measure>();
+
             while (keys.hasNext()) {
                 String key = keys.next();
                 long duration = jmeasures.getLong(key);
                 e.addMeasure(key, new Measure(key, duration));
             }
-            e.setUri(uri);
-            e.setClientId(clientId);
+           // e.setUri(uri);
+           // e.setClientId(clientId);
           //  e.setMeasures(measures);
           //  e.setStarts(marks);
-            episodes.add(e);
+           // episodes.add(e);
         } catch (JSONException e1) {
             e1.printStackTrace();
         }

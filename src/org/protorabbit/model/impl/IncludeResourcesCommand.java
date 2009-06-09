@@ -27,7 +27,6 @@ import org.protorabbit.model.ICommand;
 import org.protorabbit.model.IParameter;
 import org.protorabbit.model.ITemplate;
 import org.protorabbit.profile.Episode;
-import org.protorabbit.util.IOUtil;
 
 public class IncludeResourcesCommand extends BaseCommand {
 
@@ -223,9 +222,15 @@ public class IncludeResourcesCommand extends BaseCommand {
                 if (!deferredWritten) {
                     ResourceManager.writeDeferred(ctx, buffer, t);
                 }
-                String timestamp = "<script>var serverTimestamp = " + ((Episode)ctx.getAttribute(Config.EPISODE)).getTimestamp() + ";</script>";
-                StringBuffer buff =  IOUtil.getClasspathResource(cfg, Config.EPISODES_VIEWER);
-                buffer.write((timestamp + buff.toString()).getBytes());
+
+                String puri = "<script src=\"" + 
+                ctx.getConfig().getResourceService() + "?resourceid=episode-poster.js\"></script>";
+                String episodeEnd = puri + "<script>var serverTimestamp = " + ((Episode)ctx.getAttribute(Config.EPISODE)).getTimestamp() + ";";
+                if (ctx.getAttribute(Config.DEFAULT_EPISODE_PROCESS) != null) {
+                     episodeEnd += "window.postMessage(\"EPISODES:done\", \"*\");";
+                }
+                episodeEnd += ";</script>";
+                buffer.write(episodeEnd.getBytes());
             }
 
         }

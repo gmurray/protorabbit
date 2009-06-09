@@ -35,14 +35,17 @@ import org.protorabbit.model.impl.IncludeFile;
 import org.protorabbit.model.impl.Property;
 import org.protorabbit.model.impl.ResourceURI;
 import org.protorabbit.model.impl.Template;
+import org.protorabbit.profile.EpisodeManager;
 import org.protorabbit.util.IOUtil;
 
 public class Config {
 
    public static final String PROTORABBIT_CLIENT = "resources/protorabbit.js";
    public static final String EPISODES_CLIENT = "resources/episodes.js";
-   public static final String EPISODES_VIEWER = "resources/episodes-viewer.js";
+   public static final String EPISODE_POSTER = "resources/episodes-viewer.js";
    public static final String EPISODE = "org.protorabbit.profile.episode";
+   public static final String START_TIME = "org.protorabbit.START_TIME";
+    public static final String DEFAULT_EPISODE_PROCESS = "org.protorabbit.profile.episode.DEFAULT_PROCESS";;
 
    public static long DEFAULT_TIMEOUT = 60 * 1000 * 15;
    boolean gzip = true;
@@ -58,6 +61,7 @@ public class Config {
    private String engineClassName = "org.protorabbit.model.impl.DefaultEngine";
    private String httpClientClassName = "org.protorabbit.accelerator.impl.HttpClient";
    private static Logger logger = null;
+   private EpisodeManager episodeManager = null;
 
    static Logger getLogger() {
        if (logger == null) {
@@ -92,6 +96,13 @@ public class Config {
 
    public boolean profile() {
        return false;
+   }
+   
+   public EpisodeManager getEpisodeManager() {
+       if (episodeManager == null) {
+           episodeManager = new EpisodeManager();
+       }
+       return episodeManager;
    }
 
    void init() {

@@ -155,7 +155,7 @@ function formatDate(timestamp){
 function render(model) {
     window.model = model;
     var stableElement = document.createElement("div");
-    if (model.length > 0) {
+    if (model && model.length > 0) {
         stableElement.className = "blockTable";
         var stable = new tablebuilder();
         stable.setHeader([ "URI", "client id", "timestamp"]);

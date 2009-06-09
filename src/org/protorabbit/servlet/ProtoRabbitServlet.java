@@ -46,13 +46,13 @@ import org.protorabbit.accelerator.impl.CacheableResource;
 import org.protorabbit.json.JSONSerializer;
 import org.protorabbit.json.JSONUtil;
 import org.protorabbit.json.SerializationFactory;
+import org.protorabbit.model.IContext;
 import org.protorabbit.model.IEngine;
 import org.protorabbit.model.IProperty;
 import org.protorabbit.model.ITemplate;
 import org.protorabbit.model.impl.IncludeFile;
 import org.protorabbit.model.impl.ResourceURI;
 import org.protorabbit.profile.Episode;
-import org.protorabbit.profile.EpisodeManager;
 import org.protorabbit.profile.Mark;
 import org.protorabbit.profile.Measure;
 import org.protorabbit.util.IOUtil;
@@ -68,7 +68,6 @@ public class ProtoRabbitServlet extends HttpServlet {
     private JSONSerializer json = null;
 
     private static Logger logger = null;
-    private EpisodeManager episodeManager = null;
 
     static final Logger getLogger() {
         if (logger == null) {
@@ -93,7 +92,7 @@ public class ProtoRabbitServlet extends HttpServlet {
     private long cleanupTimeout = 3600000;
     private long lastCleanup = -1;
 
-    private String version = "0.7.2-dev-b";
+    private String version = "0.7.2-dev-c";
 
     // these file types will be provided with the default expires time if run
     // through the servlet
@@ -301,24 +300,43 @@ public class ProtoRabbitServlet extends HttpServlet {
                 }
             }
         } else if ("protorabbit".equals(id)) {
-            StringBuffer buff = IOUtil.getClasspathResource(jcfg, Config.PROTORABBIT_CLIENT);
-            if (buff != null) {
-                String hash = IOUtil.generateHash(buff.toString());
-                cr = new CacheableResource("text/javascript", jcfg.getMaxAge(), hash);
-                jcfg.getCombinedResourceManager().putResource("protorabbit", cr);
-                cr.setContent(buff);
-            } else {
-                getLogger().severe("Unable to find protorabbit client script");
+            cr =  jcfg.getCombinedResourceManager().getResource("protorabbit");
+            if (cr == null) {
+                StringBuffer buff = IOUtil.getClasspathResource(jcfg, Config.PROTORABBIT_CLIENT);
+                if (buff != null) {
+                    String hash = IOUtil.generateHash(buff.toString());
+                    cr = new CacheableResource("text/javascript", jcfg.getMaxAge(), hash);
+                    jcfg.getCombinedResourceManager().putResource("protorabbit", cr);
+                    cr.setContent(buff);
+                } else {
+                    getLogger().severe("Unable to find protorabbit client script");
+                }
             }
         } else if ("episodes".equals(id)) {
-            StringBuffer buff = IOUtil.getClasspathResource(jcfg, Config.EPISODES_CLIENT);
-            if (buff != null) {
-                String hash = IOUtil.generateHash(buff.toString());
-                cr = new CacheableResource("text/javascript", jcfg.getMaxAge(), hash);
-                jcfg.getCombinedResourceManager().putResource("episodes", cr);
-                cr.setContent(buff);
-            } else {
-                getLogger().severe("Unable to find epoisdes client script");
+                cr =  jcfg.getCombinedResourceManager().getResource("episodes");
+                if (cr == null) {
+                    StringBuffer buff = IOUtil.getClasspathResource(jcfg, Config.EPISODES_CLIENT);
+                    if (buff != null) {
+                        String hash = IOUtil.generateHash(buff.toString());
+                        cr = new CacheableResource("text/javascript", jcfg.getMaxAge(), hash);
+                        jcfg.getCombinedResourceManager().putResource("episodes", cr);
+                        cr.setContent(buff);
+                    } else {
+                        getLogger().severe("Unable to find epoisdes client script");
+                    }
+                }
+        } else if ("episode-poster".equals(id)) {
+            cr =  jcfg.getCombinedResourceManager().getResource("episode-poster");
+            if (cr == null) {
+                StringBuffer buff = IOUtil.getClasspathResource(jcfg, Config.EPISODE_POSTER);
+                if (buff != null) {
+                    String hash = IOUtil.generateHash(buff.toString());
+                    cr = new CacheableResource("text/javascript", jcfg.getMaxAge(), hash);
+                    jcfg.getCombinedResourceManager().putResource("episode-poster", cr);
+                    cr.setContent(buff);
+                } else {
+                    getLogger().severe("Unable to find epoisdes poster script");
+                }
             }
         } else if (cr == null) {
             getLogger().severe("could not find resource " + id + " with template " + templateId);
@@ -409,6 +427,7 @@ public class ProtoRabbitServlet extends HttpServlet {
 
         String path = req.getServletPath();
         String pathInfo = req.getPathInfo();
+        String clientId = req.getRemoteAddr();
         if ( "stats".equals(req.getParameter("command") ) ) {
 
             Map<String, Object> stats = new HashMap<String, Object> ();
@@ -425,17 +444,13 @@ public class ProtoRabbitServlet extends HttpServlet {
             resp.getWriter().write(jo.toString());
             return;
         } else if ("recordProfile".equals(req.getParameter("command") ) ) {
-            if (episodeManager == null) {
-                episodeManager = new EpisodeManager();
-            }
-            String clientId = req.getRemoteAddr();
             System.out.println("Recieved profile from client " + clientId);
-
+            long serverTimestamp = Long.parseLong(req.getParameter("timestamp"));
             String data = req.getParameter("data");
             JSONObject jo = null;
             try {
                 jo = new JSONObject(data);
-                episodeManager.addEpisode(clientId, (new Date()).getTime(), jo);
+                jcfg.getEpisodeManager().updateEpisode(clientId, serverTimestamp, jo);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -447,9 +462,7 @@ public class ProtoRabbitServlet extends HttpServlet {
                 json = factory.getInstance();
             }
             Object data = null;
-            if (episodeManager != null) {
-                data = episodeManager.getEpisodes();
-            }
+            data = jcfg.getEpisodeManager().getEpisodes();
             resp.setHeader("pragma", "NO-CACHE");
             resp.setHeader("Cache-Control", "no-cache");
             Object jo = json.serialize(data);
@@ -471,7 +484,6 @@ public class ProtoRabbitServlet extends HttpServlet {
         if (isDevMode) {
             updateConfig();
         }
-
         boolean canGzip = false;
         // check if client supports gzip
         Enumeration<String> hnum = req.getHeaders("Accept-Encoding");
@@ -483,7 +495,7 @@ public class ProtoRabbitServlet extends HttpServlet {
             }
         }
         WebContext wc = new WebContext(jcfg, ctx, req, resp);
-
+        wc.setAttribute(Config.START_TIME, new Long(new Date().getTime()));
         String id = req.getParameter("resourceid");
         if (id != null) {
             processResourceRequest(id, wc, req, resp, canGzip);
@@ -516,17 +528,18 @@ public class ProtoRabbitServlet extends HttpServlet {
 
         if (id != null) {
             t = jcfg.getTemplate(id);
-        }
-        if (jcfg.profile()) {
-            long timestamp = (new Date()).getTime();
 
-            if (episodeManager == null) {
-                episodeManager = new EpisodeManager();
+            if (jcfg.profile()) {
+                long timestamp = (new Date()).getTime();
+                Episode e = new Episode(timestamp);
+                e.setClientId(clientId);
+                e.setUri(id);
+                e.addStart(new Mark("server_render", timestamp));
+                wc.setAttribute(Config.EPISODE, e);
+                wc.setAttribute(Config.DEFAULT_EPISODE_PROCESS, new Boolean(true));
+                jcfg.getEpisodeManager().addEpisode(e);
             }
-            Episode e = new Episode(timestamp);
-            e.addStart(new Mark("EPISODES:mark:" + t.getId(), timestamp));
-            wc.setAttribute(Config.EPISODE, e);
-        }        
+        }
         boolean namespaceOk = true;
         if (t != null && t.getURINamespace() != null ) {
             if (namespace == null || !t.getURINamespace().startsWith(namespace)) {
@@ -605,6 +618,9 @@ public class ProtoRabbitServlet extends HttpServlet {
             if (etag != null && ifNoneMatch != null &&
                 ifNoneMatch.equals(etag)) {
                 resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
+                if (jcfg.profile()) {
+                    profile(wc);
+                }
                 return;
             }
 
@@ -649,9 +665,16 @@ public class ProtoRabbitServlet extends HttpServlet {
             out.write(bos.toByteArray());
         }
         if (jcfg.profile()) {
-            long timestamp = (new Date()).getTime();
-            Episode e = (Episode)wc.getAttribute(Config.EPISODE);
-            e.addMeasure("EPISODES:measure:" + t.getId(), new Measure("server render", timestamp));
+            profile(wc);
         }
+    }
+    
+    public void profile(IContext wc) {
+        long startTime = ((Long)wc.getAttribute(Config.START_TIME)).longValue();
+        long timestamp = (new Date()).getTime();
+        long duration = timestamp - startTime;
+        Episode e = (Episode)wc.getAttribute(Config.EPISODE);
+        Measure m = new Measure("server_render", duration);
+        e.addMeasure("server_render", m);
     }
 }
