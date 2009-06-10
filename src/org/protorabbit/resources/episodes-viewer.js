@@ -1,26 +1,11 @@
-
-function doOnload() { 
-    // Measure "timefromfirstbyte" as now - firstbyte.
-    window.postMessage("EPISODES:measure:frontend:firstbyte", "*");
-}
-
-function doneWithEverything() {
-
-    // Measure "totaltime" as now - starttime.
-    window.postMessage("EPISODES:measure:totaltime:starttime", "*");
-
-    // Signal that we're done with episodic measurements.
-
-}
-
-EPISODES.addEventListener("load", doOnload, false);
-
+window.postMessage("EPISODES:measure:frontend:firstbyte", "*");
 //If the owner of the web page chooses to do something with the final results,
 //they do that by listening for the "EPISODES:done" message.
 function handleEpisodeResults(event) {
     if ( "EPISODES:done" === event.data ) {
 
-        //drawEpisodicTimes();
+        window.postMessage("EPISODES:measure:totaltime:starttime", "*");
+
         var data = JSON.stringify({
                                    starts : EPISODES.getStarts(),
                                    uri : window.location.href,

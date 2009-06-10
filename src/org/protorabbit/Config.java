@@ -76,6 +76,7 @@ public class Config {
    Map<String, ITemplate> tmap = null;
    Map<String, IncludeFile> includeFiles = null;
    Map<String, String> commandMap = null;
+   private boolean profile = false;
 
    ResourceManager crm = null;
 
@@ -95,7 +96,7 @@ public class Config {
    }
 
    public boolean profile() {
-       return false;
+       return profile;
    }
    
    public EpisodeManager getEpisodeManager() {
@@ -625,6 +626,10 @@ public class Config {
         }
         hc.setURL(url);
         return hc;
+    }
+
+    public void setProfile(boolean b) {
+        this.profile = b;
     }
 
 }

@@ -25,6 +25,7 @@ import java.util.logging.Logger;
 import org.json.JSONObject;
 import org.protorabbit.Config;
 import org.protorabbit.accelerator.ICacheable;
+import org.protorabbit.json.Serialize;
 import org.protorabbit.model.ICommand;
 import org.protorabbit.model.IContext;
 import org.protorabbit.model.IProperty;
@@ -80,6 +81,7 @@ public class Template implements ITemplate {
         this.contents = contents;
     }
 
+    @Serialize("skip")
     public StringBuffer getContent(IContext ctx) {
             ResourceURI tri = getTemplateURI();
 
@@ -105,6 +107,7 @@ public class Template implements ITemplate {
         return id;
     }
 
+    @Serialize("skip")
     public JSONObject getJSON() {
         return json;
     }

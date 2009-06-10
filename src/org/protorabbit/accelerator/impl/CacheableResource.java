@@ -6,6 +6,7 @@ import java.util.logging.Logger;
 
 import org.protorabbit.accelerator.CacheContext;
 import org.protorabbit.accelerator.ICacheable;
+import org.protorabbit.json.Serialize;
 import org.protorabbit.model.IContext;
 import org.protorabbit.util.IOUtil;
 
@@ -108,9 +109,6 @@ public class CacheableResource implements ICacheable {
         else return content.length();
     }
 
-    /* (non-Javadoc)
-     * @see org.protorabbit.accelerator.ICacheable#getContentType()
-     */
     public String getContentType() {
         return contentType;
     }
@@ -119,18 +117,15 @@ public class CacheableResource implements ICacheable {
         // reload
     }
 
-    /* (non-Javadoc)
-     * @see org.protorabbit.accelerator.ICacheable#getContent()
-     */
+
+    @Serialize("skip")
     public StringBuffer getContent() {
         Date now = new Date();
         setLastAccessed(now.getTime());
         return content;
     }
 
-    /* (non-Javadoc)
-     * @see org.protorabbit.accelerator.ICacheable#setContent(java.lang.StringBuffer)
-     */
+
     public void setContent(StringBuffer content) {
         setLoaded(false);
         this.content = content;
@@ -139,9 +134,7 @@ public class CacheableResource implements ICacheable {
         gzippedContent = null;
     }
 
-    /* (non-Javadoc)
-     * @see org.protorabbit.accelerator.ICacheable#getGZippedContent()
-     */
+    @Serialize("skip")
     public byte[] getGZippedContent() throws IOException {
         if (gzippedContent == null && content != null) {
 
@@ -153,9 +146,6 @@ public class CacheableResource implements ICacheable {
         return gzippedContent;
     }
 
-    /* (non-Javadoc)
-     * @see org.protorabbit.accelerator.ICacheable#getContentHash()
-     */
     public String getContentHash() {
         if (contentHash == null && content != null) {
             contentHash = IOUtil.generateHash(content.toString());
@@ -204,6 +194,9 @@ public class CacheableResource implements ICacheable {
     }
 
     public long getGzipContentLength() {
+        if (gzippedContent == null) {
+            return 0;
+        }
         return gzippedContent.length;
     }
 

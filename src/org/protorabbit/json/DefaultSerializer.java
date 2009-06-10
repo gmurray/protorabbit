@@ -21,12 +21,24 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Logger;
+
+import org.protorabbit.json.Serialize;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 public class DefaultSerializer implements JSONSerializer {
+
+    private static Logger logger = null;
+
+    static Logger getLogger() {
+        if (logger == null) {
+            logger = Logger.getLogger("org.protrabbit");
+        }
+        return logger;
+    }
 
    @SuppressWarnings("unchecked")
    public Object serialize(Object o) {
@@ -110,8 +122,11 @@ public class DefaultSerializer implements JSONSerializer {
        HashMap<String, Object> map = new HashMap<String, Object>();
        Method[] methods = pojo.getClass().getMethods();
        for (int i=0; i < methods.length;i++) {
+
+           Method m = methods[i];
            try {
-               Method m = methods[i];
+
+               // skip if there is a skip annotation
                if (Modifier.isPublic(m.getModifiers()) &&
                     !"getClass".equals(m.getName()) &&
                     !"getParent".equals(m.getName()) &&
@@ -124,21 +139,30 @@ public class DefaultSerializer implements JSONSerializer {
                     !"getClassLoader".equals(m.getName()) &&
                     m.getName().startsWith("get") && m.getName().length() > 3 &&
                     m.getParameterTypes().length == 0) {
-                   // change the case of the property from camelCase
-                   String key = m.getName().substring(3,4).toLowerCase();
-                   // get the rest of the name;
-                   if (m.getName().length() > 4) {
-                       key += m.getName().substring(4);
-                   }
-                   Object value =  m.invoke(pojo, args);
-                   map.put(key, value);
+
+                   if (m.isAnnotationPresent(Serialize.class)) {
+                       Serialize s = m.getAnnotation(Serialize.class);
+
+                               if ("skip".equals(s.value())) {
+                                   continue;
+                               }
+                           }
+                       // change the case of the property from camelCase
+                       String key = m.getName().substring(3,4).toLowerCase();
+                       // get the rest of the name;
+                       if (m.getName().length() > 4) {
+                           key += m.getName().substring(4);
+                       }
+                       Object value =  m.invoke(pojo, args);
+                       map.put(key, value);
+
                }
            } catch (IllegalArgumentException e) {
-               e.printStackTrace();
+               getLogger().warning("Unable to serialize " + pojo + " : " + e);
            } catch (IllegalAccessException e) {
-               e.printStackTrace();
+               getLogger().warning("Unable to serialize " + pojo + " : " + e);
            } catch (InvocationTargetException e) {
-               e.printStackTrace();
+               getLogger().warning("Unable to serialize " + pojo + " : " + e);
            }
        }
        // use the serializer itself to serialize a map of properties we created

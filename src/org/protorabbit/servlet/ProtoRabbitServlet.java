@@ -91,8 +91,9 @@ public class ProtoRabbitServlet extends HttpServlet {
     // default to one hour
     private long cleanupTimeout = 3600000;
     private long lastCleanup = -1;
+    private boolean profile = false;
 
-    private String version = "0.7.2-dev-c";
+    private String version = "0.7.2-dev-d";
 
     // these file types will be provided with the default expires time if run
     // through the servlet
@@ -110,6 +111,9 @@ public class ProtoRabbitServlet extends HttpServlet {
             this.ctx = cfg.getServletContext();
             if (ctx.getInitParameter("prt-dev-mode") != null) {
                 isDevMode = ("true".equals(ctx.getInitParameter("prt-dev-mode").toLowerCase()));
+            }
+            if (ctx.getInitParameter("prt-profile") != null) {
+                profile = ("true".equals(ctx.getInitParameter("prt-profile").toLowerCase()));
             }
             if (ctx.getInitParameter("prt-service-uri") != null) {
                 serviceURI = ctx.getInitParameter("prt-service-uri");
@@ -181,6 +185,7 @@ public class ProtoRabbitServlet extends HttpServlet {
          if ((jcfg == null || needsUpdate) && templates.length > 0) {
             jcfg = new Config(serviceURI, maxAge);
             jcfg.setDevMode(isDevMode);
+            jcfg.setProfile(profile);
             if (engineClassName != null) {
                 jcfg.setEngineClassName(engineClassName);
             }
@@ -428,49 +433,56 @@ public class ProtoRabbitServlet extends HttpServlet {
         String path = req.getServletPath();
         String pathInfo = req.getPathInfo();
         String clientId = req.getRemoteAddr();
-        if ( "stats".equals(req.getParameter("command") ) ) {
-
-            Map<String, Object> stats = new HashMap<String, Object> ();
-            stats.put("cachedResources",  jcfg.getCombinedResourceManager().getResources());
-            stats.put("templates",  jcfg.getTemplates());
-            stats.put("includeFiles", jcfg.getIncludeFiles());
-            if (json == null) {
-                SerializationFactory factory = new SerializationFactory();
-                json = factory.getInstance();
+        String command = req.getParameter("command");
+        if (command != null) {
+            if ( "stats".equals( command ) ) {
+    
+                Map<String, Object> stats = new HashMap<String, Object> ();
+                stats.put("cachedResources",  jcfg.getCombinedResourceManager().getResources());
+                stats.put("templates",  jcfg.getTemplates());
+                stats.put("includeFiles", jcfg.getIncludeFiles());
+                if (json == null) {
+                    SerializationFactory factory = new SerializationFactory();
+                    json = factory.getInstance();
+                }
+                resp.setHeader("pragma", "NO-CACHE");
+                resp.setHeader("Cache-Control", "no-cache");
+                Object jo = json.serialize(stats);
+                resp.getWriter().write(jo.toString());
+                return;
+            } else if ("recordProfile".equals(command) ) {
+                System.out.println("Recieved profile from client " + clientId);
+                long serverTimestamp = Long.parseLong(req.getParameter("timestamp"));
+                String data = req.getParameter("data");
+                JSONObject jo = null;
+                try {
+                    jo = new JSONObject(data);
+                    jcfg.getEpisodeManager().updateEpisode(clientId, serverTimestamp, jo);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                resp.getWriter().write("ok");
+                return;
+            } else if ("episodes".equals(command) ) {
+                if (json == null) {
+                    SerializationFactory factory = new SerializationFactory();
+                    json = factory.getInstance();
+                }
+                Object data = null;
+                data = jcfg.getEpisodeManager().getEpisodes();
+                resp.setHeader("pragma", "NO-CACHE");
+                resp.setHeader("Cache-Control", "no-cache");
+                Object jo = json.serialize(data);
+                resp.getWriter().write(jo.toString());
+                return;
+            } else if ("version".equals(command) ) {
+                resp.getWriter().write(version);
+                return;
+            } else if ("startProfiling".equals(command)) {
+                jcfg.setProfile(true);
+                resp.getWriter().write("profiling enabled");
+                return;
             }
-            resp.setHeader("pragma", "NO-CACHE");
-            resp.setHeader("Cache-Control", "no-cache");
-            Object jo = json.serialize(stats);
-            resp.getWriter().write(jo.toString());
-            return;
-        } else if ("recordProfile".equals(req.getParameter("command") ) ) {
-            System.out.println("Recieved profile from client " + clientId);
-            long serverTimestamp = Long.parseLong(req.getParameter("timestamp"));
-            String data = req.getParameter("data");
-            JSONObject jo = null;
-            try {
-                jo = new JSONObject(data);
-                jcfg.getEpisodeManager().updateEpisode(clientId, serverTimestamp, jo);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            resp.getWriter().write("ok");
-            return;
-        } else if ("episodes".equals(req.getParameter("command") ) ) {
-            if (json == null) {
-                SerializationFactory factory = new SerializationFactory();
-                json = factory.getInstance();
-            }
-            Object data = null;
-            data = jcfg.getEpisodeManager().getEpisodes();
-            resp.setHeader("pragma", "NO-CACHE");
-            resp.setHeader("Cache-Control", "no-cache");
-            Object jo = json.serialize(data);
-            resp.getWriter().write(jo.toString());
-            return;
-        } else if ("version".equals(req.getParameter("command") ) ) {
-            resp.getWriter().write(version);
-            return;
         } else if (pathInfo != null) {
             for (String t : writeHeaders) {
                if (pathInfo.endsWith(t)) {

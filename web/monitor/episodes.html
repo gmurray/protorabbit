@@ -145,6 +145,16 @@ function loadData() {
         }); 
 }
 
+function startProfile() {
+    var req = new ajax({ 
+            url : "../prt?command=startProfiling",
+            callback : function(req) {
+                alert("Server responded :" + req.responseText);
+            }
+        }); 
+}
+
+
 function formatDate(timestamp){
     var d = new Date(timestamp);
     var rdate= d.getMonth() +1 + "/" + d.getDate() + "/" + d.getFullYear();
@@ -166,7 +176,7 @@ function render(model) {
         stableElement.innerHTML = stable.toString();
 
     } else {
-      stableElement.innerHTML = "N/A";  
+      stableElement.innerHTML = "<p>N/A</p><p><a href='javascript:void(0)' onclick='startProfile()'>Start Profiling</a></p>";
     }
     document.body.appendChild(stableElement);
 }
@@ -197,10 +207,12 @@ window.onload = function() {
     <a href="episodes.html">Episodes</a>
     <a href="components.html">Components</a>
     <a href="resources.html">Resources</a>
+
     <a href="../"> Home</a>
    </div>
   </div>
   <div style="clear:both;height:5px"></div>
+
   <div id="items" style="width 220px;"></div>
   <div id="results" style="position : absolute; margin-left : 505px; width:600px;height:300px"></div>
  </body>

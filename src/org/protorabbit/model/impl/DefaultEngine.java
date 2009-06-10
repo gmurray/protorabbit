@@ -184,10 +184,10 @@ public class DefaultEngine implements IEngine {
                         int headStart = preText.indexOf("<head>");
                         if (headStart != -1) {
                             preText = preText.substring(0, headStart + 6) + 
-                                      "<script src=\"prt?resourceid=episodes.js\"></script>" +
+                              "<script src=\"prt?resourceid=episodes.js\"></script>" +
                                       "<script>var t_firstbyte = Number(new Date());" +
                                       "window.postMessage(\"EPISODES:mark:firstbyte:\" + t_firstbyte, \"*\");" +
-                                      "</script> "+
+                                      "</script>" +
                                       preText.substring(headStart + 6, preText.length());
                         }
                         out.write(preText.getBytes());
