@@ -482,6 +482,10 @@ public class ProtoRabbitServlet extends HttpServlet {
                 jcfg.setProfile(true);
                 resp.getWriter().write("profiling enabled");
                 return;
+            } else if ("stopProfiling".equals(command)) {
+                jcfg.setProfile(false);
+                resp.getWriter().write("profiling disabled");
+                return;
             }
         } else if (pathInfo != null) {
             for (String t : writeHeaders) {
