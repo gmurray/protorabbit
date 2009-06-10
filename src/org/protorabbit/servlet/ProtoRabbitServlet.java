@@ -478,6 +478,10 @@ public class ProtoRabbitServlet extends HttpServlet {
             } else if ("version".equals(command) ) {
                 resp.getWriter().write(version);
                 return;
+            } else if ("resetProfiles".equals(command)) {
+                jcfg.getEpisodeManager().reset();
+                resp.getWriter().write("profiles reset");
+                return;
             } else if ("startProfiling".equals(command)) {
                 jcfg.setProfile(true);
                 resp.getWriter().write("profiling enabled");
@@ -548,6 +552,7 @@ public class ProtoRabbitServlet extends HttpServlet {
             if (jcfg.profile()) {
                 long timestamp = (new Date()).getTime();
                 Episode e = new Episode(timestamp);
+                e.setUserAgent(req.getHeader("user-agent"));
                 e.setClientId(clientId);
                 e.setUri(id);
                 e.addStart(new Mark("server_render", timestamp));

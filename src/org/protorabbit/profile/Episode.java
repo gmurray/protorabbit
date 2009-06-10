@@ -7,12 +7,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Episode{
+public class Episode {
 
     private MarkComparator mc = null;
     private long timeStamp;
     private String clientId;
     private String uri;
+    private String userAgent;
 
     private List<Mark> starts = new ArrayList<Mark>();
     private Map<String, Measure> measures = new HashMap<String, Measure>();
@@ -76,6 +77,14 @@ public class Episode{
 
 	public String getClientId() {
 		return clientId;
+	}
+	
+	public String getUserAgent() {
+	    return userAgent;
+	}
+	
+	public void setUserAgent(String userAgent) {
+	    this.userAgent = userAgent;
 	}
 
 	public void setUri(String uri) {

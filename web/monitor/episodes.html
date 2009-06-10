@@ -102,15 +102,22 @@ function drawEpisodicTimes(episode, starts, measures) {
     }
 
     var div = document.getElementById("results");
-    var nPixels = (div.clientWidth || div.offsetWidth) - 44;
+    var nPixels = (div.clientWidth || div.offsetWidth);
     var PxlPerMs = nPixels / (tLast - tFirst);
     var sHtml = "";
+    // show total time
+    sHtml += '<div style="background: #EEE; border: 1px solid; padding-bottom: 2px; font-size: 10pt; position: absolute; left: ' + leftPx + 
+    'px; top: ' +  0 + 
+    'px; width: 100%' +
+    '; height: 16px;"><nobr>&nbsp; Total' +
+    ' - ' + (tLast - tFirst) + 'ms' +
+    '</nobr></div>\n';
     for ( var i = 0; i < aEpisodes.length; i++ ) {
         var episodeName = aEpisodes[i];
-        var leftPx = parseInt(PxlPerMs * (episode.startsMap[episodeName] - tFirst)) + 40;
+        var leftPx = parseInt(PxlPerMs * (episode.startsMap[episodeName] - tFirst));
         var widthPx = parseInt(PxlPerMs * measures[episodeName].duration);
         sHtml += '<div style="background: #EEE; border: 1px solid; padding-bottom: 2px; font-size: 10pt; position: absolute; left: ' + leftPx + 
-            'px; top: ' + (i*30) + 
+            'px; top: ' + ((i*30) + 40) + 
             'px; width: ' + widthPx +
             'px; height: 16px;"><nobr>&nbsp;' + episodeName + 
             //' (' + starts[episodeName] + ', ' + measures[episodeName] + ')' +
@@ -154,6 +161,24 @@ function startProfile() {
         }); 
 }
 
+function stopProfile() {
+    var req = new ajax({ 
+            url : "../prt?command=stopProfiling",
+            callback : function(req) {
+                alert("Server responded :" + req.responseText);
+            }
+        }); 
+}
+
+function resetProfile() {
+    var req = new ajax({ 
+            url : "../prt?command=resetProfiles",
+            callback : function(req) {
+                alert("Server responded :" + req.responseText);
+            }
+        }); 
+}
+
 
 function formatDate(timestamp){
     var d = new Date(timestamp);
@@ -163,22 +188,23 @@ function formatDate(timestamp){
 }
 
 function render(model) {
+    var stableElement = document.getElementById("items");
+    document.getElementById("results").innerHTML = "";
     window.model = model;
-    var stableElement = document.createElement("div");
+
     if (model && model.length > 0) {
         stableElement.className = "blockTable";
         var stable = new tablebuilder();
-        stable.setHeader([ "URI", "client id", "timestamp"]);
+        stable.setHeader([ "URI", "client id", "User Agent", "timestamp"]);
         for (var i=0; i < model.length; i+=1) {
             var episode = model[i];
-            stable.addRow([ "<a href='#' onclick='showEpisode(" + i + ")'>" + episode.uri + "</a>", episode.clientId, formatDate(episode.timestamp) ]);
+            stable.addRow([ "<a href='#' onclick='showEpisode(" + i + ")'>" + episode.uri + "</a>", episode.clientId, episode.userAgent, formatDate(episode.timestamp) ]);
         }
         stableElement.innerHTML = stable.toString();
 
     } else {
-      stableElement.innerHTML = "<p>N/A</p><p><a href='javascript:void(0)' onclick='startProfile()'>Start Profiling</a></p>";
+      stableElement.innerHTML = "<p>N/A</p>";
     }
-    document.body.appendChild(stableElement);
 }
 
 function showEpisode(id) {
@@ -207,13 +233,18 @@ window.onload = function() {
     <a href="episodes.html">Episodes</a>
     <a href="components.html">Components</a>
     <a href="resources.html">Resources</a>
-
     <a href="../"> Home</a>
    </div>
   </div>
   <div style="clear:both;height:5px"></div>
-
+     <div>
+      <a href='javascript:void(0)' onclick='loadData()'>Refresh</a> |
+      <a href='javascript:void(0)' onclick='startProfile()'>Start Profiling</a> |
+      <a href='javascript:void(0)' onclick='stopProfile()'>Stop Profiling</a> |
+      <a href='javascript:void(0)' onclick='resetProfile()'>Reset Profiles</a>
+     </div>
+  <div style="clear:both;height:5px"></div>
   <div id="items" style="width 220px;"></div>
-  <div id="results" style="position : absolute; margin-left : 505px; width:600px;height:300px"></div>
+  <div id="results" style="top:85px;position : absolute; margin-left : 505px; width:600px;height:300px"></div>
  </body>
 </html>
