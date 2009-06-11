@@ -36,6 +36,7 @@ import org.protorabbit.model.IEngine;
 import org.protorabbit.model.IParameter;
 import org.protorabbit.model.ITemplate;
 import org.protorabbit.model.IDocumentContext;
+import org.protorabbit.profile.Episode;
 
 /*
  *  DefaultEngine.java
@@ -183,11 +184,15 @@ public class DefaultEngine implements IEngine {
                         String preText =  buff.substring(index, c.getStartIndex());
                         int headStart = preText.indexOf("<head>");
                         if (headStart != -1) {
+                            long serverTime = ((Episode)ctx.getAttribute(Config.EPISODE)).getTimestamp();
                             preText = preText.substring(0, headStart + 6) + 
                               "<script src=\"prt?resourceid=episodes.js\"></script>" +
-                                      "<script>var t_firstbyte = Number(new Date());" +
-                                      "window.postMessage(\"EPISODES:mark:firstbyte:\" + t_firstbyte, \"*\");" +
+                              "<script>var serverTimestamp = " + serverTime + ";var t_pingStart = (new Date()).getTime();" +
                                       "</script>" +
+                                      "<script src=\"prt?command=ping\"></script>" +
+                                      "<script>var t_now = (new Date()).getTime();var t_transit= Math.round((t_now - t_pingStart) / 2);" +
+                                      "var t_sync='prt?command=episodesync&timestamp=" + serverTime +"&transitTime=' + t_transit;" +
+                                      "document.write(\"<scr\" + \"ipt src='\" + t_sync + \"'></scr\" + \"ipt>\");</script>" +
                                       preText.substring(headStart + 6, preText.length());
                         }
                         out.write(preText.getBytes());

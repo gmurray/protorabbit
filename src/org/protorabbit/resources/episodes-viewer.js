@@ -1,4 +1,18 @@
-window.postMessage("EPISODES:measure:frontend:firstbyte", "*");
+window.episodesDefaultLoad = true;
+var _oldLoad = null;
+
+if (window.onload) {
+    _oldLoad = window.onload;
+}
+window.onload = function() {
+
+    window.postMessage("EPISODES:measure:frontend:firstbyte", "*");
+    _oldLoad();
+    if (window.episodesDefaultLoad === true) {
+
+        window.postMessage("EPISODES:done", "*");
+    }
+};
 //If the owner of the web page chooses to do something with the final results,
 //they do that by listening for the "EPISODES:done" message.
 function handleEpisodeResults(event) {
@@ -20,9 +34,8 @@ function handleEpisodeResults(event) {
         });
     }
 }
+
 EPISODES.addEventListener("message", handleEpisodeResults, false);
-
-
 
 /*
 http://www.JSON.org/json2.js

@@ -91,9 +91,9 @@ public class ProtoRabbitServlet extends HttpServlet {
     // default to one hour
     private long cleanupTimeout = 3600000;
     private long lastCleanup = -1;
-    private boolean profile = false;
+    private boolean profile = true;
 
-    private String version = "0.7.2-dev-d";
+    private String version = "0.7.3-dev";
 
     // these file types will be provided with the default expires time if run
     // through the servlet
@@ -290,6 +290,10 @@ public class ProtoRabbitServlet extends HttpServlet {
             } else {
                 IProperty property = t.getPropertyById(id, wc);
                 StringBuffer buff = null;
+                if (property == null) {
+                    getLogger().severe("Unable to find property with id " + id);
+                    return;
+                }
                 IncludeFile inc = jcfg.getIncludeFileContent(templateId, property.getKey(),wc);
                 if (inc != null) {
                     buff = inc.getContent();
@@ -435,8 +439,37 @@ public class ProtoRabbitServlet extends HttpServlet {
         String clientId = req.getRemoteAddr();
         String command = req.getParameter("command");
         if (command != null) {
-            if ( "stats".equals( command ) ) {
-    
+            if ("ping".equals(command)) {
+                resp.setHeader("pragma", "NO-CACHE");
+                resp.setHeader("Cache-Control", "no-cache");
+                resp.getWriter().write((new Date()).getTime() + "");
+                return;
+            } else if ("episodesync".equals(command)) {
+                long startTime = Long.parseLong(req.getParameter("timestamp"));
+                long transitTime = Long.parseLong(req.getParameter("transitTime"));
+                System.out.println("transit time=" + req.getParameter("transitTime"));
+                Episode e = jcfg.getEpisodeManager().getEpisode(clientId, startTime);
+                if (e == null) {
+                    return;
+                }
+                e.setTransitTime(transitTime);
+                Mark m = e.getMark("transit_to");
+                long transitStartTime = m.getStartTime();
+                long now = (new Date()).getTime();
+                long duration = (now - (transitStartTime + transitTime));
+                // add the page load directly following the start time
+                e.addMark(new Mark("page_load", transitStartTime + transitTime));
+                Measure m1 = new Measure("transit_to", transitTime);
+                // include transit time for this request and intial page load
+                Measure m2 = new Measure("page_load", duration);
+                e.addMeasure("transit_to", m1);
+                e.addMeasure("page_load", m2);
+                // now - duration is assumed transit time to offset call to this command
+                resp.getWriter().write("var t_firstbyte=new Number(" + (now + transitTime) + ");" +
+                                       "window.postMessage(\"EPISODES:mark:firstbyte:\" + t_firstbyte, \"*\");");
+                return;
+            } else if ("stats".equals( command ) ) {
+
                 Map<String, Object> stats = new HashMap<String, Object> ();
                 stats.put("cachedResources",  jcfg.getCombinedResourceManager().getResources());
                 stats.put("templates",  jcfg.getTemplates());
@@ -451,15 +484,24 @@ public class ProtoRabbitServlet extends HttpServlet {
                 resp.getWriter().write(jo.toString());
                 return;
             } else if ("recordProfile".equals(command) ) {
-                System.out.println("Recieved profile from client " + clientId);
-                long serverTimestamp = Long.parseLong(req.getParameter("timestamp"));
+
+                long startTime = Long.parseLong(req.getParameter("timestamp"));
+                long timestamp = (new Date()).getTime();
+                long duration = timestamp - startTime;
+                Episode e = jcfg.getEpisodeManager().getEpisode(clientId, startTime);
+                if (e == null) {
+                    return;
+                }
+                // make sure to account for transit time
+                Measure m = new Measure("full_request", duration - e.getTransitTime());
+                e.addMeasure("full_request", m);
                 String data = req.getParameter("data");
                 JSONObject jo = null;
                 try {
                     jo = new JSONObject(data);
-                    jcfg.getEpisodeManager().updateEpisode(clientId, serverTimestamp, jo);
-                } catch (JSONException e) {
-                    e.printStackTrace();
+                    jcfg.getEpisodeManager().updateEpisode(clientId, startTime, jo);
+                } catch (JSONException ex) {
+                    ex.printStackTrace();
                 }
                 resp.getWriter().write("ok");
                 return;
@@ -555,7 +597,8 @@ public class ProtoRabbitServlet extends HttpServlet {
                 e.setUserAgent(req.getHeader("user-agent"));
                 e.setClientId(clientId);
                 e.setUri(id);
-                e.addStart(new Mark("server_render", timestamp));
+                e.addMark(new Mark("full_request", timestamp));
+                e.addMark(new Mark("server_render", timestamp));
                 wc.setAttribute(Config.EPISODE, e);
                 wc.setAttribute(Config.DEFAULT_EPISODE_PROCESS, new Boolean(true));
                 jcfg.getEpisodeManager().addEpisode(e);
@@ -689,7 +732,7 @@ public class ProtoRabbitServlet extends HttpServlet {
             profile(wc);
         }
     }
-    
+
     public void profile(IContext wc) {
         long startTime = ((Long)wc.getAttribute(Config.START_TIME)).longValue();
         long timestamp = (new Date()).getTime();
@@ -697,5 +740,6 @@ public class ProtoRabbitServlet extends HttpServlet {
         Episode e = (Episode)wc.getAttribute(Config.EPISODE);
         Measure m = new Measure("server_render", duration);
         e.addMeasure("server_render", m);
+        e.addMark(new Mark("transit_to", timestamp));
     }
 }

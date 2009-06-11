@@ -225,9 +225,10 @@ public class IncludeResourcesCommand extends BaseCommand {
 
                 String puri = "<script src=\"" + 
                 ctx.getConfig().getResourceService() + "?resourceid=episode-poster.js\"></script>";
-                String episodeEnd = puri + "<script>var serverTimestamp = " + ((Episode)ctx.getAttribute(Config.EPISODE)).getTimestamp() + ";";
-                if (ctx.getAttribute(Config.DEFAULT_EPISODE_PROCESS) != null) {
-                     episodeEnd += "window.postMessage(\"EPISODES:done\", \"*\");";
+                String episodeEnd = puri ;//+ "<script>var serverTimestamp = " + ((Episode)ctx.getAttribute(Config.EPISODE)).getTimestamp() + ";";
+                // skip the default processing if the property is not set
+                if (ctx.getAttribute(Config.DEFAULT_EPISODE_PROCESS) == null) {
+                     episodeEnd += "window.episodesDefaultLoad = false;";
                 }
                 episodeEnd += ";</script>";
                 buffer.write(episodeEnd.getBytes());

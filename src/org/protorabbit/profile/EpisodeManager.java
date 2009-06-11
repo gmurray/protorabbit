@@ -52,7 +52,7 @@ public class EpisodeManager {
             while (keys.hasNext()) {
                 String key = keys.next();
                 long timeStamp = starts.getLong(key);
-                e.addStart(new Mark(key, timeStamp));
+                e.addMark(new Mark(key, timeStamp));
                 
             }
             JSONObject jmeasures = json.getJSONObject("measures");

@@ -14,16 +14,17 @@ public class Episode {
     private String clientId;
     private String uri;
     private String userAgent;
+    private long transitTime = 0;
 
-    private List<Mark> starts = new ArrayList<Mark>();
+    private List<Mark> marks = new ArrayList<Mark>();
     private Map<String, Measure> measures = new HashMap<String, Measure>();
 
     public Episode(long timeStamp) {
         this.timeStamp = timeStamp;
     }
 
-    public void setStarts(List<Mark> starts) {
-        this.starts = starts;
+    public void setStarts(List<Mark> marks) {
+        this.marks = marks;
     }
 
     @SuppressWarnings("unchecked")
@@ -43,17 +44,27 @@ public class Episode {
     }
 
     @SuppressWarnings("unchecked")
-    public List<Mark> getStarts() {
+    public List<Mark> getMarks() {
         if (mc == null) {
             mc = new MarkComparator();
         }
-        Collections.sort(starts, mc);
-        return starts;
+        Collections.sort(marks, mc);
+        return marks;
     }
     
-    public void addStart(Mark m) {
-        starts.add(m);
+    public void addMark(Mark m) {
+        marks.add(m);
     }
+
+    public Mark getMark(String id) {
+        for (Mark m : marks) {
+            if (m.getId().equals(id)) {
+                return m;
+            }
+        }
+        return null;
+    }
+
 
     public void addMeasure(String id, Measure m) {
         measures.put(id, m);
@@ -71,28 +82,36 @@ public class Episode {
         return timeStamp;
     }
 
-	public void setClientId(String clientId) {
-		this.clientId = clientId;
-	}
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
+    }
 
-	public String getClientId() {
-		return clientId;
-	}
-	
-	public String getUserAgent() {
-	    return userAgent;
-	}
-	
-	public void setUserAgent(String userAgent) {
-	    this.userAgent = userAgent;
-	}
+    public String getClientId() {
+        return clientId;
+    }
 
-	public void setUri(String uri) {
-		this.uri = uri;
-	}
+    public String getUserAgent() {
+        return userAgent;
+    }
 
-	public String getUri() {
-		return uri;
-	}
+    public void setUserAgent(String userAgent) {
+        this.userAgent = userAgent;
+    }
+
+    public void setUri(String uri) {
+        this.uri = uri;
+    }
+
+    public String getUri() {
+        return uri;
+    }
+
+    public void setTransitTime(long transitTime) {
+        this.transitTime = transitTime;
+    }
+
+    public long getTransitTime() {
+        return transitTime;
+    }
 
 }
