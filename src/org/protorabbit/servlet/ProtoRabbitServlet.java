@@ -93,7 +93,7 @@ public class ProtoRabbitServlet extends HttpServlet {
     private long lastCleanup = -1;
     private boolean profile = false;
 
-    private String version = "0.7.3-dev-c";
+    private String version = "0.7.4-dev";
 
     // these file types will be provided with the default expires time if run
     // through the servlet
@@ -334,19 +334,6 @@ public class ProtoRabbitServlet extends HttpServlet {
                         getLogger().severe("Unable to find epoisdes client script");
                     }
                 }
-        } else if ("episode-poster".equals(id)) {
-            cr =  jcfg.getCombinedResourceManager().getResource("episode-poster");
-            if (cr == null) {
-                StringBuffer buff = IOUtil.getClasspathResource(jcfg, Config.EPISODE_POSTER);
-                if (buff != null) {
-                    String hash = IOUtil.generateHash(buff.toString());
-                    cr = new CacheableResource("text/javascript", jcfg.getMaxAge(), hash);
-                    jcfg.getCombinedResourceManager().putResource("episode-poster", cr);
-                    cr.setContent(buff);
-                } else {
-                    getLogger().severe("Unable to find epoisdes poster script");
-                }
-            }
         } else if (cr == null) {
             getLogger().severe("could not find resource " + id + " with template " + templateId);
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -444,10 +431,16 @@ public class ProtoRabbitServlet extends HttpServlet {
                 resp.setHeader("Cache-Control", "no-cache");
                 resp.getWriter().write((new Date()).getTime() + "");
                 return;
+            } else if ("timeshift".equals(command)) {
+                long clientTime = Long.parseLong(req.getParameter("clientTime"));
+                resp.setHeader("pragma", "NO-CACHE");
+                resp.setHeader("Cache-Control", "no-cache");
+                long timeShift = ((new Date()).getTime() - clientTime);
+                resp.getWriter().write("timeshift=" + timeShift + ";");
+                return;
             } else if ("episodesync".equals(command)) {
                 long startTime = Long.parseLong(req.getParameter("timestamp"));
                 long transitTime = Long.parseLong(req.getParameter("transitTime"));
-                System.out.println("transit time=" + req.getParameter("transitTime"));
                 Episode e = jcfg.getEpisodeManager().getEpisode(clientId, startTime);
                 if (e == null) {
                     return;
@@ -486,12 +479,14 @@ public class ProtoRabbitServlet extends HttpServlet {
             } else if ("recordProfile".equals(command) ) {
 
                 long startTime = Long.parseLong(req.getParameter("timestamp"));
+                long timeshift = Long.parseLong(req.getParameter("timeshift"));
                 long timestamp = (new Date()).getTime();
                 long duration = timestamp - startTime;
                 Episode e = jcfg.getEpisodeManager().getEpisode(clientId, startTime);
                 if (e == null) {
                     return;
                 }
+                e.setTimeshift(timeshift);
                 // make sure to account for transit time
                 Measure m = new Measure("full_request", duration - e.getTransitTime());
                 e.addMeasure("full_request", m);

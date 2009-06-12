@@ -42,16 +42,13 @@ public class EpisodeManager {
     @SuppressWarnings("unchecked")
     public void updateEpisode(String clientId, long timestamp, JSONObject json) {
         Episode e = getEpisode(clientId, timestamp);
-        if (e == null) {
-        	    System.out.println("Creating new Episode for clientId" + clientId + " with timestamp=" + timestamp);
-            //e = new Episode(timestamp);
-        }
+
         try {
             JSONObject starts = json.getJSONObject("starts");
             Iterator<String> keys = starts.keys();
             while (keys.hasNext()) {
                 String key = keys.next();
-                long timeStamp = starts.getLong(key);
+                long timeStamp = starts.getLong(key) - e.getTimeshift();
                 e.addMark(new Mark(key, timeStamp));
                 
             }
@@ -63,11 +60,7 @@ public class EpisodeManager {
                 long duration = jmeasures.getLong(key);
                 e.addMeasure(key, new Measure(key, duration));
             }
-           // e.setUri(uri);
-           // e.setClientId(clientId);
-          //  e.setMeasures(measures);
-          //  e.setStarts(marks);
-           // episodes.add(e);
+
         } catch (JSONException e1) {
             e1.printStackTrace();
         }

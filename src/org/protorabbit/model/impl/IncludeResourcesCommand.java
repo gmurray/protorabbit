@@ -26,7 +26,6 @@ import org.protorabbit.json.SerializationFactory;
 import org.protorabbit.model.ICommand;
 import org.protorabbit.model.IParameter;
 import org.protorabbit.model.ITemplate;
-import org.protorabbit.profile.Episode;
 
 public class IncludeResourcesCommand extends BaseCommand {
 
@@ -234,14 +233,12 @@ public class IncludeResourcesCommand extends BaseCommand {
                     ResourceManager.writeDeferred(ctx, buffer, t);
                 }
 
-                String puri = "<script src=\"" + 
-                ctx.getConfig().getResourceService() + "?resourceid=episode-poster.js\"></script>";
-                String episodeEnd = puri;
                 // skip the default processing if the property is not set
                 if (ctx.getAttribute(Config.DEFAULT_EPISODE_PROCESS) == null) {
-                     episodeEnd += "<script>window.episodesDefaultLoad = false;</script>";
+                     String episodeEnd = "<script>window.episodesDefaultLoad = false;</script>";
+                     buffer.write(episodeEnd.getBytes());
                 }
-                buffer.write(episodeEnd.getBytes());
+
             }
 
         }

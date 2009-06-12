@@ -83,7 +83,13 @@ function drawEpisodicTimes(episode, marks, measures) {
     for ( var s=0; s < marks.length; s+=1 ) {
         var start = marks[s];
         var episodeName = start.id;
-
+        var measure =  measures[episodeName];
+        if (!measure) {
+            if (window.console) {
+               console.log("Could not find measure for " + episodeName);
+            }
+            continue;
+        }
         var episodeStart =  start.startTime;
         var episodeEnd = episodeStart + measures[episodeName].duration;
         tFirst = ( "undefined" === typeof(tFirst) || tFirst > episodeStart ? episodeStart : tFirst );

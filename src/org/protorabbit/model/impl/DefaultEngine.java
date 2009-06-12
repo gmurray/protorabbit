@@ -186,14 +186,21 @@ public class DefaultEngine implements IEngine {
                         if (headStart != -1) {
                             long serverTime = ((Episode)ctx.getAttribute(Config.EPISODE)).getTimestamp();
                             preText = preText.substring(0, headStart + 6) + 
-                              "<script src=\"prt?resourceid=episodes.js\"></script>" +
-                              "<script>var serverTimestamp = " + serverTime + ";var t_pingStart = (new Date()).getTime();" +
-                                      "</script>" +
-                                      "<script src=\"prt?command=ping\"></script>" +
-                                      "<script>var t_now = (new Date()).getTime();var t_transit= Math.round((t_now - t_pingStart) / 2);" +
-                                      "var t_sync='prt?command=episodesync&timestamp=" + serverTime +"&transitTime=' + t_transit;" +
-                                      "document.write(\"<scr\" + \"ipt src='\" + t_sync + \"'></scr\" + \"ipt>\");</script>" +
-                                      preText.substring(headStart + 6, preText.length());
+                              "<script>var timeshift=0;var serverTimestamp = " + serverTime + ";</script>" + 
+                              "<script src=\"prt?resourceid=episodes.js\"></script>"+
+                              "<script>var t_pingStart1 = (new Date()).getTime();</script>" +
+                              "<script src=\"prt?command=ping\"></script>" +
+                              "<script>var t_now1 = (new Date()).getTime();" +
+                              "var t_transit1= Math.round((t_now1 - t_pingStart1) / 2);" +
+                              "var t_pingStart2 = (new Date()).getTime();" +
+                              "document.write(\"<scr\" + \"ipt src='prt?command=timeshift&clientTime=\" + t_pingStart2 + \"'></scr\" + \"ipt>\");\n" +
+                              "var t_now2 = (new Date()).getTime();\n" +
+                              "var t_transit2= Math.round((t_now2 - t_pingStart2) / 2);\n" +
+                              "var t_transit= Math.round((t_transit1 + t_transit2) / 4);\n" +
+                              "if ((t_transit * 2) < timeshift) {timeshift = timeshift - (t_transit * 2);} else if (timeshift < 0) {timeshift+=(t_transit * 2);}" +
+                              "var t_sync='prt?command=episodesync&timestamp=" + serverTime +"&transitTime=' + t_transit;" +
+                              "document.write(\"<scr\" + \"ipt src='\" + t_sync + \"'></scr\" + \"ipt>\");</script>" +
+                              preText.substring(headStart + 6, preText.length());
                         }
                         out.write(preText.getBytes());
                     } else {

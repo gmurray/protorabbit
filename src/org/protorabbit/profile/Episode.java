@@ -15,6 +15,15 @@ public class Episode {
     private String uri;
     private String userAgent;
     private long transitTime = 0;
+    public long timeshift = 0;
+
+    public long getTimeshift() {
+        return timeshift;
+    }
+
+    public void setTimeshift(long timeshift) {
+        this.timeshift = timeshift;
+    }
 
     private List<Mark> marks = new ArrayList<Mark>();
     private Map<String, Measure> measures = new HashMap<String, Measure>();

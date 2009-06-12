@@ -536,7 +536,7 @@ window.protorabbit = function() {
  function addDeferredProperties(item, prefix) {
      ctx.deferredProperties.push({ url : item, prefix : prefix});
  }
- 
+
  var oldOnload = window.onload;
 
   window.onload = function() {
@@ -591,8 +591,8 @@ window.protorabbit = function() {
               });
           }
       }
-      if (typeof window.oldOnload == 'function') {
-          window.oldOnload.apply({},[]);
+      if ( oldOnload) {
+          oldOnload();
       }
   };
  
