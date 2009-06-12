@@ -120,10 +120,21 @@ public class IncludeResourcesCommand extends BaseCommand {
                 String resourceId = crm.processScripts(combineURIs, ctx, hasDeferredScripts, buffer);
 
                 if (!hasDeferredScripts && resourceId != null) {
+                    if (ctx.getConfig().profile()) {
+                         String measure =  "<script>" +
+                             "window.postMessage(\"EPISODES:mark:" + resourceId + "\", \"*\");" +
+                         "</script>\n";
+                         buffer.write(measure.getBytes());
+                    }
                     String uri = "<script src=\"" + 
                     cfg.getResourceService() + "?resourceid=" + resourceId +  ".js&tid=" + t.getId() + "\"></script>";
                     buffer.write(uri.getBytes());
-
+                    if (ctx.getConfig().profile()) {
+                        String measure =  "<script>" +
+                            "window.postMessage(\"EPISODES:measure:" + resourceId + "\", \"*\");" +
+                        "</script>\n";
+                        buffer.write(measure.getBytes());
+                    }
                } else if (resourceId != null){
                    buffer.write(("<script>protorabbit.addDeferredScript('" + cfg.getResourceService() +
                               "?resourceid=" + resourceId + ".js&tid=" + t.getId() + "');</script>").getBytes());
@@ -187,7 +198,7 @@ public class IncludeResourcesCommand extends BaseCommand {
                              "window.postMessage(\"EPISODES:mark:" + resourceId + "\", \"*\");" +
                          "</script>\n";
                          buffer.write(measure.getBytes());
-                    }
+                     }
 
                     String uri = "<link rel=\"stylesheet\" type=\"text/css\" href=\"" +
                     cfg.getResourceService() + "?resourceid=" + resourceId + 
@@ -225,12 +236,11 @@ public class IncludeResourcesCommand extends BaseCommand {
 
                 String puri = "<script src=\"" + 
                 ctx.getConfig().getResourceService() + "?resourceid=episode-poster.js\"></script>";
-                String episodeEnd = puri ;//+ "<script>var serverTimestamp = " + ((Episode)ctx.getAttribute(Config.EPISODE)).getTimestamp() + ";";
+                String episodeEnd = puri;
                 // skip the default processing if the property is not set
                 if (ctx.getAttribute(Config.DEFAULT_EPISODE_PROCESS) == null) {
-                     episodeEnd += "window.episodesDefaultLoad = false;";
+                     episodeEnd += "<script>window.episodesDefaultLoad = false;</script>";
                 }
-                episodeEnd += ";</script>";
                 buffer.write(episodeEnd.getBytes());
             }
 

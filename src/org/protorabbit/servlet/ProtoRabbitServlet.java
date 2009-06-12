@@ -91,9 +91,9 @@ public class ProtoRabbitServlet extends HttpServlet {
     // default to one hour
     private long cleanupTimeout = 3600000;
     private long lastCleanup = -1;
-    private boolean profile = true;
+    private boolean profile = false;
 
-    private String version = "0.7.3-dev";
+    private String version = "0.7.3-dev-c";
 
     // these file types will be provided with the default expires time if run
     // through the servlet
