@@ -260,17 +260,22 @@ public class ProtoRabbitServlet extends HttpServlet {
         }
         ResourceManager crm = jcfg.getCombinedResourceManager();
         ICacheable cr = crm.getResource(resourceId);
-        
-        if (canGzip) {
-            resp.setHeader("Vary", "Accept-Encoding");
 
+      //  if (canGzip) {
+       //     resp.setHeader("Vary", "Accept-Encoding");
+       //     resp.setHeader("Content-Encoding", "gzip");
+       // }
+        boolean shouldGzip = false;
+        ITemplate t = null;
+        if (templateId != null) {
+             t = jcfg.getTemplate(templateId);
         }
-
         // re-constitute the resource. This case will happen across server restarts
         // where a client may have a resource reference with a long cache time
-        if (cr == null && templateId != null && resourceId != null) {
+        if (cr == null && t != null && resourceId != null) {
             getLogger().fine("Re-constituting " + id + " from  template " + templateId);
-            ITemplate t = jcfg.getTemplate(templateId);
+            IProperty property = null;
+
             if ("styles".equals(id)) {
                 List<ResourceURI> styles = t.getAllStyles(wc);
                 crm.processStyles(styles, wc, out);
@@ -293,12 +298,36 @@ public class ProtoRabbitServlet extends HttpServlet {
                 crm.putResource(resourceId, cr);
                 // assume this is a request for a deferred resource that hasn't been created
             } else {
-                IProperty property = t.getPropertyById(id, wc);
-                StringBuffer buff = null;
+                property = t.getPropertyById(id, wc);
                 if (property == null) {
                     getLogger().severe("Unable to find property with id " + id + " in template " + t.getId());
                     return;
                 }
+            }
+            // now before we do the work set the cache header
+            if ( canGzip ) {
+                if ("scripts".equals(id) &&
+                     t.gzipScripts() != null && t.gzipScripts() == true) {
+                    shouldGzip = true;
+                    resp.setHeader("Content-Type", "text/javascript");
+                } else if ("styles".equals(id) && 
+                        t.gzipStyles() != null && t.gzipStyles() == true) {
+                    shouldGzip = true;
+                    resp.setHeader("Content-Type", "text/css");
+                } else if (property != null && t.gzipTemplate() != null && t.gzipTemplate() == true) {
+                    shouldGzip = true;
+                    resp.setHeader("Content-Type", "text/html");
+                }
+            }
+            // gzip needs to be set before we do anything else given a call to the RequestDispatcher will
+            // stop all further headers
+            if (shouldGzip) {
+                resp.setHeader("Content-Encoding", "gzip");
+                resp.setHeader("Vary", "Accept-Encoding");
+            }
+            if (property != null ) {
+                StringBuffer buff = null;
+
                 IncludeFile inc = jcfg.getIncludeFileContent(templateId, property.getKey(),wc);
                 if (inc != null) {
                     buff = inc.getContent();
@@ -312,6 +341,27 @@ public class ProtoRabbitServlet extends HttpServlet {
                     cr.setContent( buff );
                     crm.putResource(templateId + "_" + resourceId , cr);
                 }
+            } else if ("styles".equals(id)) {
+                List<ResourceURI> styles = t.getAllStyles(wc);
+                crm.processStyles(styles, wc, out);
+                cr = crm.getResource(resourceId);
+            } else if ("scripts".equals(id)){
+                List<ResourceURI> scripts = t.getAllScripts(wc);
+                crm.processStyles(scripts, wc, out);
+                cr = crm.getResource(resourceId);
+            } else if ("messages".equals(id)) {
+                if (json == null) {
+                    SerializationFactory factory = new SerializationFactory();
+                    json = factory.getInstance();
+                }
+                List<IProperty> deferredProperties = new ArrayList<IProperty>();
+                t.getDeferProperties(deferredProperties, wc);
+                JSONObject jo = (JSONObject)json.serialize(deferredProperties);
+                String content = jo.toString();
+                cr = new CacheableResource("application/json", jcfg.getResourceTimeout(), resourceId);
+                cr.setContent( new StringBuffer(content) );
+                crm.putResource(resourceId, cr);
+                // assume this is a request for a deferred resource that hasn't been created
             }
         } else if ("protorabbit".equals(id)) {
             cr =  jcfg.getCombinedResourceManager().getResource("protorabbit");
@@ -347,11 +397,9 @@ public class ProtoRabbitServlet extends HttpServlet {
 
         if (cr != null) {
             CacheContext cc = cr.getCacheContext();
-            if (cc.isExpired() || cr.getContent() == null) {
-                if (jcfg.getGzip() && canGzip && cr.gzipResources()) {
-                    resp.setHeader("Content-Encoding", "gzip");
-                    cr.refresh(wc);
-                }
+
+            if (cc.isExpired() || cr.getContent() == null || cr.getStatus() == ICacheable.INITIALIZED) {
+                cr.refresh(wc);
             }
             // wait for the resource to load
             int tries = 0;
@@ -379,25 +427,27 @@ public class ProtoRabbitServlet extends HttpServlet {
 
                 resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
             }
-            if (etag != null) {
-                resp.setHeader("ETag", etag);
+            long timeout = 0;
+            if (t != null && t.getTimeout() != null) {
+                timeout = t.getTimeout();
             }
-            resp.setHeader("Expires", cc.getExpires());
-            resp.setHeader("Cache-Control", "public,max-age=" + cc.getMaxAge());
-            resp.setHeader("Content-Type", cr.getContentType());
-            System.out.println("returing " + cr.getContentHash() + " type=" + cr.getContentType() + " rsourceId=" + resourceId);
-            if (jcfg.getGzip() && canGzip && cr.gzipResources()) {
-                resp.setHeader("Content-Encoding", "gzip");
+            if (etag != null && t != null && timeout > 0) {
+                resp.setHeader("ETag", etag);
+                resp.setHeader("Expires", cc.getExpires());
+                resp.setHeader("Cache-Control", "public,max-age=" + cc.getMaxAge());
+            }
+
+            if (shouldGzip) {
+
                 byte[] bytes = cr.getGZippedContent();
-                cr.incrementAccessCount();
+                cr.incrementGzipAccessCount();
                 if (bytes != null) {
                     ByteArrayInputStream bis = new ByteArrayInputStream(
                             bytes);
                     IOUtil.writeBinaryResource(bis, out);
                 }
             } else {
-                resp.setHeader("Content-Type", cr.getContentType());
-       //        System.out.println("returing " + cr.getContentHash() + " type=" + cr.getContentType());
+                cr.incrementAccessCount();
                 out.write(cr.getContent().toString().getBytes());
             }
 

@@ -31,7 +31,7 @@ public class AsyncWorker implements IWorker, Runnable{
         hc = ctx.getConfig().getHttpClient(resource);
     }
 
-    public void run(ICallback c) {
+    public void run(ICallback c, IContext ctx) {
         this.callback = c;
 
         Thread t=new Thread (this);

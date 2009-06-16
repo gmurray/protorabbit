@@ -177,7 +177,7 @@ public class Template implements ITemplate {
     public IProperty getPropertyById(String id, IContext ctx) {
         for (String key : properties.keySet()) {
             IProperty property = properties.get(key);
-            if (id.equals(key)) {
+            if (id.equals(key) || id.equals(property.getId())) {
                 return property;
             }
         }

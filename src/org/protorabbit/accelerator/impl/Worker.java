@@ -19,29 +19,26 @@ import org.protorabbit.model.IContext;
 
 public class Worker implements IWorker{
 
-    private IContext ctx = null;
     private String baseDir;
     private String resource;
     private ICallback callback = null;
 
     public Worker(String baseDir, 
-                      String resource,
-                      IContext ctx) {
-        this.ctx = ctx;
+                      String resource) {
+
         this.baseDir = baseDir;
         this.resource = resource;
     }
 
-    public void run(ICallback c) {
+    public void run(ICallback c, IContext ctx) {
         this.callback = c;
-        this.run();
+        this.run(ctx);
     }
 
-    public void run() {
+    public void run(IContext ctx) {
         try {
 
             StringBuffer content = ctx.getResource(baseDir,resource);
-
             if (callback != null) {
                 callback.setContent(content);
                 callback.execute();

@@ -11,6 +11,8 @@
 
 package org.protorabbit.accelerator;
 
+import org.protorabbit.model.IContext;
+
 public interface IWorker {
-    public void run(ICallback c);
+    public void run(ICallback c, IContext ctx);
 }

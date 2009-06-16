@@ -31,7 +31,7 @@ public class CacheableResource implements ICacheable {
 
     protected String hash;
     protected String contentHash;
-    private int status = -1;
+    protected int status = -1;
 
     private long lastAccessed = -1;
     private Long timeout = null;
@@ -75,9 +75,6 @@ public class CacheableResource implements ICacheable {
         freeAgents.put(test, ic);
     }
 
-    /* (non-Javadoc)
-     * @see org.protorabbit.accelerator.ICacheable#gzipResources()
-     */
     public boolean gzipResources() {
         return gzip;
     }
@@ -86,9 +83,7 @@ public class CacheableResource implements ICacheable {
         this.contentType = contentType;
     }
 
-    /* (non-Javadoc)
-     * @see org.protorabbit.accelerator.ICacheable#setGzipResources(boolean)
-     */
+
     public void setGzipResources(boolean gzip) {
         this.gzip = gzip;
     }

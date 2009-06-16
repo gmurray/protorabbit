@@ -19,10 +19,6 @@ import org.protorabbit.model.IContext;
 
 public class DeferredResource extends CacheableResource {
 
-    public static final int LOADING = 100;
-    public static final int LOADED = 200;
-
-    private int status;
     private IWorker worker;
     private ICallback callback;
 
@@ -36,16 +32,16 @@ public class DeferredResource extends CacheableResource {
             // start immediately
             this.refresh(ctx);
         } else {
-            worker = new Worker(baseDir,resource,ctx);
+            worker = new Worker(baseDir,resource);
         }
     }
 
     public void refresh(IContext ctx) {
 
-        if (status != DeferredResource.LOADING &&
-            status != DeferredResource.LOADED) {
-            status = DeferredResource.LOADING;
-            worker.run(callback);
+        if (getStatus() != DeferredResource.LOADING ) {
+            setStatus(LOADING);
+            callback.setStatus(LOADING);
+            worker.run(callback, ctx);
         }
     }
 

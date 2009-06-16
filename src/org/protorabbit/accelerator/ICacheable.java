@@ -17,6 +17,10 @@ import org.protorabbit.model.IContext;
 
 public interface ICacheable {
 
+    public static final int LOADING = 100;
+    public static final int LOADED = 200;
+    public static final int INITIALIZED = 99;
+
     public boolean gzipResources();
 
     public Long getTimeout();
