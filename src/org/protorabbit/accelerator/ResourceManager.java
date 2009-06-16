@@ -200,6 +200,7 @@ public class ResourceManager {
 
    @SuppressWarnings("unchecked")
    public CacheableResource getScripts(List<ResourceURI>scriptResources, IContext ctx, OutputStream out) throws IOException {
+
        CacheableResource scripts = new CacheableResource("text/javascript", maxTimeout, getHash(scriptResources));
 
        List<String> deferredScripts = (List<String>)ctx.getAttribute(IncludeCommand.DEFERRED_SCRIPTS);
@@ -266,6 +267,7 @@ public class ResourceManager {
    public CacheableResource getStyles(List<ResourceURI>styleResources, IContext ctx, OutputStream out) throws IOException {
 
        CacheableResource styles = new CacheableResource("text/css", maxTimeout, getHash(styleResources));
+
        List<String> deferredScripts = (List<String>)ctx.getAttribute(IncludeCommand.DEFERRED_SCRIPTS);
        Iterator<ResourceURI> it = styleResources.iterator();
        while (it.hasNext()) {
@@ -344,65 +346,49 @@ public class ResourceManager {
                                IContext ctx,
                                OutputStream out) throws java.io.IOException {
 
-       ITemplate t = ctx.getConfig().getTemplate(ctx.getTemplateId());
-       ICacheable csr;
-       String resourceId = "styles";
-       // check if any of the combined resources are expired if dev mode
-       if (ctx.getConfig().getDevMode()) {
-           boolean requiresRefresh = false;
-           for (ResourceURI item : styleResources) {
-               if (item.isUpdated(ctx)) {
-                   requiresRefresh = true;
-                   break;
-               }
-           }
-           // remove the hash
-           if (requiresRefresh && resourceId != null) {
-               combinedResources.remove(t.getId() + "_" +resourceId);
-           }
-       }
-       if (combinedResources.get(t.getId() + "_" +resourceId) != null) {
-           csr = combinedResources.get(t.getId() + "_" +resourceId);
+       return processResources(styleResources,
+                               ctx,
+                               false,
+                               "styles",
+                               out);
+   }
 
-           if (csr.getCacheContext().isExpired()) {
-               csr.reset();
-               csr = getStyles(styleResources,ctx, out);
-           }
-       } else {
-           csr = getStyles(styleResources,ctx, out);
+   public String processResources(List<ResourceURI>uriResources,
+                                IContext ctx, boolean defer, String type, OutputStream out) throws java.io.IOException {
+
+       if (uriResources.size() == 0 ) {
+           return null;
        }
+       ITemplate t = ctx.getConfig().getTemplate(ctx.getTemplateId());
+       ICacheable csr = null;
+       if (t == null) {
+           return null;
+       }
+       String resourceId = null;
+       String contentType = null;
        boolean gzip = false;
 
-       if (t != null) {
+       if ("scripts".equals(type)) {
+           resourceId = "scripts";
+           contentType = "text/javascript";
+           if (t.gzipScripts() == null) {
+               gzip = ctx.getConfig().getGzip();
+           } else {
+               gzip = t.gzipScripts();
+           }
+       } else if ("styles".equals(type)) {
+           resourceId = "styles";
+           contentType = "text/css";
            if (t.gzipStyles() != null) {
                gzip = t.gzipStyles();
            } else {
                gzip = ctx.getConfig().getGzip();
            }
-           csr.setGzipResources(gzip);
-
-           combinedResources.put(t.getId() + "_" + resourceId, csr);
-          return resourceId;
-       } else {
-           return null;
        }
-
-   }
-
-   public String processScripts(List<ResourceURI>scriptResources,
-                                IContext ctx, boolean defer, OutputStream out) throws java.io.IOException {
-
-       if (scriptResources.size() == 0 ) {
-           return null;
-       }
-       ITemplate t = ctx.getConfig().getTemplate(ctx.getTemplateId());
-       ICacheable csr;
-      // String hash = //getHash(scriptResources);
-       String resourceId = "scripts";
        // check if any of the combined resources are expired if dev mode
        if (ctx.getConfig().getDevMode()) {
            boolean requiresRefresh = false;
-           for (ResourceURI item : scriptResources) {
+           for (ResourceURI item : uriResources) {
                if (item.isUpdated(ctx)) {
                    requiresRefresh = true;
                    break;
@@ -413,34 +399,66 @@ public class ResourceManager {
                combinedResources.remove(t.getId() + "_" + resourceId);
            }
        }
+       CacheableResource container = null;
+       ICacheable targetResource = combinedResources.get(t.getId() + "_" +resourceId);
+       String test = null;
+       if (ctx.getUATests() != null && ctx.getUATests().size() == 1  ) {
+           test = ctx.getUATests().get(0);
+       }
+       if (targetResource != null && 
+           (targetResource.getResourceForUserAgent(test) != null) ) {
+           // we have a resource matching the test return it
+           if (test != null) {
 
-       if (combinedResources.get(t.getId() + "_" +resourceId) != null) {
+               csr = targetResource.getResourceForUserAgent(test);
 
-           csr = combinedResources.get(t.getId() + "_" + resourceId);
-
+           }  else {
+               csr = combinedResources.get(t.getId() + "_" + resourceId);
+           }
            if (csr.getCacheContext().isExpired()) {
                csr.reset();
-               csr = getScripts(scriptResources,ctx, out);
+               if ("scripts".equals(type)) {
+                   csr = getScripts(uriResources,ctx, out);
+               } else if ("styles".equals(type)) {
+                   csr = getStyles(uriResources,ctx, out);
+               }
+               if (test != null) {
+                   container = new CacheableResource(contentType, maxTimeout, null);
+                   container.addTestableResource(test, csr);
+               }
            }
        } else {
-           csr = getScripts(scriptResources,ctx, out);
+           if ("scripts".equals(type)) {
+               csr = getScripts(uriResources,ctx, out);
+           } else if ("styles".equals(type)) {
+               csr = getStyles(uriResources,ctx, out);
+           }
+           if (test != null) {
+               container = new CacheableResource(contentType, maxTimeout, null);
+               container.addTestableResource(test, csr);
+           }
        }
-
 
        if (t != null) {
 
-           boolean gzip = false;
-
-           if (t.gzipScripts() == null) {
-               gzip = ctx.getConfig().getGzip();
-           } else {
-               gzip = t.gzipScripts();
-           }
            csr.setGzipResources(gzip);
-           combinedResources.put(t.getId() + "_" +resourceId, csr);
+           if (container != null) {
+               combinedResources.put(t.getId() + "_" +resourceId, container);
+           } else {
+               combinedResources.put(t.getId() + "_" +resourceId, csr); 
+           }
            return resourceId;
        } else {
            return null;
        }
+   }
+
+   public String processScripts(List<ResourceURI>scriptResources,
+           IContext ctx, boolean defer, OutputStream out) throws java.io.IOException {
+       return processResources(scriptResources,
+               ctx,
+               defer,
+               "scripts",
+               out);
    }
 }

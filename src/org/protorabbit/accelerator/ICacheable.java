@@ -45,6 +45,8 @@ public interface ICacheable {
 
     public String getContentType();
 
+    public void setContentType(String contentType);
+
     public StringBuffer getContent();
 
     public void setContent(StringBuffer content);
@@ -66,4 +68,8 @@ public interface ICacheable {
     public void setLastAccessed(long lastAccessed);
 
     public long getLastAccessed();
+
+    public boolean hasUATests();
+
+    public ICacheable getResourceForUserAgent(String test);
 }

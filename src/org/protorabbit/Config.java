@@ -234,6 +234,8 @@ public class Config {
                }
                if (prop.getUATest() != null) {
                    if (ctx.uaTest(prop.getUATest()) == false) {
+                       // track the test
+                       ctx.addUATest(prop.getUATest());
                        return null;
                    }
                }

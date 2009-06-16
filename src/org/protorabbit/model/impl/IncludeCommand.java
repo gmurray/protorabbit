@@ -89,6 +89,8 @@ public class IncludeCommand extends BaseCommand {
             }
             if (property.getUATest() != null) {
                 if (ctx.uaTest(property.getUATest()) == false) {
+                    // track the test
+                    ctx.addUATest(property.getUATest());
                     return;
                 }
             }

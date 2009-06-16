@@ -4,7 +4,7 @@
      {
       "id" : "blueprints-css",
       "template" : "templates/bp-2-column-base.html",
-      "combineResources" : false,
+      "combineResources" : true,
       "styles" : {
         "libs" : [
            { "url" : "lib/reset.css"},

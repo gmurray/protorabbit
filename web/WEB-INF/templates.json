@@ -2,7 +2,7 @@
   "templates" : [
 
     {
-     "combineResources" : false,
+     "combineResources" : true,
      "timeout" : 150000,
      "gzip" : false,
      "id" : "welcome",

@@ -1,0 +1,250 @@
+<html>
+ <head>
+  <title>Protorabbit Episodes</title>
+  
+<style>
+
+.pmenu {
+  padding:3px;
+  height:40px;
+  font-size:2em;
+  background:#333;
+  color:#fff
+}
+
+.pmenu a {
+  color : #fff;
+  font-size:0.4em;
+}
+
+.pmenu a:visited {
+  color : #fff;
+}
+
+.blockTable {
+  width : 500px;
+  background : #eee;
+  border : 1px solid #333;
+  font-size : .8em;
+}
+
+.blockTable td {
+  background : #fff;
+}
+</style>
+
+<script>
+
+window.tablebuilder = function() {
+
+    var _header;
+    var _rows = [];
+
+    this.setHeader = function(_headers) {
+        _header = "<tr><th>" + _headers.join("</th><th>") + "</tr>";
+    };
+
+    this.addRow = function(_cells) {
+        _rows.push("<tr><td>" + _cells.join("</td><td>") + "</td></tr>");
+    };
+
+    this.toString = function() {
+        return  "<table>" + _header + 
+          "<tbody>" + _rows.join("") + "</tbody>" +
+          "</table>";
+    };
+};
+
+function getXHR () {
+    if (window.XMLHttpRequest) {
+        return new window.XMLHttpRequest();
+    } else if (window.ActiveXObject) {
+        return new window.ActiveXObject("Microsoft.XMLHTTP");
+    } else {
+        return null;
+    }
+}
+
+function getStartEpisode(episode, id) {
+
+    for (var i=0; i < episode.starts.length; i+=1) {
+        if (episode.starts[i].id == id) {
+            return episode.starts[i].startTime;
+        }
+    }
+    return 0;
+}
+
+function drawEpisodicTimes(episode, marks, measures) {
+
+    // Put the episodes in order by start time and duration.
+    var tFirst, tLast;
+    var aEpisodes = new Array(); // in order
+    for ( var s=0; s < marks.length; s+=1 ) {
+        var start = marks[s];
+        var episodeName = start.id;
+        var measure =  measures[episodeName];
+        if (!measure) {
+            if (window.console) {
+               console.log("Could not find measure for " + episodeName);
+            }
+            continue;
+        }
+        var episodeStart =  start.startTime;
+        var episodeEnd = episodeStart + measures[episodeName].duration;
+        tFirst = ( "undefined" === typeof(tFirst) || tFirst > episodeStart ? episodeStart : tFirst );
+        tLast = ( "undefined" === typeof(tLast) || tLast < episodeEnd ? episodeEnd : tLast );
+
+        var index = 0;
+        for ( var i = 0; i < aEpisodes.length; i++ ) {
+            var curName = aEpisodes[i];
+            if ( episodeStart < marks[curName] ||
+                 ( episodeStart == episode.startsMap[curName] && episodeEnd > episode.startsMap[curName]+measures[curName].duration ) ) {
+                break;
+            }
+            index++;
+        }
+        aEpisodes.splice(index, 0, episodeName);
+    }
+
+    var div = document.getElementById("results");
+    var nPixels = (div.clientWidth || div.offsetWidth);
+    var PxlPerMs = nPixels / (tLast - tFirst);
+    var sHtml = "";
+
+    for ( var i = 0; i < aEpisodes.length; i++ ) {
+        var episodeName = aEpisodes[i];
+        var leftPx = parseInt(PxlPerMs * (episode.startsMap[episodeName] - tFirst));
+        var widthPx = parseInt(PxlPerMs * measures[episodeName].duration);
+        sHtml += '<div style="background: #EEE; border: 1px solid; padding-bottom: 2px; font-size: 10pt; position: absolute; left: ' + leftPx + 
+            'px; top: ' + ((i*30)) + 
+            'px; width: ' + widthPx +
+            'px; height: 16px;"><nobr>&nbsp;' + episodeName + 
+            //' (' + starts[episodeName] + ', ' + measures[episodeName] + ')' +
+            ' - ' + measures[episodeName].duration + 'ms' +
+            '</nobr></div>\n';
+    }
+    div.innerHTML = sHtml;
+}
+function ajax(args) {
+    var _req = getXHR();
+    _req.onreadystatechange = function() { 
+        if (_req.readyState == 4) {
+            if ((_req.status == 200 || _req.status === 0) &&
+                    args.callback) {
+              args.callback(_req);
+            } else if (_req.status != 200) {
+                alert("Error making request. Please try again later");
+            }
+        }
+    };
+    _req.open("GET", args.url, true);
+    _req.send(null);
+}
+
+function loadData() {
+    var req = new ajax({ 
+            url : "../prt?command=episodes",
+            callback : function(req) {
+                var model = eval("(" + req.responseText + ")");
+                render(model);
+            }
+        }); 
+}
+
+function startProfile() {
+    var req = new ajax({ 
+            url : "../prt?command=startProfiling",
+            callback : function(req) {
+                alert("Server responded :" + req.responseText);
+            }
+        }); 
+}
+
+function stopProfile() {
+    var req = new ajax({ 
+            url : "../prt?command=stopProfiling",
+            callback : function(req) {
+                alert("Server responded :" + req.responseText);
+            }
+        }); 
+}
+
+function resetProfile() {
+    var req = new ajax({ 
+            url : "../prt?command=resetProfiles",
+            callback : function(req) {
+                alert("Server responded :" + req.responseText);
+            }
+        }); 
+}
+
+
+function formatDate(timestamp){
+    var d = new Date(timestamp);
+    var rdate= d.getMonth() +1 + "/" + d.getDate() + "/" + d.getFullYear();
+    rdate += " " + d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds();
+    return rdate;
+}
+
+function render(model) {
+    var stableElement = document.getElementById("items");
+    document.getElementById("results").innerHTML = "";
+    window.model = model;
+
+    if (model && model.length > 0) {
+        stableElement.className = "blockTable";
+        var stable = new tablebuilder();
+        stable.setHeader([ "URI", "client id", "User Agent", "timestamp"]);
+        for (var i=0; i < model.length; i+=1) {
+            var episode = model[i];
+            stable.addRow([ "<a href='#' onclick='showEpisode(" + i + ")'>" + episode.uri + "</a>", episode.clientId, episode.userAgent, formatDate(episode.timestamp) ]);
+        }
+        stableElement.innerHTML = stable.toString();
+
+    } else {
+      stableElement.innerHTML = "<p>N/A</p>";
+    }
+}
+
+function showEpisode(id) {
+
+    var episode = window.model[id];
+    if (!episode.startsMap) {
+        episode.startsMap = {};
+        for (var j=0; j < episode.marks.length; j+=1) {
+            episode.startsMap[episode.marks[j].id] = episode.marks[j].startTime;
+        }
+    }
+    drawEpisodicTimes(episode, episode.marks, episode.measures);
+
+}
+window.onload = function() {
+    loadData();
+};
+
+</script>
+
+ </head>
+ <body>
+  <div class="pmenu">
+   <div style="float:left">Protorabbit Episodes</div>
+    <div style="float:right">
+    <a href="episodes.html">Episodes</a>
+    <a href="components.html">Components</a>
+    <a href="resources.html">Resources</a>
+    <a href="../"> Home</a>
+   </div>
+  </div>
+  <div style="clear:both;height:5px"></div>
+     <div>
+      <a href='javascript:void(0)' onclick='loadData()'>Refresh</a> |
+      <a href='javascript:void(0)' onclick='startProfile()'>Start Profiling</a> |
+      <a href='javascript:void(0)' onclick='stopProfile()'>Stop Profiling</a> |
+      <a href='javascript:void(0)' onclick='resetProfile()'>Reset Profiles</a>
+     </div>
+  <div style="clear:both;height:5px"></div>
+  <div id="items" style="width 220px;"></div>
+  <div id="results" style="top:85px;position : absolute; margin-left : 505px; width:600px;height:300px"></div>
+ </body>
+</html>

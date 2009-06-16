@@ -12,11 +12,16 @@
 package org.protorabbit.model;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import org.protorabbit.Config;
 
 public interface IContext {
+
+    public List<String> getUATests();
+
+    public void addUATest(String test);
 
     public Map<String, ?> getAttributes();
 

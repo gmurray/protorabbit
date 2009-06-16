@@ -1,7 +1,11 @@
 package org.protorabbit.accelerator.impl;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import org.protorabbit.accelerator.CacheContext;
@@ -36,6 +40,9 @@ public class CacheableResource implements ICacheable {
     private long accessCount = 0;
     private long gzipAccessCount = 0;
 
+    private Map<String, ICacheable> freeAgents;
+    private List<String> tests;
+
     static Logger getLogger() {
         if (logger == null) {
             logger = Logger.getLogger("org.protrabbit");
@@ -57,11 +64,26 @@ public class CacheableResource implements ICacheable {
         this.setStatus(200);
     }
 
+    public void addTestableResource(String test, ICacheable ic) {
+        if (tests == null) {
+            tests = new ArrayList<String>();
+        }
+        if (freeAgents == null) {
+            freeAgents = new HashMap<String, ICacheable>();
+        }
+        tests.add(test);
+        freeAgents.put(test, ic);
+    }
+
     /* (non-Javadoc)
      * @see org.protorabbit.accelerator.ICacheable#gzipResources()
      */
     public boolean gzipResources() {
         return gzip;
+    }
+    
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
     }
 
     /* (non-Javadoc)
@@ -71,9 +93,7 @@ public class CacheableResource implements ICacheable {
         this.gzip = gzip;
     }
 
-    /* (non-Javadoc)
-     * @see org.protorabbit.accelerator.ICacheable#reset()
-     */
+
     public void reset() {
         setLoaded(false);
         status = -1;
@@ -83,16 +103,11 @@ public class CacheableResource implements ICacheable {
         cc.reset();
     }
 
-    /* (non-Javadoc)
-     * @see org.protorabbit.accelerator.ICacheable#getCacheContext()
-     */
+
     public CacheContext getCacheContext() {
         return cc;
     }
 
-    /* (non-Javadoc)
-     * @see org.protorabbit.accelerator.ICacheable#appendContent(java.lang.String)
-     */
     public void appendContent(String ncontent) {
         setLoaded(false);
         content.append(ncontent);
@@ -101,9 +116,7 @@ public class CacheableResource implements ICacheable {
         gzippedContent = null;
     } 
 
-    /* (non-Javadoc)
-     * @see org.protorabbit.accelerator.ICacheable#getContentLegth()
-     */
+
     public long getContentLength() {
         if (content == null) return 0;
         else return content.length();
@@ -112,11 +125,10 @@ public class CacheableResource implements ICacheable {
     public String getContentType() {
         return contentType;
     }
-    
-    public void refresh(IContext ctx) {
-        // reload
-    }
 
+    public void refresh(IContext ctx) {
+        // TODO : rework
+    }
 
     @Serialize("skip")
     public StringBuffer getContent() {
@@ -124,7 +136,6 @@ public class CacheableResource implements ICacheable {
         setLastAccessed(now.getTime());
         return content;
     }
-
 
     public void setContent(StringBuffer content) {
         setLoaded(false);
@@ -207,6 +218,31 @@ public class CacheableResource implements ICacheable {
 
     public void incrementGzipAccessCount() {
         gzipAccessCount +=1;
-        
+    }
+
+    @Serialize("skip")
+    public ICacheable getResourceForUserAgent(String test) {
+        if (test == null) {
+            return null;
+        }
+        if (tests == null) {
+            return this;
+        }
+        for (String target : tests) {
+            if (target.equals(test)) {
+                return freeAgents.get(target);
+            }
+        }
+        return this;
+    }
+
+    public boolean hasUATests() {
+        if (tests == null) {
+            return false;
+        } else if (tests.size() > 0) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }

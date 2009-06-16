@@ -35,7 +35,7 @@ public class Property implements IProperty {
         this.baseURI = baseURI;
         this.originalTemplate = originalTemplate;
     }
-    
+
     public void setId(String id) {
         this.id = id;
     }

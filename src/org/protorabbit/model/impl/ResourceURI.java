@@ -156,7 +156,7 @@ public class ResourceURI implements ITestable {
     }
 
     public String getUATest() {
-        return this.uaTest;
+        return uaTest;
     }
 
     public void setUATest(String test) {

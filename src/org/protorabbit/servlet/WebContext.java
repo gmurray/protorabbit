@@ -20,6 +20,8 @@ import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -41,6 +43,7 @@ public class WebContext extends BaseContext {
 
     private HttpServletResponse resp;
     private String contextRoot = "";
+    private List<String> matchedUATests;
 
     public WebContext(Config cfg) {
         this.cfg = cfg;
@@ -355,4 +358,17 @@ public class WebContext extends BaseContext {
         return resp;
     }
 
+    public List<String> getUATests() {
+        return matchedUATests;
+        
+    }
+
+    public void addUATest(String test) {
+        if (matchedUATests == null) {
+            matchedUATests = new ArrayList<String>();
+        }
+        if (!matchedUATests.contains(test)) {
+            matchedUATests.add(test);
+        }
+    }
 }

@@ -28,6 +28,7 @@ public class DeferredResource extends CacheableResource {
 
     public DeferredResource(String baseDir, String resource, IContext ctx, Long timeout) {
         super();
+        setContentType("text/html");
         cc = new CacheContext(timeout, hash);
         callback = new DeferredCallback(this);
         if (resource.startsWith("http")) {

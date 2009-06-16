@@ -93,7 +93,7 @@ public class ProtoRabbitServlet extends HttpServlet {
     private long lastCleanup = -1;
     private boolean profile = false;
 
-    private String version = "0.7.4-dev";
+    private String version = "0.7.5-dev";
 
     // these file types will be provided with the default expires time if run
     // through the servlet
@@ -260,6 +260,11 @@ public class ProtoRabbitServlet extends HttpServlet {
         }
         ResourceManager crm = jcfg.getCombinedResourceManager();
         ICacheable cr = crm.getResource(resourceId);
+        
+        if (canGzip) {
+            resp.setHeader("Vary", "Accept-Encoding");
+
+        }
 
         // re-constitute the resource. This case will happen across server restarts
         // where a client may have a resource reference with a long cache time
@@ -291,7 +296,7 @@ public class ProtoRabbitServlet extends HttpServlet {
                 IProperty property = t.getPropertyById(id, wc);
                 StringBuffer buff = null;
                 if (property == null) {
-                    getLogger().severe("Unable to find property with id " + id);
+                    getLogger().severe("Unable to find property with id " + id + " in template " + t.getId());
                     return;
                 }
                 IncludeFile inc = jcfg.getIncludeFileContent(templateId, property.getKey(),wc);
@@ -331,11 +336,11 @@ public class ProtoRabbitServlet extends HttpServlet {
                         jcfg.getCombinedResourceManager().putResource("episodes", cr);
                         cr.setContent(buff);
                     } else {
-                        getLogger().severe("Unable to find epoisdes client script");
+                        getLogger().severe("Unable to find episodes client script");
                     }
                 }
         } else if (cr == null) {
-            getLogger().severe("could not find resource " + id + " with template " + templateId);
+            getLogger().severe("Could not find resource " + id + " with template " + templateId);
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
@@ -379,7 +384,8 @@ public class ProtoRabbitServlet extends HttpServlet {
             }
             resp.setHeader("Expires", cc.getExpires());
             resp.setHeader("Cache-Control", "public,max-age=" + cc.getMaxAge());
-
+            resp.setHeader("Content-Type", cr.getContentType());
+            System.out.println("returing " + cr.getContentHash() + " type=" + cr.getContentType() + " rsourceId=" + resourceId);
             if (jcfg.getGzip() && canGzip && cr.gzipResources()) {
                 resp.setHeader("Content-Encoding", "gzip");
                 byte[] bytes = cr.getGZippedContent();
@@ -391,6 +397,7 @@ public class ProtoRabbitServlet extends HttpServlet {
                 }
             } else {
                 resp.setHeader("Content-Type", cr.getContentType());
+       //        System.out.println("returing " + cr.getContentHash() + " type=" + cr.getContentType());
                 out.write(cr.getContent().toString().getBytes());
             }
 

@@ -14,6 +14,7 @@ package org.protorabbit.model.impl;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.List;
 
 import org.protorabbit.Config;
 import org.protorabbit.util.IOUtil;
@@ -70,5 +71,15 @@ public class FileSystemContext extends BaseContext {
         // TODO Auto-generated method stub
         return false;
     }
+
+    public List<String> getUATests() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+	public void addUATest(String test) {
+		// TODO Auto-generated method stub
+		
+	}
 
 }
