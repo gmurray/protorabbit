@@ -199,9 +199,11 @@ public class ResourceManager {
    }
 
    @SuppressWarnings("unchecked")
-   public CacheableResource getScripts(List<ResourceURI>scriptResources, IContext ctx, OutputStream out) throws IOException {
+   public void getScripts(ICacheable scripts, List<ResourceURI>scriptResources, IContext ctx, OutputStream out) throws IOException {
 
-       CacheableResource scripts = new CacheableResource("text/javascript", maxTimeout, getHash(scriptResources));
+           scripts.setTimeout(maxTimeout);
+           scripts.setHash(getHash(scriptResources));
+
 
        List<String> deferredScripts = (List<String>)ctx.getAttribute(IncludeCommand.DEFERRED_SCRIPTS);
 
@@ -260,14 +262,17 @@ public class ResourceManager {
               }
            }
        }
-       return scripts;
+
    }
 
    @SuppressWarnings("unchecked")
-   public CacheableResource getStyles(List<ResourceURI>styleResources, IContext ctx, OutputStream out) throws IOException {
-
-       CacheableResource styles = new CacheableResource("text/css", maxTimeout, getHash(styleResources));
-
+   public ICacheable getStyles(ICacheable styles, List<ResourceURI>styleResources, IContext ctx, OutputStream out) throws IOException {
+       if (styles == null) {
+           styles = new CacheableResource("text/css", maxTimeout, getHash(styleResources));
+       } else {
+           styles.setTimeout(maxTimeout);
+           styles.setHash(getHash(styleResources));
+       }
        List<String> deferredScripts = (List<String>)ctx.getAttribute(IncludeCommand.DEFERRED_SCRIPTS);
        Iterator<ResourceURI> it = styleResources.iterator();
        while (it.hasNext()) {
@@ -330,16 +335,51 @@ public class ResourceManager {
        return styles;
    }
 
-   public ICacheable getResource(String key) {
+   public ICacheable getResource(String key, IContext ctx) {
+       String ua = null;
+       ITemplate t = ctx.getConfig().getTemplate(ctx.getTemplateId());
+       boolean hasUATest = t.hasUserAgentDependencies(ctx);
+       if (hasUATest) {
+           String uaTest = ctx.getUATests().get(0);
+           if (ctx.uaTest(uaTest)) {
+               ua = uaTest;
+           }
+       }
        ICacheable csr = combinedResources.get(key);
        if (csr != null) {
-           return csr;
+           if (ua != null) {
+               ICacheable child = csr.getResourceForUserAgent(ua);
+               return child;
+           } else {
+               return csr;
+           }
        }
        return null;
    }
 
    public void putResource(String key, ICacheable csr) {
-       combinedResources.put(key, csr);
+     putResource(key, csr, null);
+   }
+
+   public void putResource(String key, ICacheable csr, String userAgent) {
+       ICacheable parent = combinedResources.get(key);
+       if (userAgent != null) {
+
+           if (parent == null) {
+               parent = new CacheableResource(csr.getContentType(), null, null);
+               combinedResources.put(key, parent);
+           }
+           if (parent != csr) {
+               parent.addUserAgentResource(userAgent, csr);
+               
+           } else {
+              getLogger().severe("Error adding template to cache: " + key + " can't add self for " + userAgent);
+           }
+       } else {
+           if (!combinedResources.containsKey(key)) {
+               combinedResources.put(key, csr);
+           }
+       }
    }
 
    public String processStyles(List<ResourceURI>styleResources,
@@ -365,12 +405,12 @@ public class ResourceManager {
            return null;
        }
        String resourceId = null;
-       String contentType = null;
+
        boolean gzip = false;
 
        if ("scripts".equals(type)) {
            resourceId = "scripts";
-           contentType = "text/javascript";
+
            if (t.gzipScripts() == null) {
                gzip = ctx.getConfig().getGzip();
            } else {
@@ -378,7 +418,7 @@ public class ResourceManager {
            }
        } else if ("styles".equals(type)) {
            resourceId = "styles";
-           contentType = "text/css";
+
            if (t.gzipStyles() != null) {
                gzip = t.gzipStyles();
            } else {
@@ -396,61 +436,56 @@ public class ResourceManager {
            }
            // remove the hash
            if (requiresRefresh && resourceId != null) {
-               combinedResources.remove(t.getId() + "_" + resourceId);
+           //    combinedResources.remove(t.getId() + "_" + resourceId);
            }
        }
-       CacheableResource container = null;
+
        ICacheable targetResource = combinedResources.get(t.getId() + "_" +resourceId);
+
        String test = null;
-       if (ctx.getUATests() != null && ctx.getUATests().size() == 1  ) {
-           test = ctx.getUATests().get(0);
+       // only set the test if this template passes
+       if (ctx.getUATests() != null && ctx.getUATests().size() == 1 ) {
+           String testt = ctx.getUATests().get(0);
+           if (ctx.uaTest(testt)) {
+               test = testt;
+           }
        }
-       if (targetResource != null && 
-           (targetResource.getResourceForUserAgent(test) != null) ) {
+
+       if ((targetResource != null  ) || (targetResource != null && 
+           (targetResource.getResourceForUserAgent(test) != null)) ) {
            // we have a resource matching the test return it
-           if (test != null) {
 
+           if (test != null) {
                csr = targetResource.getResourceForUserAgent(test);
-
            }  else {
-               csr = combinedResources.get(t.getId() + "_" + resourceId);
+               csr = targetResource;
            }
-           if (csr.getCacheContext().isExpired()) {
-               csr.reset();
-               if ("scripts".equals(type)) {
-                   csr = getScripts(uriResources,ctx, out);
-               } else if ("styles".equals(type)) {
-                   csr = getStyles(uriResources,ctx, out);
-               }
-               if (test != null) {
-                   container = new CacheableResource(contentType, maxTimeout, null);
-                   container.addTestableResource(test, csr);
-               }
-           }
-       } else {
+           if (csr != null) {
+
+                if (csr.getCacheContext().isExpired()) {
+                    csr.reset();
+                    if ("scripts".equals(type)) {
+                        getScripts(csr, uriResources, ctx, out);
+                    } else if ("styles".equals(type)) {
+                        getStyles(csr, uriResources, ctx, out);
+                    }
+                }
+            }
+       }
+       if (csr == null) {
+
            if ("scripts".equals(type)) {
-               csr = getScripts(uriResources,ctx, out);
+               csr = new CacheableResource("text/javascript", null, null);
+               getScripts(csr,uriResources,ctx, out);
            } else if ("styles".equals(type)) {
-               csr = getStyles(uriResources,ctx, out);
+               csr = new CacheableResource("text/css", null, null);
+               getStyles(csr, uriResources,ctx, out);
            }
-           if (test != null) {
-               container = new CacheableResource(contentType, maxTimeout, null);
-               container.addTestableResource(test, csr);
-           }
-       }
-
-       if (t != null) {
-
            csr.setGzipResources(gzip);
-           if (container != null) {
-               combinedResources.put(t.getId() + "_" +resourceId, container);
-           } else {
-               combinedResources.put(t.getId() + "_" +resourceId, csr); 
-           }
-           return resourceId;
-       } else {
-           return null;
+          
        }
+       putResource(t.getId() + "_" + resourceId, csr, test);
+       return resourceId;
    }
 
    public String processScripts(List<ResourceURI>scriptResources,
@@ -461,4 +496,5 @@ public class ResourceManager {
                "scripts",
                out);
    }
+
 }

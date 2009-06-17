@@ -85,7 +85,7 @@ public class ProtoRabbitServlet extends HttpServlet {
 
     // in seconds - default is 14 days
     private long maxAge = 1209600;
-    private int maxTries = 300;
+    private int maxTries = 250;
     // in milliseconds
     private long tryTimeout = 20;
     // default to one hour
@@ -93,7 +93,7 @@ public class ProtoRabbitServlet extends HttpServlet {
     private long lastCleanup = -1;
     private boolean profile = false;
 
-    private String version = "0.7.5-dev";
+    private String version = "0.7.6-dev";
 
     // these file types will be provided with the default expires time if run
     // through the servlet
@@ -258,32 +258,38 @@ public class ProtoRabbitServlet extends HttpServlet {
         if (templateId != null ) {
             resourceId = templateId + "_" + resourceId;
         }
-        ResourceManager crm = jcfg.getCombinedResourceManager();
-        ICacheable cr = crm.getResource(resourceId);
 
-      //  if (canGzip) {
-       //     resp.setHeader("Vary", "Accept-Encoding");
-       //     resp.setHeader("Content-Encoding", "gzip");
-       // }
         boolean shouldGzip = false;
         ITemplate t = null;
         if (templateId != null) {
              t = jcfg.getTemplate(templateId);
+             wc.setTemplateId(templateId);
         }
+
+        boolean requiresUAHandling = false;
+        boolean hasUATest = t.hasUserAgentDependencies(wc);
+        if (hasUATest) {
+            String uaTest = wc.getUATests().get(0);
+            requiresUAHandling = wc.uaTest(uaTest);
+        }
+        ResourceManager crm = jcfg.getCombinedResourceManager();
+        ICacheable cr = crm.getResource(resourceId, wc);
+
         // re-constitute the resource. This case will happen across server restarts
         // where a client may have a resource reference with a long cache time
-        if (cr == null && t != null && resourceId != null) {
+        if (cr == null && t != null && resourceId != null || requiresUAHandling ||
+            (cr != null && cr.getCacheContext().isExpired())) {
             getLogger().fine("Re-constituting " + id + " from  template " + templateId);
             IProperty property = null;
-
             if ("styles".equals(id)) {
+
                 List<ResourceURI> styles = t.getAllStyles(wc);
                 crm.processStyles(styles, wc, out);
-                cr = crm.getResource(resourceId);
+                cr = crm.getResource(resourceId, wc);
             } else if ("scripts".equals(id)){
                 List<ResourceURI> scripts = t.getAllScripts(wc);
                 crm.processStyles(scripts, wc, out);
-                cr = crm.getResource(resourceId);
+                cr = crm.getResource(resourceId, wc);
             } else if ("messages".equals(id)) {
                 if (json == null) {
                     SerializationFactory factory = new SerializationFactory();
@@ -344,11 +350,11 @@ public class ProtoRabbitServlet extends HttpServlet {
             } else if ("styles".equals(id)) {
                 List<ResourceURI> styles = t.getAllStyles(wc);
                 crm.processStyles(styles, wc, out);
-                cr = crm.getResource(resourceId);
+                cr = crm.getResource(resourceId, wc);
             } else if ("scripts".equals(id)){
                 List<ResourceURI> scripts = t.getAllScripts(wc);
                 crm.processStyles(scripts, wc, out);
-                cr = crm.getResource(resourceId);
+                cr = crm.getResource(resourceId, wc);
             } else if ("messages".equals(id)) {
                 if (json == null) {
                     SerializationFactory factory = new SerializationFactory();
@@ -364,7 +370,7 @@ public class ProtoRabbitServlet extends HttpServlet {
                 // assume this is a request for a deferred resource that hasn't been created
             }
         } else if ("protorabbit".equals(id)) {
-            cr =  jcfg.getCombinedResourceManager().getResource("protorabbit");
+            cr =  crm.getResource("protorabbit", wc);
             if (cr == null) {
                 StringBuffer buff = IOUtil.getClasspathResource(jcfg, Config.PROTORABBIT_CLIENT);
                 if (buff != null) {
@@ -377,7 +383,7 @@ public class ProtoRabbitServlet extends HttpServlet {
                 }
             }
         } else if ("episodes".equals(id)) {
-                cr =  jcfg.getCombinedResourceManager().getResource("episodes");
+                cr =  crm.getResource("episodes", wc);
                 if (cr == null) {
                     StringBuffer buff = IOUtil.getClasspathResource(jcfg, Config.EPISODES_CLIENT);
                     if (buff != null) {
@@ -404,6 +410,7 @@ public class ProtoRabbitServlet extends HttpServlet {
             // wait for the resource to load
             int tries = 0;
             while ((cr.getStatus() != 200) && tries < maxTries) {
+
                 try {
                     Thread.sleep(tryTimeout);
                 } catch (InterruptedException e) {

@@ -50,7 +50,8 @@ public class CacheableResource implements ICacheable {
         return logger;
     }
 
-    public CacheableResource() {}
+    public CacheableResource() {
+    }
 
     public CacheableResource(String contentType,
                             Long maxAge,
@@ -60,44 +61,44 @@ public class CacheableResource implements ICacheable {
         this.contentType =  contentType;
         this.content = new StringBuffer();
         this.contentHash = hash;
-        cc = new CacheContext(maxAge, hash);
+        Long tmax = null;
+        if (maxAge != null) {
+            tmax = new Long(maxAge.longValue());
+        }
+        cc = new CacheContext(tmax, hash);
         this.setStatus(200);
     }
 
-    public void addTestableResource(String test, ICacheable ic) {
+    public void addUserAgentResource(String ua, ICacheable ic) {
         if (tests == null) {
             tests = new ArrayList<String>();
         }
         if (freeAgents == null) {
             freeAgents = new HashMap<String, ICacheable>();
         }
-        tests.add(test);
-        freeAgents.put(test, ic);
+        tests.add(ua);
+        freeAgents.put(ua, ic);
     }
 
     public boolean gzipResources() {
         return gzip;
     }
-    
+
     public void setContentType(String contentType) {
         this.contentType = contentType;
     }
-
 
     public void setGzipResources(boolean gzip) {
         this.gzip = gzip;
     }
 
-
     public void reset() {
         setLoaded(false);
-        status = -1;
         lastAccessed = -1;
         this.content = new StringBuffer();
         this.gzippedContent = null;
         cc.reset();
     }
-
 
     public CacheContext getCacheContext() {
         return cc;
@@ -110,7 +111,6 @@ public class CacheableResource implements ICacheable {
         contentHash = null;
         gzippedContent = null;
     } 
-
 
     public long getContentLength() {
         if (content == null) return 0;
@@ -138,6 +138,11 @@ public class CacheableResource implements ICacheable {
         // force a recreation of gzipped and contentHash
         contentHash = null;
         gzippedContent = null;
+    }
+
+    public Map<String,ICacheable> getUserAgentResources() {
+
+        return freeAgents;
     }
 
     @Serialize("skip")
@@ -184,6 +189,14 @@ public class CacheableResource implements ICacheable {
     }
 
     public void setTimeout(Long timeout) {
+        if (cc == null) {
+            cc = new CacheContext(null, null);
+        }
+        Long tmax = null;
+        if (timeout != null) {
+            timeout = new Long(timeout.longValue());
+        }
+        cc.setMaxAge(tmax);
         this.timeout = timeout;
     }
 
@@ -208,27 +221,25 @@ public class CacheableResource implements ICacheable {
 
     public void incrementAccessCount() {
         accessCount +=1;
-        
     }
 
     public void incrementGzipAccessCount() {
         gzipAccessCount +=1;
     }
 
-    @Serialize("skip")
     public ICacheable getResourceForUserAgent(String test) {
         if (test == null) {
             return null;
         }
         if (tests == null) {
-            return this;
+            return null;
         }
         for (String target : tests) {
             if (target.equals(test)) {
                 return freeAgents.get(target);
             }
         }
-        return this;
+        return null;
     }
 
     public boolean hasUATests() {
@@ -239,5 +250,21 @@ public class CacheableResource implements ICacheable {
         } else {
             return false;
         }
+    }
+
+    public void setHash(String hash) {
+        if (cc == null) {
+            cc = new CacheContext(null, null);
+        }
+        this.contentHash = hash;
+        cc.setHash(hash);
+    }
+    
+    public String toString() {
+    	String c = "N/A";
+    	if (content != null && content.length() > 20) {
+    		c = content.substring(0, 20);
+    	}
+ 	   return contentType + " { status : " + status + " content: " + c + "}";
     }
 }

@@ -76,4 +76,9 @@ public interface ICacheable {
     public boolean hasUATests();
 
     public ICacheable getResourceForUserAgent(String test);
+
+    public void setHash(String hash);
+
+	public void addUserAgentResource(String userAgent, ICacheable csr);
+
 }

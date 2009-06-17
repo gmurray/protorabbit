@@ -64,7 +64,15 @@ function createResourcesBlock(t) {
         s3table.setHeader(["id", "Content Type", "expires", "created", "Max Age", "Last Accessed", "timeout", "Status", "Content Length", "Gzip Content Length", "Access Count", "Gzip Access Count"]);
         var rowCount = 0;
         for (var i in t.cachedResources) {
+
             var s = t.cachedResources[i];
+            
+            if (i == "blueprints-css_styles") {
+                if (window.console) 
+                    console.log(uneval(s));
+                }
+            }
+            
             var cc = s.cacheContext;
             var cl =  s.contentLength;
             var gcl = s.gzipContentLength;

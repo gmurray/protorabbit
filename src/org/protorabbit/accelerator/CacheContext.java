@@ -21,14 +21,12 @@ public class CacheContext {
     // time in milliseconds 
     private long created = 0;
     // maximum time in seconds
-    private long maxAge = 0;
+    private Long maxAge = null;
     private SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss  z");
     private String hash;
 
     public CacheContext(Long maxAge, String hash) {
-        if (maxAge != null) {
-            this.maxAge = maxAge;
-        }
+        this.maxAge = maxAge;
         this.hash = hash;
         reset();
     }
@@ -38,12 +36,18 @@ public class CacheContext {
      */
     public void reset() {
         created = System.currentTimeMillis();
+        if (maxAge == null) {
+            return;
+        }
         Date expiredate = new Date(created + (maxAge * 1000) );
         sdf.setTimeZone (TimeZone.getTimeZone("GMT"));
         expires = sdf.format(expiredate);
     }
 
     public boolean isExpired() {
+        if (maxAge == null) {
+            return true;
+        }
         long current = System.currentTimeMillis();
         long diff = current - created;
         // convert diff to milliseconds
@@ -51,6 +55,9 @@ public class CacheContext {
     }
 
     public long getMaxAge() {
+        if (maxAge == null) {
+            return 0;
+        }
         long current = System.currentTimeMillis();
         long diff = current  + (maxAge * 1000) - created;
         // convert diff to seconds
@@ -65,11 +72,17 @@ public class CacheContext {
         return created;
     }
 
-    public void setMaxAge(long maxAge) {
+    public void setMaxAge(Long maxAge) {
         this.maxAge = maxAge;
+        reset();
     }
 
     public String getHash() {
         return hash;
+    }
+
+    public void setHash(String hash) {
+        this.hash = hash;
+        
     }
 }

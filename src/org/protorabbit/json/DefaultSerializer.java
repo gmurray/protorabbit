@@ -153,6 +153,7 @@ public class DefaultSerializer implements JSONSerializer {
                        if (m.getName().length() > 4) {
                            key += m.getName().substring(4);
                        }
+
                        Object value =  m.invoke(pojo, args);
                        map.put(key, value);
 
