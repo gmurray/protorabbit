@@ -1,7 +1,8 @@
-window.tablebuilder = function() {
+window.tablebuilder = function(tableClass) {
 
     var _header;
     var _rows = [];
+    if (!tableClass) tableClass = "";
 
     this.setHeader = function(_headers) {
         _header = "<tr><th>" + _headers.join("</th><th>") + "</tr>";
@@ -10,9 +11,13 @@ window.tablebuilder = function() {
     this.addRow = function(_cells) {
         _rows.push("<tr><td>" + _cells.join("</td><td>") + "</td></tr>");
     };
+    
+    this.addRawRow = function(raw) {
+        _rows.push(raw);
+    };
 
     this.toString = function() {
-        return  "<table>" + _header + 
+        return  "<table class='" + tableClass + "'>" + _header + 
           "<tbody>" + _rows.join("") + "</tbody>" +
           "</table>";
     };
@@ -35,6 +40,72 @@ var propTypes = {
 
 };
 
+var globalContentLength = 0;
+
+function createCachedTable(t) {
+    var text = "";
+    var s3table = new tablebuilder("blockTable");
+    s3table.setHeader(["id", "Content Type", "expires", "created", "Max Age", "Last Accessed", "timeout", "Status", "Content Length", "Gzip Content Length", "Access Count", "Gzip Access Count"]);
+    var rowCount = 0;
+    for (var i in t) {
+
+        var s = t[i];
+        var cc = s.cacheContext;
+        var cl =  s.contentLength;
+        var gcl = s.gzipContentLength;
+        if (typeof cl == "number") {
+            globalContentLength += cl;
+        }
+        if (s.contentType) {
+            var ctotal = s.gzipContentLength || 0;
+            ctotal += s.contentLength || 0;
+            content[s.contentType] += ctotal;
+        }
+        if (typeof gcl == "number") {
+            globalContentLength += gcl;
+        }
+        if (s.accessCount || s.gzipAccessCount) {
+            var total = s.accessCount || 0;
+            total += s.gzipAccessCount;
+            accessCounts.push({ label : i, value : total});
+        }
+        var rowSpan = 1;
+        if (s.userAgentResources) {
+            rowSpan = 2;
+        }
+
+        var _cells = [   i || '',
+                          s.contentType || '',
+                          cc.expires|| '',
+                          (new Date(cc.created)),
+                          cc.maxAge || '',
+                          (new Date(s.lastAccessed)),
+                          s.timeout || '',
+                          s.status || '',
+                          cl || '',
+                          gcl || '',
+                          s.accessCount,
+                          s.gzipAccessCount
+                          ];
+        
+        var row = "<tr><td rowspan='" + rowSpan + "'>" + _cells.join("</td><td>") + "</td></tr>";
+        s3table.addRawRow(row);
+
+        if (s.userAgentResources) {
+            var text2 = createCachedTable(s.userAgentResources);
+            s3table.addRawRow("<tr><td colspan='12'>" + text2 +"</td></tr>");
+        }
+        rowCount += 1;
+    }
+    if (rowCount > 0) {
+        text = s3table.toString();
+    } else {
+        text = "N/A";
+    }
+
+    return text
+}
+
 function createResourcesBlock(t) {
 
     var te = document.createElement("div");
@@ -50,7 +121,7 @@ function createResourcesBlock(t) {
     bb.className = "cacheBodyBlock";
     te.appendChild(bb);
 
-    var globalContentLength = 0;
+    globalContentLength = 0;
 
     var cachedResources = document.createElement("div");
     cachedResources.innerHTML = "Cached Resources";
@@ -58,64 +129,12 @@ function createResourcesBlock(t) {
     bb.appendChild(cachedResources);
 
     var s3tableElement = document.createElement("div");
+    var text = "N/A";
     if (t.cachedResources) {
-        s3tableElement.className = "blockTable";
-        var s3table = new tablebuilder();
-        s3table.setHeader(["id", "Content Type", "expires", "created", "Max Age", "Last Accessed", "timeout", "Status", "Content Length", "Gzip Content Length", "Access Count", "Gzip Access Count"]);
-        var rowCount = 0;
-        for (var i in t.cachedResources) {
-
-            var s = t.cachedResources[i];
-            
-            if (i == "blueprints-css_styles") {
-                if (window.console) 
-                    console.log(uneval(s));
-                }
-            }
-            
-            var cc = s.cacheContext;
-            var cl =  s.contentLength;
-            var gcl = s.gzipContentLength;
-            if (typeof cl == "number") {
-                globalContentLength += cl;
-            }
-            if (s.contentType) {
-                var ctotal = s.gzipContentLength || 0;
-                ctotal += s.contentLength || 0;
-                content[s.contentType] += ctotal;
-            }
-            if (typeof gcl == "number") {
-                globalContentLength += gcl;
-            }
-            if (s.accessCount || s.gzipAccessCount) {
-                var total = s.accessCount || 0;
-                total += s.gzipAccessCount;
-                accessCounts.push({ label : i, value : total});
-            }
-            s3table.addRow([   i || '',
-                              s.contentType || '',
-                              cc.expires|| '',
-                              (new Date(cc.created)),
-                              cc.maxAge || '',
-                              (new Date(s.lastAccessed)),
-                              s.timeout || '',
-                              s.status || '',
-                              cl || '',
-                              gcl || '',
-                              s.accessCount,
-                              s.gzipAccessCount
-                              ]);
-            rowCount += 1;
-        }
-        if (rowCount > 0) {
-            s3tableElement.innerHTML = s3table.toString();
-        } else {
-            s3tableElement.innerHTML = "N/A";
-        }
-
-    } else {
-      s3tableElement.innerHTML = "N/A";  
+        text = createCachedTable(t.cachedResources);
     }
+    s3tableElement.innerHTML = text;
+
     bb.appendChild(s3tableElement);
 
     var s6TitleElement = document.createElement("div");
@@ -132,8 +151,7 @@ function createResourcesBlock(t) {
    var s6tableElement = document.createElement("div");
 
     if (templateResources.length > 0) {
-        s6tableElement.className = "blockTable";
-        var s6table = new tablebuilder();
+        var s6table = new tablebuilder("blockTable");
         s6table.setHeader(["id", "Content Type", "expires", "created", "Max Age", "Last Accessed", "timeout", "Status", "Content Length", "Gzip Content Length", "Access Count", "Gzip Access Count"]);
         for (var l=0; l < templateResources.length; l+=1 ) {
             var s = templateResources[l].templateResource;
@@ -180,8 +198,7 @@ function createResourcesBlock(t) {
     
     var s4tableElement = document.createElement("div");
     if (t.includeFiles) {
-        s4tableElement.className = "blockTable";
-        var s4table = new tablebuilder();
+        var s4table = new tablebuilder("blockTable");
         s4table.setHeader(["id", "timeout", "Created", "Last Refresh", "Content Length"]);
         var rowCount = 0;
         for (var i in t.includeFiles) {
@@ -217,8 +234,7 @@ function createResourcesBlock(t) {
     
     var s5tableElement = document.createElement("div");
     if (t.templates) {
-        s5tableElement.className = "blockTable";
-        var s5table = new tablebuilder();
+        var s5table = new tablebuilder("blockTable");
         s5table.setHeader(["id", "Created", "Last Refresh", "Content Length"]);
         var rowCount = 0;
         for (var i in t.templates) {
