@@ -336,6 +336,7 @@ public class ResourceManager {
    }
 
    public ICacheable getResource(String key, IContext ctx) {
+
        String ua = null;
        ITemplate t = ctx.getConfig().getTemplate(ctx.getTemplateId());
        boolean hasUATest = t.hasUserAgentDependencies(ctx);
@@ -346,10 +347,17 @@ public class ResourceManager {
            }
        }
        ICacheable csr = combinedResources.get(key);
+
        if (csr != null) {
+           // if there is a child resource for the given user agent return it
+           // otherwise return the default resource.
            if (ua != null) {
                ICacheable child = csr.getResourceForUserAgent(ua);
-               return child;
+               if (child != null) {
+                   return child;
+               } else {
+                   return csr;
+               }
            } else {
                return csr;
            }
@@ -363,6 +371,7 @@ public class ResourceManager {
 
    public void putResource(String key, ICacheable csr, String userAgent) {
        ICacheable parent = combinedResources.get(key);
+
        if (userAgent != null) {
 
            if (parent == null) {

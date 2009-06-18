@@ -93,7 +93,7 @@ public class ProtoRabbitServlet extends HttpServlet {
     private long lastCleanup = -1;
     private boolean profile = false;
 
-    private String version = "0.7.6-dev";
+    private String version = "0.7.7-dev-b";
 
     // these file types will be provided with the default expires time if run
     // through the servlet
@@ -267,7 +267,12 @@ public class ProtoRabbitServlet extends HttpServlet {
         }
 
         boolean requiresUAHandling = false;
-        boolean hasUATest = t.hasUserAgentDependencies(wc);
+        boolean hasUATest = false;
+        if (t != null) {
+            hasUATest = t.hasUserAgentDependencies(wc);
+        } else {
+            getLogger().severe("Could not find template " + templateId);
+        }
         if (hasUATest) {
             String uaTest = wc.getUATests().get(0);
             requiresUAHandling = wc.uaTest(uaTest);
@@ -280,6 +285,7 @@ public class ProtoRabbitServlet extends HttpServlet {
         if (cr == null && t != null && resourceId != null || requiresUAHandling ||
             (cr != null && cr.getCacheContext().isExpired())) {
             getLogger().fine("Re-constituting " + id + " from  template " + templateId);
+ 
             IProperty property = null;
             if ("styles".equals(id)) {
 
@@ -287,8 +293,9 @@ public class ProtoRabbitServlet extends HttpServlet {
                 crm.processStyles(styles, wc, out);
                 cr = crm.getResource(resourceId, wc);
             } else if ("scripts".equals(id)){
+
                 List<ResourceURI> scripts = t.getAllScripts(wc);
-                crm.processStyles(scripts, wc, out);
+                crm.processScripts(scripts, wc, false, out);             
                 cr = crm.getResource(resourceId, wc);
             } else if ("messages".equals(id)) {
                 if (json == null) {
@@ -348,13 +355,13 @@ public class ProtoRabbitServlet extends HttpServlet {
                     crm.putResource(templateId + "_" + resourceId , cr);
                 }
             } else if ("styles".equals(id)) {
-                List<ResourceURI> styles = t.getAllStyles(wc);
-                crm.processStyles(styles, wc, out);
-                cr = crm.getResource(resourceId, wc);
+                if (cr == null) {
+                    cr = crm.getResource(resourceId, wc);
+                }
             } else if ("scripts".equals(id)){
-                List<ResourceURI> scripts = t.getAllScripts(wc);
-                crm.processStyles(scripts, wc, out);
-                cr = crm.getResource(resourceId, wc);
+                if (cr == null) {
+                    cr = crm.getResource(resourceId, wc);
+                }
             } else if ("messages".equals(id)) {
                 if (json == null) {
                     SerializationFactory factory = new SerializationFactory();
