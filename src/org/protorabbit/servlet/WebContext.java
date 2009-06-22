@@ -43,7 +43,8 @@ public class WebContext extends BaseContext {
 
     private HttpServletResponse resp;
     private String contextRoot = "";
-    private List<String> matchedUATests;
+    private List<String> matchedUAScriptTests;
+    private List<String> matchedUAStyleTests;
 
     public WebContext(Config cfg) {
         this.cfg = cfg;
@@ -358,17 +359,29 @@ public class WebContext extends BaseContext {
         return resp;
     }
 
-    public List<String> getUATests() {
-        return matchedUATests;
-        
+    public List<String> getUAScriptTests() {
+        return matchedUAScriptTests;
     }
 
-    public void addUATest(String test) {
-        if (matchedUATests == null) {
-            matchedUATests = new ArrayList<String>();
+    public void addUAScriptTest(String test) {
+        if (matchedUAScriptTests == null) {
+            matchedUAScriptTests = new ArrayList<String>();
         }
-        if (!matchedUATests.contains(test)) {
-            matchedUATests.add(test);
+        if (!matchedUAScriptTests.contains(test)) {
+            matchedUAScriptTests.add(test);
         }
+    }
+
+    public void addUAStyleTest(String test) {
+        if (matchedUAStyleTests == null) {
+            matchedUAStyleTests = new ArrayList<String>();
+        }
+        if (!matchedUAStyleTests.contains(test)) {
+            matchedUAStyleTests.add(test);
+        }
+    }
+
+    public List<String> getUAStyleTests() {
+        return matchedUAStyleTests;
     }
 }

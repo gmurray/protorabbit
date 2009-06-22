@@ -339,14 +339,26 @@ public class ResourceManager {
 
        String ua = null;
        ITemplate t = ctx.getConfig().getTemplate(ctx.getTemplateId());
-       boolean hasUATest = t.hasUserAgentDependencies(ctx);
-       if (hasUATest) {
-           String uaTest = ctx.getUATests().get(0);
-           if (ctx.uaTest(uaTest)) {
-               ua = uaTest;
+       ICacheable csr = combinedResources.get(key);
+
+       boolean hasUATest = false;
+       if (csr.getResourceType() == Config.SCRIPT) {
+           hasUATest = t.hasUserAgentScriptDependencies(ctx);
+           if (hasUATest) {
+               String uaTest = ctx.getUAScriptTests().get(0);
+               if (ctx.uaTest(uaTest)) {
+                   ua = uaTest;
+               }
+           }
+       } else if (csr.getResourceType() == Config.STYLE) {
+           hasUATest = t.hasUserAgentScriptDependencies(ctx);
+           if (hasUATest) {
+               String uaTest = ctx.getUAScriptTests().get(0);
+               if (ctx.uaTest(uaTest)) {
+                   ua = uaTest;
+               }
            }
        }
-       ICacheable csr = combinedResources.get(key);
 
        if (csr != null) {
            // if there is a child resource for the given user agent return it
@@ -398,12 +410,12 @@ public class ResourceManager {
        return processResources(styleResources,
                                ctx,
                                false,
-                               "styles",
+                               Config.STYLE,
                                out);
    }
 
    public String processResources(List<ResourceURI>uriResources,
-                                IContext ctx, boolean defer, String type, OutputStream out) throws java.io.IOException {
+                                IContext ctx, boolean defer, int type, OutputStream out) throws java.io.IOException {
 
        if (uriResources.size() == 0 ) {
            return null;
@@ -416,8 +428,10 @@ public class ResourceManager {
        String resourceId = null;
 
        boolean gzip = false;
+       // only set the test if this template passes
+       String test = null;
 
-       if ("scripts".equals(type)) {
+       if (Config.SCRIPT == type) {
            resourceId = "scripts";
 
            if (t.gzipScripts() == null) {
@@ -425,13 +439,25 @@ public class ResourceManager {
            } else {
                gzip = t.gzipScripts();
            }
-       } else if ("styles".equals(type)) {
+           if (ctx.getUAScriptTests() != null && ctx.getUAScriptTests().size() == 1 ) {
+               String testt = ctx.getUAScriptTests().get(0);
+               if (ctx.uaTest(testt)) {
+                   test = testt;
+               }
+           }
+       } else if (Config.STYLE == type) {
            resourceId = "styles";
 
            if (t.gzipStyles() != null) {
                gzip = t.gzipStyles();
            } else {
                gzip = ctx.getConfig().getGzip();
+           }
+           if (ctx.getUAStyleTests() != null && ctx.getUAStyleTests().size() == 1 ) {
+               String testt = ctx.getUAStyleTests().get(0);
+               if (ctx.uaTest(testt)) {
+                   test = testt;
+               }
            }
        }
        // check if any of the combined resources are expired if dev mode
@@ -451,15 +477,6 @@ public class ResourceManager {
 
        ICacheable targetResource = combinedResources.get(t.getId() + "_" +resourceId);
 
-       String test = null;
-       // only set the test if this template passes
-       if (ctx.getUATests() != null && ctx.getUATests().size() == 1 ) {
-           String testt = ctx.getUATests().get(0);
-           if (ctx.uaTest(testt)) {
-               test = testt;
-           }
-       }
-
        if ((targetResource != null  ) || (targetResource != null && 
            (targetResource.getResourceForUserAgent(test) != null)) ) {
            // we have a resource matching the test return it
@@ -473,9 +490,9 @@ public class ResourceManager {
 
                 if (csr.getCacheContext().isExpired()) {
                     csr.reset();
-                    if ("scripts".equals(type)) {
+                    if (Config.SCRIPT == type) {
                         getScripts(csr, uriResources, ctx, out);
-                    } else if ("styles".equals(type)) {
+                    } else if (Config.STYLE == type) {
                         getStyles(csr, uriResources, ctx, out);
                     }
                 }
@@ -483,10 +500,10 @@ public class ResourceManager {
        }
        if (csr == null) {
 
-           if ("scripts".equals(type)) {
+           if (Config.SCRIPT == type) {
                csr = new CacheableResource("text/javascript", null, null);
                getScripts(csr,uriResources,ctx, out);
-           } else if ("styles".equals(type)) {
+           } else if (Config.STYLE == type) {
                csr = new CacheableResource("text/css", null, null);
                getStyles(csr, uriResources,ctx, out);
            }
@@ -502,7 +519,7 @@ public class ResourceManager {
        return processResources(scriptResources,
                ctx,
                defer,
-               "scripts",
+               Config.SCRIPT,
                out);
    }
 

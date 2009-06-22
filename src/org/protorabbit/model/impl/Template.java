@@ -624,17 +624,6 @@ public class Template implements ITemplate {
         this.gzip = gzip;
     }
 
-    /*
-     *  Find out if this template has any user agent dependencies
-     * 
-     */
-    public boolean hasUserAgentDependencies(IContext ctx) {
-        //if (hasUADependencies == null) {
-           return  checkForUADependencies(ctx);
-       // }
-    //    return hasUADependencies.booleanValue();
-    }
-
     boolean checkPropsListForUATests(Map<String, IProperty> properties, IContext ctx) {
         if (properties == null) {
             return false;
@@ -645,15 +634,15 @@ public class Template implements ITemplate {
             ITestable p = properties.get(key); 
             if (p != null && 
                 p.getUATest() != null) {
-                ctx.addUATest(p.getUATest());
+                ctx.addUAScriptTest(p.getUATest());
                 _hasDependnencies = true;
             }
         }
         return _hasDependnencies;
     }
-    
-   boolean checkPropertiesForUA(IContext ctx) {
-        
+
+   public boolean hasUserAgentPropertyDependencies(IContext ctx) {
+
        boolean _hasDependnencies = false;
        _hasDependnencies = checkPropsListForUATests(properties, ctx);
         if (ancestors == null) {
@@ -673,31 +662,32 @@ public class Template implements ITemplate {
         return _hasDependnencies;
     }
 
-    boolean checkListForUATests(List<ResourceURI> list, IContext ctx) {
+    boolean checkListForUATests(List<ResourceURI> list, IContext ctx, int type) {
         if (list == null) {
             return false;
         }
         boolean hasTest = false;
         for (ITestable t : list) {
             if (t.getUATest() != null) {
-                ctx.addUATest(t.getUATest());
+                if (type == Config.SCRIPT) {
+                    ctx.addUAScriptTest(t.getUATest());
+                } else if (type == Config.STYLE) {
+                    ctx.addUAStyleTest(t.getUATest());
+                }
                 hasTest = true;
             }
         }
         return hasTest;
     }
-    
+
     /*
      *  Go through and check all properties and ResourceURI references for this
      *  template whether they have user agent references. If they have references
      *  then we have to re-render by request.
      */
-    boolean checkForUADependencies(IContext ctx) {
+    public boolean hasUserAgentScriptDependencies(IContext ctx) {
         boolean _hasDependnencies = false;
-        if (checkListForUATests(styles,ctx)) {
-            _hasDependnencies =  true;
-        }
-        if (checkListForUATests(scripts,ctx)) {
+        if (checkListForUATests(scripts,ctx,Config.SCRIPT)) {
             _hasDependnencies = true;
         }
         if (ancestors != null) {
@@ -705,22 +695,39 @@ public class Template implements ITemplate {
             while (it.hasNext()) {
                 ITemplate p = config.getTemplate(it.next());
                 if (p != null) {
-                    List<ResourceURI>pstyles = p.getAllStyles(ctx);
                     List<ResourceURI>pscripts = p.getAllScripts(ctx);
-                    if (checkListForUATests(pstyles, ctx)) {
-                        _hasDependnencies = true;
-                    };
-                    if (checkListForUATests(pscripts,ctx)) {
+                    if (checkListForUATests(pscripts,ctx,Config.SCRIPT)) {
                         _hasDependnencies = true;
                     }
                 }
             }
         }
-        if (checkPropertiesForUA(ctx)) {
-            _hasDependnencies = true;
+        return _hasDependnencies;
+    }
+
+    /*
+     *  Go through and check all properties and ResourceURI references for this
+     *  template whether they have user agent references. If they have references
+     *  then we have to re-render by request.
+     */
+    public boolean hasUserAgentStyleDependencies(IContext ctx) {
+        boolean _hasDependnencies = false;
+        if (checkListForUATests(styles,ctx,Config.STYLE)) {
+            _hasDependnencies =  true;
+        }
+        if (ancestors != null) {
+            Iterator<String> it = ancestors.iterator();
+            while (it.hasNext()) {
+                ITemplate p = config.getTemplate(it.next());
+                if (p != null) {
+                    List<ResourceURI>pstyles = p.getAllStyles(ctx);
+                    if (checkListForUATests(pstyles, ctx,Config.STYLE)) {
+                        _hasDependnencies = true;
+                    };
+                }
+            }
         }
         return _hasDependnencies;
-      // hasUADependencies = new Boolean(_hasDependnencies);
     }
 
     public void setURINamespace(String namespace) {

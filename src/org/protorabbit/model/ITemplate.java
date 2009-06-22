@@ -62,7 +62,9 @@ public interface ITemplate {
     public Boolean gzipStyles();
     public String getURINamespace();
     public void setURINamespace(String namespace);
-    public boolean hasUserAgentDependencies(IContext ctx);
+    public boolean hasUserAgentScriptDependencies(IContext ctx);
+    public boolean hasUserAgentStyleDependencies(IContext ctx);
+    public boolean hasUserAgentPropertyDependencies(IContext ctx);
     public void setAttribute(String key, Object value);
     public Object getAttribute(String key);
     public DocumentContext getDocumentContext();

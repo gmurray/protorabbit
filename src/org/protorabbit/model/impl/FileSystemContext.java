@@ -77,9 +77,24 @@ public class FileSystemContext extends BaseContext {
         return null;
     }
 
-	public void addUATest(String test) {
+	public void addUAScriptTest(String test) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	public void addUAStyleTest(String test) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public List<String> getUAScriptTests() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public List<String> getUAStyleTests() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

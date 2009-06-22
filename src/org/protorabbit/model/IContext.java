@@ -19,9 +19,13 @@ import org.protorabbit.Config;
 
 public interface IContext {
 
-    public List<String> getUATests();
+    public List<String> getUAScriptTests();
 
-    public void addUATest(String test);
+    public List<String> getUAStyleTests();
+
+    public void addUAScriptTest(String test);
+
+    public void addUAStyleTest(String test);
 
     public Map<String, ?> getAttributes();
 

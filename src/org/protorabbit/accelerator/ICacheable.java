@@ -49,6 +49,8 @@ public interface ICacheable {
 
     public String getContentType();
 
+    public int getResourceType();
+
     public void setContentType(String contentType);
 
     public StringBuffer getContent();
@@ -79,6 +81,6 @@ public interface ICacheable {
 
     public void setHash(String hash);
 
-	public void addUserAgentResource(String userAgent, ICacheable csr);
+    public void addUserAgentResource(String userAgent, ICacheable csr);
 
 }

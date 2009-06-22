@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import org.protorabbit.Config;
 import org.protorabbit.accelerator.CacheContext;
 import org.protorabbit.accelerator.ICacheable;
 import org.protorabbit.json.Serialize;
@@ -261,10 +262,22 @@ public class CacheableResource implements ICacheable {
     }
     
     public String toString() {
-    	String c = "N/A";
-    	if (content != null && content.length() > 20) {
-    		c = content.substring(0, 20);
-    	}
- 	   return contentType + " { status : " + status + " content: " + c + "}";
+        String c = "N/A";
+        if (content != null && content.length() > 20) {
+            c = content.substring(0, 20);
+        }
+        return contentType + " { status : " + status + " content: " + c + "}";
+    }
+
+    public int getResourceType() {
+        int resourceType = Config.UNKNOWN;
+        if (contentType != null) {
+            if ("text/css".equals(contentType)) {
+                resourceType = Config.STYLE;
+            } else if ("text/javascript".equals(contentType)) {
+                resourceType = Config.SCRIPT;
+            }
+        }
+        return resourceType;
     }
 }

@@ -45,7 +45,11 @@ public class Config {
    public static final String EPISODE_POSTER = "resources/episodes-viewer.js";
    public static final String EPISODE = "org.protorabbit.profile.episode";
    public static final String START_TIME = "org.protorabbit.START_TIME";
-    public static final String DEFAULT_EPISODE_PROCESS = "org.protorabbit.profile.episode.DEFAULT_PROCESS";;
+   public static final String DEFAULT_EPISODE_PROCESS = "org.protorabbit.profile.episode.DEFAULT_PROCESS";;
+
+   public static final int UNKNOWN = 0;
+   public static final int SCRIPT = 1;
+   public static final int STYLE = 2;
 
    public static long DEFAULT_TIMEOUT = 60 * 1000 * 15;
    boolean gzip = true;
@@ -235,7 +239,7 @@ public class Config {
                if (prop.getUATest() != null) {
                    if (ctx.uaTest(prop.getUATest()) == false) {
                        // track the test
-                       ctx.addUATest(prop.getUATest());
+                       ctx.addUAScriptTest(prop.getUATest());
                        return null;
                    }
                }

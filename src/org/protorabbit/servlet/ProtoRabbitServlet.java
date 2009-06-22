@@ -250,9 +250,17 @@ public class ProtoRabbitServlet extends HttpServlet {
 
         OutputStream out = resp.getOutputStream();
         int lastDot = id.lastIndexOf(".");
+        int resourceType = Config.UNKNOWN;
         if (lastDot != -1) {
+            String extension = id.substring(lastDot +1, id.length());
+            if ("css".equals(extension)) {
+                resourceType = Config.STYLE;
+            } else if ("js".equals(extension)) {
+                resourceType = Config.SCRIPT;
+            }
             id = id.substring(0, lastDot);
         }
+
         String resourceId = id;
         String templateId = req.getParameter("tid");
         if (templateId != null ) {
@@ -266,26 +274,33 @@ public class ProtoRabbitServlet extends HttpServlet {
              wc.setTemplateId(templateId);
         }
 
+        ResourceManager crm = jcfg.getCombinedResourceManager();
+        ICacheable cr = crm.getResource(resourceId, wc);
         boolean requiresUAHandling = false;
         boolean hasUATest = false;
         if (t != null) {
-            hasUATest = t.hasUserAgentDependencies(wc);
+            if (resourceType == Config.SCRIPT) {
+                hasUATest = t.hasUserAgentScriptDependencies(wc);
+                if (hasUATest) {
+                    String uaTest = wc.getUAScriptTests().get(0);
+                    requiresUAHandling = wc.uaTest(uaTest);
+                }
+            } else  if (resourceType == Config.STYLE) {
+                hasUATest = t.hasUserAgentStyleDependencies(wc);
+                if (hasUATest) {
+                    String uaTest = wc.getUAStyleTests().get(0);
+                    requiresUAHandling = wc.uaTest(uaTest);
+                }
+            }
         } else {
             getLogger().severe("Could not find template " + templateId);
         }
-        if (hasUATest) {
-            String uaTest = wc.getUATests().get(0);
-            requiresUAHandling = wc.uaTest(uaTest);
-        }
-        ResourceManager crm = jcfg.getCombinedResourceManager();
-        ICacheable cr = crm.getResource(resourceId, wc);
-
         // re-constitute the resource. This case will happen across server restarts
         // where a client may have a resource reference with a long cache time
         if (cr == null && t != null && resourceId != null || requiresUAHandling ||
             (cr != null && cr.getCacheContext().isExpired())) {
             getLogger().fine("Re-constituting " + id + " from  template " + templateId);
- 
+
             IProperty property = null;
             if ("styles".equals(id)) {
 
@@ -694,7 +709,7 @@ public class ProtoRabbitServlet extends HttpServlet {
                 ((t.getTimeout() > 0 && (tr == null ||
                 tr.getCacheContext().isExpired() )) ||
                 t.requiresRefresh(wc) ||
-                t.hasUserAgentDependencies(wc) )) {
+                t.hasUserAgentPropertyDependencies(wc) )) {
 
             if (canGzip && t.gzipTemplate() != null && t.gzipTemplate() == true) {
                 resp.setHeader("Vary", "Accept-Encoding");
