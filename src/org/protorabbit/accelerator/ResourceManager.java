@@ -342,7 +342,7 @@ public class ResourceManager {
        ICacheable csr = combinedResources.get(key);
 
        boolean hasUATest = false;
-       if (csr.getResourceType() == Config.SCRIPT) {
+       if (t != null && csr != null && csr.getResourceType() == Config.SCRIPT) {
            hasUATest = t.hasUserAgentScriptDependencies(ctx);
            if (hasUATest) {
                String uaTest = ctx.getUAScriptTests().get(0);
@@ -350,7 +350,7 @@ public class ResourceManager {
                    ua = uaTest;
                }
            }
-       } else if (csr.getResourceType() == Config.STYLE) {
+       } else if (t != null && csr != null && csr.getResourceType() == Config.STYLE) {
            hasUATest = t.hasUserAgentScriptDependencies(ctx);
            if (hasUATest) {
                String uaTest = ctx.getUAScriptTests().get(0);

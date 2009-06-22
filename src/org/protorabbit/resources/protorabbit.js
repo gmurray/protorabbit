@@ -30,7 +30,8 @@ window.protorabbit = function() {
  };
 
  function addDeferredScript(s){
-      ctx.deferredScripts.push(s);
+     window.episodesDefaultLoad = false;
+     ctx.deferredScripts.push(s);
  }
 
  function isDefined(_target) {
@@ -526,46 +527,100 @@ window.protorabbit = function() {
  }
 
  function addDeferredFragement(item) {
-      ctx.deferredFragments.push(item);
+     window.episodesDefaultLoad = false;
+     ctx.deferredFragments.push(item);
  }
 
  function addDeferredStyle(item, media) {
+     window.episodesDefaultLoad = false;
      ctx.deferredStyles.push({ url : item, media : media});
  }
 
  function addDeferredProperties(item, prefix) {
+     window.episodesDefaultLoad = false;
      ctx.deferredProperties.push({ url : item, prefix : prefix});
  }
 
  var oldOnload = window.onload;
+ var onComplete = null;
+ var inFlight = [];
+ var timer = null;
+ 
+ function addToLoadQueue(key, label) {
+	 if (window.postMessage) {
+	     window.postMessage("EPISODES:mark:" + key, "*");
+	 }
+	 inFlight.push(key);	 
+ }
+ 
+ function updateLoadQueue(key, label) {
+
+	 for (var i=0; i < inFlight.length; i+=1) {
+		 if (inFlight[i] == key) {
+			 inFlight.splice(i,1);
+			 if (window.postMessage) {
+			     window.postMessage("EPISODES:measure:" + key, "*");
+			 }
+			 break;
+		 }
+	 }
+ }
 
   window.onload = function() {
+      if ( oldOnload) {
+          oldOnload();
+      }
       ctx.head = document.getElementsByTagName("head")[0];
+
+      // setup for episodes if we have any properties
+      if (ctx.deferredStyles.length > 0 ||
+          ctx.deferredFragments.length > 0 ||
+          ctx.deferredScripts.length > 0 ||
+          ctx.deferredProperties.length > 0) {
+
+       onComplete = function() { 	   
+    	   if (timer) {
+    		   clearInterval(timer);
+    	   }
+           if (window.postMessage) {
+        	   window.postMessage("EPISODES:done", "*");
+           }
+       };
+
+      }
+      
       if (ctx.deferredStyles.length > 0) {
           for (var i=0; i < ctx.deferredStyles.length; i+=1) {
-              addStyleLink(ctx.deferredStyles[i].url, ctx.deferredStyles[i].media);
+        	  var url = ctx.deferredStyles[i].url;
+        	  var key = "style_" + url;
+        	  addToLoadQueue(key, url);
+              addStyleLink(url, ctx.deferredStyles[i].media);
+              updateLoadQueue(key, url);
           }
       }
       if (ctx.deferredScripts.length > 0) {
           ctx.deferredScripts.reverse();
+          addToLoadQueue("deferred_scripts", "Deferred Scripts");
           addLibraries({
              libs : ctx.deferredScripts,
-             callback : function(args) {
+             callback : function(args) { 	     
                   publish("/protorabbit/scriptLoad", { "value" : "deferredScripts"} );
+                  updateLoadQueue("deferred_scripts", "Deferred Scripts");
               }
           });
       }
       if (ctx.deferredFragments.length > 0) {
           for (var j=0; j < ctx.deferredFragments.length; j++) {
               var item = ctx.deferredFragments[j];
-
+              addToLoadQueue("fragment_" + item.include, item.include);
               var content = doAjax( {
                  url : item.include,
                  callback : function(req) {
+            	     var _key =  "fragment_" + item.include;
                      publish("/protorabbit/ajaxLoad", { value : item.url});
                      var target = document.getElementById(item.elementId);
                      target.innerHTML = req.responseText;
-                     
+                     updateLoadQueue(_key, item.include);
                  }
               });
           }
@@ -573,9 +628,11 @@ window.protorabbit = function() {
       if (ctx.deferredProperties.length > 0) {
           for (var k=0; k < ctx.deferredProperties.length; k++) {
               var propSet = ctx.deferredProperties[k];
+              addToLoadQueue("deferred_property_" + propSet.url, propSet.url);
               doAjax( {
                  url : propSet.url,
                  callback : function(req) {
+            	     var _key = "deferred_property_" + propSet.url;
                      var props = eval("(" + req.responseText + ")");
                      for (var p in props) {
                          var target = document.getElementById(propSet.prefix + "_" + p);
@@ -583,6 +640,7 @@ window.protorabbit = function() {
                              target.innerHTML = props[p];
                          }
                      }
+                     updateLoadQueue(_key, propSet.url);
                      publish("/protorabbit/propertySetLoad", { value :propSet});
                  },
                  onerror : function() {
@@ -591,9 +649,18 @@ window.protorabbit = function() {
               });
           }
       }
-      if ( oldOnload) {
-          oldOnload();
-      }
+      timer = setInterval(function() {
+    		 if (inFlight.length === 0 ) {
+    			 if (onComplete) {
+    				 publish("/protorabbit/loadComplete", {});
+    				 onComplete.apply({},[]);
+    			 } else {
+    				 if (timer) {
+    					 clearInterval(timer);
+    				 }
+    			 }
+    		 }
+      }, 5);
   };
  
   return {

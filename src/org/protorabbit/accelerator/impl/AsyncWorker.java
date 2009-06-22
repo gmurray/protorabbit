@@ -13,6 +13,7 @@ package org.protorabbit.accelerator.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.logging.Logger;
 
 import org.protorabbit.accelerator.ICallback;
 import org.protorabbit.accelerator.IHttpClient;
@@ -25,9 +26,18 @@ public class AsyncWorker implements IWorker, Runnable{
     private ICallback callback = null;
     private String encoding = null;
     private IHttpClient hc = null;
+    private String resource;
+    private static Logger logger = null;
+
+    static final Logger getLogger() {
+        if (logger == null) {
+            logger = Logger.getLogger("org.protrabbit");
+        }
+        return logger;
+    }
 
     public AsyncWorker(String resource, IContext ctx) {
-
+        this.resource = resource;
         hc = ctx.getConfig().getHttpClient(resource);
     }
 
@@ -40,11 +50,15 @@ public class AsyncWorker implements IWorker, Runnable{
 
     public void run() {
         try {
-
+        	StringBuffer buff = null;
             InputStream is = hc.getInputStream();
-            encoding = hc.getContentEncoding();
-            StringBuffer buff = IOUtil.loadStringFromInputStream(is,encoding);
-
+            if (is != null) {
+                encoding = hc.getContentEncoding();
+               buff = IOUtil.loadStringFromInputStream(is,encoding);
+            } else {
+                getLogger().severe("Error loading external resource " + resource);
+                buff = new StringBuffer("");
+            }
             if (callback != null) {
                 callback.setContent(buff);
                 callback.execute();
