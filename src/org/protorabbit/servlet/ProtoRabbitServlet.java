@@ -93,7 +93,7 @@ public class ProtoRabbitServlet extends HttpServlet {
     private long lastCleanup = -1;
     private boolean profile = false;
 
-    private String version = "0.7.8-dev-g";
+    private String version = "0.7.8-dev-h";
 
     // these file types will be provided with the default expires time if run
     // through the servlet
@@ -544,7 +544,7 @@ public class ProtoRabbitServlet extends HttpServlet {
                 e.addMeasure("transit_to", m1);
                 e.addMeasure("page_load", m2);
                 // now - duration is assumed transit time to offset call to this command
-                resp.getWriter().write("var t_firstbyte=new Number(" + (now + transitTime) + ");" +
+                resp.getWriter().write("var t_firstbyte=new Number(new Date());" +
                                        "window.postMessage(\"EPISODES:mark:firstbyte:\" + t_firstbyte, \"*\");");
                 return;
             } else if ("stats".equals( command ) ) {
