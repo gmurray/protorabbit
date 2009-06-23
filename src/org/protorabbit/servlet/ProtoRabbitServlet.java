@@ -93,7 +93,7 @@ public class ProtoRabbitServlet extends HttpServlet {
     private long lastCleanup = -1;
     private boolean profile = false;
 
-    private String version = "0.7.7-dev-b";
+    private String version = "0.7.8-dev-g";
 
     // these file types will be provided with the default expires time if run
     // through the servlet
@@ -292,18 +292,42 @@ public class ProtoRabbitServlet extends HttpServlet {
                     requiresUAHandling = wc.uaTest(uaTest);
                 }
             }
-        } else {
-            getLogger().severe("Could not find template " + templateId);
         }
         // re-constitute the resource. This case will happen across server restarts
         // where a client may have a resource reference with a long cache time
-        if (cr == null && t != null && resourceId != null || requiresUAHandling ||
+        if ("protorabbit".equals(id)) {
+            cr =  crm.getResource("protorabbit", wc);
+            if (cr == null) {
+                StringBuffer buff = IOUtil.getClasspathResource(jcfg, Config.PROTORABBIT_CLIENT);
+                if (buff != null) {
+                    String hash = IOUtil.generateHash(buff.toString());
+                    cr = new CacheableResource("text/javascript", jcfg.getMaxAge(), hash);
+                    jcfg.getCombinedResourceManager().putResource("protorabbit", cr);
+                    cr.setContent(buff);
+                } else {
+                    getLogger().severe("Unable to find protorabbit client script");
+                }
+            }
+        } else if ("episodes".equals(id)) {
+                cr =  crm.getResource("episodes", wc);
+                if (cr == null) {
+                    StringBuffer buff = IOUtil.getClasspathResource(jcfg, Config.EPISODES_CLIENT);
+                    if (buff != null) {
+                        String hash = IOUtil.generateHash(buff.toString());
+                        cr = new CacheableResource("text/javascript", jcfg.getMaxAge(), hash);
+                        jcfg.getCombinedResourceManager().putResource("episodes", cr);
+                        cr.setContent(buff);
+                    } else {
+                        getLogger().severe("Unable to find episodes client script");
+                    }
+                }
+
+        } else if (cr == null && t != null && resourceId != null || requiresUAHandling ||
             (cr != null && cr.getCacheContext().isExpired())) {
             getLogger().fine("Re-constituting " + id + " from  template " + templateId);
 
             IProperty property = null;
             if ("styles".equals(id)) {
-
                 List<ResourceURI> styles = t.getAllStyles(wc);
                 crm.processStyles(styles, wc, out);
                 cr = crm.getResource(resourceId, wc);
@@ -326,9 +350,11 @@ public class ProtoRabbitServlet extends HttpServlet {
                 crm.putResource(resourceId, cr);
                 // assume this is a request for a deferred resource that hasn't been created
             } else {
-                property = t.getPropertyById(id, wc);
+                if (t != null) {
+                    property = t.getPropertyById(id, wc);
+                }
                 if (property == null) {
-                    getLogger().severe("Unable to find property with id " + id + " in template " + t.getId());
+                    getLogger().severe("Unable to find property with id " + id + ((t != null) ? " in template " + t.getId() : " with no template."));
                     return;
                 }
             }
@@ -391,32 +417,6 @@ public class ProtoRabbitServlet extends HttpServlet {
                 crm.putResource(resourceId, cr);
                 // assume this is a request for a deferred resource that hasn't been created
             }
-        } else if ("protorabbit".equals(id)) {
-            cr =  crm.getResource("protorabbit", wc);
-            if (cr == null) {
-                StringBuffer buff = IOUtil.getClasspathResource(jcfg, Config.PROTORABBIT_CLIENT);
-                if (buff != null) {
-                    String hash = IOUtil.generateHash(buff.toString());
-                    cr = new CacheableResource("text/javascript", jcfg.getMaxAge(), hash);
-                    jcfg.getCombinedResourceManager().putResource("protorabbit", cr);
-                    cr.setContent(buff);
-                } else {
-                    getLogger().severe("Unable to find protorabbit client script");
-                }
-            }
-        } else if ("episodes".equals(id)) {
-                cr =  crm.getResource("episodes", wc);
-                if (cr == null) {
-                    StringBuffer buff = IOUtil.getClasspathResource(jcfg, Config.EPISODES_CLIENT);
-                    if (buff != null) {
-                        String hash = IOUtil.generateHash(buff.toString());
-                        cr = new CacheableResource("text/javascript", jcfg.getMaxAge(), hash);
-                        jcfg.getCombinedResourceManager().putResource("episodes", cr);
-                        cr.setContent(buff);
-                    } else {
-                        getLogger().severe("Unable to find episodes client script");
-                    }
-                }
         } else if (cr == null) {
             getLogger().severe("Could not find resource " + id + " with template " + templateId);
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);

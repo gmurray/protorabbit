@@ -22,6 +22,7 @@ public class ResourceURI implements ITestable {
 
     private String uri = null;
     private String baseURI = null;
+    private String fullURI = null;
 
     private boolean written = false;
     private Boolean combine = null;
@@ -120,7 +121,16 @@ public class ResourceURI implements ITestable {
     }
 
     public String getFullURI() {
-        return baseURI + uri;
+        if (fullURI == null) {
+            fullURI = baseURI;
+            // make sure to prevent // in paths
+            if (uri.startsWith("/") && baseURI.endsWith("/")) {
+                fullURI += uri.substring(1);
+            } else {
+                fullURI += uri;
+            }
+        }
+        return fullURI;
     }
 
     public String getTest() {

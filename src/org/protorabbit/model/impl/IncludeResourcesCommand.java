@@ -106,9 +106,6 @@ public class IncludeResourcesCommand extends BaseCommand {
                     }
                 }
 
-                if ((hasDeferredScripts  || deferredScripts != null || deferredProperties != null)) {
-                    ResourceManager.writeDeferred(ctx, buffer, t);
-                }
            }
            if (linkURIs.size() > 0 ){
                 String links = URIResourceManager.generateReferences(t, ctx, linkURIs, ResourceURI.SCRIPT);
@@ -135,6 +132,7 @@ public class IncludeResourcesCommand extends BaseCommand {
                         buffer.write(measure.getBytes());
                     }
                } else if (resourceId != null){
+                   ResourceManager.writeDeferred(ctx, buffer, t);
                    buffer.write(("<script>protorabbit.addDeferredScript('" + cfg.getResourceService() +
                               "?resourceid=" + resourceId + ".js&tid=" + t.getId() + "');</script>").getBytes());
                }
@@ -142,9 +140,6 @@ public class IncludeResourcesCommand extends BaseCommand {
            }
            if (deferredScripts != null) {
 
-               if (!deferredWritten) {
-                   ResourceManager.writeDeferred(ctx, buffer, t);
-               }
                for (String s : deferredScripts) {
                    buffer.write(s.getBytes());
                }

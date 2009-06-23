@@ -72,18 +72,24 @@ public class ResourceManager {
    }
 
    public static void writeDeferred(IContext ctx, OutputStream out, ITemplate t) throws IOException {
-       StringBuffer buff = IOUtil.getClasspathResource(ctx.getConfig(), Config.PROTORABBIT_CLIENT);
-       if (buff != null) {
-           String hash = IOUtil.generateHash(buff.toString());
-           ICacheable cr = new CacheableResource("text/javascript", t.getTimeout(), hash);
-           ctx.getConfig().getCombinedResourceManager().putResource("protorabbit", cr);
-           cr.setContent(buff);
-           String uri = "<script src=\"" + 
-           ctx.getConfig().getResourceService() + "?resourceid=protorabbit.js\"></script>";
-           out.write(uri.getBytes());
-           ctx.setAttribute(DEFERRED_WRITTEN, Boolean.TRUE);
-       } else {
-           getLogger().severe("Unable to find protorabbit client script " + Config.PROTORABBIT_CLIENT);
+       boolean deferredWritten = false;
+       if (ctx.getAttribute(DEFERRED_WRITTEN) != null) {
+           deferredWritten = ((Boolean)ctx.getAttribute(DEFERRED_WRITTEN)).booleanValue();
+       }
+       if (!deferredWritten) {
+           StringBuffer buff = IOUtil.getClasspathResource(ctx.getConfig(), Config.PROTORABBIT_CLIENT);
+           if (buff != null) {
+               String hash = IOUtil.generateHash(buff.toString());
+               ICacheable cr = new CacheableResource("text/javascript", t.getTimeout(), hash);
+               ctx.getConfig().getCombinedResourceManager().putResource("protorabbit", cr);
+               cr.setContent(buff);
+               String uri = "<script src=\"" + 
+               ctx.getConfig().getResourceService() + "?resourceid=protorabbit.js\"></script>";
+               out.write(uri.getBytes());
+               ctx.setAttribute(DEFERRED_WRITTEN, Boolean.TRUE);
+           } else {
+               getLogger().severe("Unable to find protorabbit client script " + Config.PROTORABBIT_CLIENT);
+       }
        }
    }
 
@@ -460,18 +466,15 @@ public class ResourceManager {
                }
            }
        }
+
        // check if any of the combined resources are expired if dev mode
+       boolean requiresRefresh = false;
        if (ctx.getConfig().getDevMode()) {
-           boolean requiresRefresh = false;
            for (ResourceURI item : uriResources) {
                if (item.isUpdated(ctx)) {
                    requiresRefresh = true;
                    break;
                }
-           }
-           // remove the hash
-           if (requiresRefresh && resourceId != null) {
-           //    combinedResources.remove(t.getId() + "_" + resourceId);
            }
        }
 
@@ -488,7 +491,7 @@ public class ResourceManager {
            }
            if (csr != null) {
 
-                if (csr.getCacheContext().isExpired()) {
+                if (csr.getCacheContext().isExpired() || requiresRefresh) {
                     csr.reset();
                     if (Config.SCRIPT == type) {
                         getScripts(csr, uriResources, ctx, out);
