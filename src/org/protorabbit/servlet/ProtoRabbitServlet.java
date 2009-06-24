@@ -147,6 +147,12 @@ public class ProtoRabbitServlet extends HttpServlet {
             } else {
                 templates = new String[] { defaultTemplateURI };
             }
+            jcfg =  Config.getInstance(serviceURI, maxAge);
+            jcfg.setDevMode(isDevMode);
+            jcfg.setProfile(profile);
+            if (engineClassName != null) {
+                jcfg.setEngineClassName(engineClassName);
+            }
             try {
                 updateConfig();
                 } catch (IOException e) {
@@ -182,14 +188,8 @@ public class ProtoRabbitServlet extends HttpServlet {
             }
         }
 
-         if ((jcfg == null || needsUpdate) && templates.length > 0) {
-            jcfg = new Config(serviceURI, maxAge);
-            jcfg.setDevMode(isDevMode);
-            jcfg.setProfile(profile);
-            if (engineClassName != null) {
-                jcfg.setEngineClassName(engineClassName);
-            }
-            engine = jcfg.getEngine();
+         if ((needsUpdate) && templates.length > 0) {
+            jcfg.resetTemplates();
             for (int i = 0; i < templates.length; i++) {
                 JSONObject base = null;
                 InputStream is = this.ctx.getResourceAsStream(templates[i]);
@@ -710,8 +710,7 @@ public class ProtoRabbitServlet extends HttpServlet {
         }
 
         // get the initial content or get the content if it is expired
-        if (t.getTimeout() != null && 
-                ((t.getTimeout() > 0 && (tr == null ||
+        if ( (t.getTimeout() != null && (t.getTimeout() > 0 && (tr == null ||
                 tr.getCacheContext().isExpired() )) ||
                 t.requiresRefresh(wc) ||
                 jcfg.profile() ||
@@ -721,18 +720,17 @@ public class ProtoRabbitServlet extends HttpServlet {
                 resp.setHeader("Vary", "Accept-Encoding");
                 resp.setHeader("Content-Encoding", "gzip");
             }
-            if (jcfg.profile()) {
-                resp.setHeader("Expires", IOUtil.getExpires(t.getTimeout()));
-                resp.setHeader("Cache-Control", "public,max-age=" + IOUtil.getMaxAge(t.getTimeout()));
-            }
+
             // headers after this point do not get written
             engine.renderTemplate(id, wc, bos);
 
             String content = bos.toString(jcfg.getEncoding());
             String hash = IOUtil.generateHash(content);
             ICacheable cr = new CacheableResource("text/html", t.getTimeout(), hash);
-            resp.setHeader("ETag", cr.getContentHash());
 
+            if (!jcfg.profile()) {
+                resp.setHeader("ETag", cr.getContentHash());
+            }
             cr.setContent(new StringBuffer(content));
             t.setTemplateResource(cr);
 
@@ -752,8 +750,7 @@ public class ProtoRabbitServlet extends HttpServlet {
                 cr.incrementAccessCount();
                 resp.setContentLength(bytes.length);
                 if (bytes != null) {
-                    ByteArrayInputStream bis = new ByteArrayInputStream(
-                            bytes);
+                    ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
                     IOUtil.writeBinaryResource(bis, out);
                 } 
             }
@@ -776,10 +773,11 @@ public class ProtoRabbitServlet extends HttpServlet {
             }
 
             resp.setContentType(tr.getContentType());
-
-            resp.setHeader("ETag", etag);
-            resp.setHeader("Expires", tr.getCacheContext().getExpires());
-            resp.setHeader("Cache-Control", "public,max-age=" + tr.getCacheContext().getMaxAge());
+            if (!jcfg.profile()) {
+                resp.setHeader("ETag", etag);
+                resp.setHeader("Expires", tr.getCacheContext().getExpires());
+                resp.setHeader("Cache-Control", "public,max-age=" + tr.getCacheContext().getMaxAge());
+            }
 
             if (canGzip &&  t.gzipTemplate() != null && t.gzipTemplate() == true) {
 
@@ -792,9 +790,7 @@ public class ProtoRabbitServlet extends HttpServlet {
 
                 if (bytes != null) {
                     resp.setContentLength(bytes.length);
-                    ByteArrayInputStream bis = new ByteArrayInputStream(
-                           bytes);
-
+                    ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
                     IOUtil.writeBinaryResource(bis, out);
                 }
             } else {
@@ -804,8 +800,7 @@ public class ProtoRabbitServlet extends HttpServlet {
                 byte[] bytes =tr.getContent().toString().getBytes();
                 resp.setContentLength(bytes.length);
                 if (bytes != null) {
-                    ByteArrayInputStream bis = new ByteArrayInputStream(
-                            bytes);
+                    ByteArrayInputStream bis = new ByteArrayInputStream( bytes);
                     IOUtil.writeBinaryResource(bis, out);
                 }
             }

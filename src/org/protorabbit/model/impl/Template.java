@@ -534,6 +534,11 @@ public class Template implements ITemplate {
     }
 
     public boolean requiresRefresh(IContext ctx) {
+        if (dc != null ) {
+            if (dc.requiresRefresh()) {
+                return true;
+            }
+        }
         ResourceURI tri = getTemplateURI();
         long now = (new Date()).getTime();
         boolean needsUpdate = false;

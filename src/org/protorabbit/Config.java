@@ -81,10 +81,29 @@ public class Config {
    Map<String, IncludeFile> includeFiles = null;
    Map<String, String> commandMap = null;
    private boolean profile = false;
+   private static Config config = null;
 
    ResourceManager crm = null;
 
-   public Config(String serviceURI, long maxAge ) {
+   public void resetTemplates() {
+       tmap = new HashMap<String, ITemplate>();
+   }
+
+   public static Config getInstance(String serviceURI, long maxAge ) {
+       if (config == null) {
+           config = new Config( serviceURI, maxAge );
+       }
+       return config;
+   }
+   
+   public static Config getInstance() {
+       if (config == null) {
+           config = new Config();
+       }
+       return config;
+   }
+
+   private Config(String serviceURI, long maxAge ) {
        init();
        this.maxAge = maxAge;
        crm = new ResourceManager(this,
@@ -92,7 +111,7 @@ public class Config {
                getMaxAge());
    }
 
-   public Config() {
+   private Config() {
        init();
        crm = new ResourceManager(this,
                                  resourceService,

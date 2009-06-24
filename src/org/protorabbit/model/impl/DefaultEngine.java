@@ -57,7 +57,7 @@ public class DefaultEngine implements IEngine {
     }
 
     public void renderTemplate(String tid, IContext ctx, OutputStream out) {
-        long startTime = (new Date()).getTime();
+
         Config cfg = ctx.getConfig();
         ctx.setTemplateId(tid);
         ITemplate template = cfg.getTemplate(tid);
@@ -81,8 +81,6 @@ public class DefaultEngine implements IEngine {
         } else {
             getLogger().info("Unable to find template " + tid);
         }
-        long stopTime = (new Date()).getTime();
-        getLogger().info("Render time=" + (stopTime - startTime) + "ms");
     }
 
     private DocumentContext getDocumentContext(ITemplate template, IContext ctx) {
@@ -100,21 +98,16 @@ public class DefaultEngine implements IEngine {
                 requiresRefresh = true;
             } else if (uri != null) {
                 requiresRefresh = ctx.isUpdated(uri.getFullURI(), template.getDocumentContext().getLastRefresh() );
-                if (requiresRefresh) {
-                    getLogger().info("Reloading resource : " + uri.getFullURI());
-                }
             }
         }
         if (template.getDocumentContext() == null || requiresRefresh) {
-            getLogger().info("Reloading template document for template " + template.getId() + " profiling : " + ctx.getConfig().profile());
             dc = new DocumentContext();
             StringBuffer buff = template.getContent(ctx);
             dc.setDocument(buff);
             dc.setURI(template.getTemplateURI());
             gatherCommands(buff,ctx,dc);
-            if (!ctx.getConfig().profile()) {
-                template.setDocumentContext(dc);
-            } else {
+            template.setDocumentContext(dc);
+            if (ctx.getConfig().profile()) {
                 dc.setRequiresRefresh(true);
             }
 
@@ -307,7 +300,7 @@ public class DefaultEngine implements IEngine {
                 i+=1;
             }
         }
-        Config cfg = new Config();
+        Config cfg = Config.getInstance();
         FileSystemContext ctx = new FileSystemContext(cfg, documentRoot);
 
         if (cTemplates.size() == 0) {
