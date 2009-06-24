@@ -11,6 +11,7 @@ public interface IDocumentContext {
     public StringBuffer getDocument();
     public long getContentLength();
     public long getCreated();
+    public void setRequiresRefresh(boolean requiresRefresh);
     public long getLastAccessed();
     public long getLastRefresh();
     public void setDocument(StringBuffer document);

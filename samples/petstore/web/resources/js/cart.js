@@ -24,8 +24,14 @@ function renderCart(items) {
     }
 }
 
+if (window.onload) {
+    var oldOnload = window.onload;
+}
 // load the catalog for the given id
 window.onload = function() {
+    if (oldOnload) {
+        oldOnload();
+    }
     var categoryId = getURLParam("id");
     $.ajaxSetup({ cache: false });
     jQuery.getJSON( "controller?id=cart", function(data) {

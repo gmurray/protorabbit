@@ -88,10 +88,17 @@ public class DefaultEngine implements IEngine {
     private DocumentContext getDocumentContext(ITemplate template, IContext ctx) {
         DocumentContext dc = null;
         boolean requiresRefresh = false;
-        if (ctx.getConfig().getDevMode() && 
+        if (template.getDocumentContext() != null) {
+            requiresRefresh = template.getDocumentContext().requiresRefresh();
+        }
+        if (ctx.getConfig().profile()) {
+            requiresRefresh = true;
+        } else if (ctx.getConfig().getDevMode() && 
             template.getDocumentContext() != null ) {
             ResourceURI uri = template.getDocumentContext().getURI();
-            if (uri != null) {
+            if (template.getDocumentContext().requiresRefresh()) {
+                requiresRefresh = true;
+            } else if (uri != null) {
                 requiresRefresh = ctx.isUpdated(uri.getFullURI(), template.getDocumentContext().getLastRefresh() );
                 if (requiresRefresh) {
                     getLogger().info("Reloading resource : " + uri.getFullURI());
@@ -99,12 +106,18 @@ public class DefaultEngine implements IEngine {
             }
         }
         if (template.getDocumentContext() == null || requiresRefresh) {
+            getLogger().info("Reloading template document for template " + template.getId() + " profiling : " + ctx.getConfig().profile());
             dc = new DocumentContext();
             StringBuffer buff = template.getContent(ctx);
             dc.setDocument(buff);
             dc.setURI(template.getTemplateURI());
             gatherCommands(buff,ctx,dc);
-            template.setDocumentContext(dc);
+            if (!ctx.getConfig().profile()) {
+                template.setDocumentContext(dc);
+            } else {
+                dc.setRequiresRefresh(true);
+            }
+
         } else {
             dc = template.getDocumentContext();
         }

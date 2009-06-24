@@ -158,7 +158,11 @@ public class ResourceURI implements ITestable {
     }
 
     public void updateLastUpdated(IContext ctx) {
-        this.lastUpdated = ctx.getLastUpdated(getFullURI());
+        if (uri.startsWith("/")) {
+            this.lastUpdated = ctx.getLastUpdated(uri);
+        } else {
+            this.lastUpdated = ctx.getLastUpdated(getFullURI());
+        }
     }
 
     public boolean isUpdated(IContext ctx) {

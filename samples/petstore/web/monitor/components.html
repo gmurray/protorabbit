@@ -225,8 +225,8 @@ function createBlock(t) {
       s3tableElement.innerHTML = "N/A";
     }
     bb.appendChild(s3tableElement);
-    
-    terminals[t.id] = [ new WireIt.Terminal(te, {direction: [1,0], offsetPosition: [blockWidth - 15,45]})];
+
+    terminals[t.id] = [ new WireIt.Terminal(te, {wireConfig: { drawingMethod: "arrows"}, direction: [0,1], offsetPosition: [blockWidth - 15,45]})];
     // Make the block2 draggable
     new WireIt.util.DD(terminals[t.id],te);
     return te;
@@ -311,7 +311,7 @@ function render(model) {
            for (var j=0; j < t.ancestors.length;j++) {
                var ater = terminals[t.ancestors[j]];
                if (ater) {
-                   var w1 = new WireIt.Wire(lterminal[0], ater[0], document.body);
+                   var w1 = new WireIt.Wire(lterminal[0], ater[0], document.body, {  drawingMethod: "arrows"});
                    w1.redraw();
                }
            }

@@ -89,7 +89,7 @@ public class ResourceManager {
                ctx.setAttribute(DEFERRED_WRITTEN, Boolean.TRUE);
            } else {
                getLogger().severe("Unable to find protorabbit client script " + Config.PROTORABBIT_CLIENT);
-       }
+           }
        }
    }
 

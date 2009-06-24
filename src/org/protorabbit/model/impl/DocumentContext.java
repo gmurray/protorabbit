@@ -17,6 +17,7 @@ public class DocumentContext implements IDocumentContext {
     private long lastAccessed;
     private long lastRefresh;
     private ResourceURI uri = null;
+    private boolean requiresRefresh = false;
 
     public int index = 0;
  
@@ -102,6 +103,14 @@ public class DocumentContext implements IDocumentContext {
 
     public ResourceURI getURI() {
         return uri;
+    }
+
+    public void setRequiresRefresh(boolean requiresRefresh) {
+        this.requiresRefresh = requiresRefresh;
+    }
+    
+    public boolean requiresRefresh() {
+        return requiresRefresh;
     }
 
 }

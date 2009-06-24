@@ -18,10 +18,14 @@ function renderCategory(cateogry) {
 
 }
 
-
+if (window.onload) {
+    var oldOnload = window.onload;
+}
 // load the catalog for the given id
 window.onload = function() {
-
+    if (oldOnload) {
+        oldOnload();
+    }
     var categoryId = getURLParam("id");
     jQuery.getJSON( "controller?id=" + categoryId, function(data) {
         renderCategory(data);

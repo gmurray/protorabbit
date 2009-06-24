@@ -93,7 +93,7 @@ public class ProtoRabbitServlet extends HttpServlet {
     private long lastCleanup = -1;
     private boolean profile = false;
 
-    private String version = "0.7.8-dev-h";
+    private String version = "0.8.0-dev-c";
 
     // these file types will be provided with the default expires time if run
     // through the servlet
@@ -334,7 +334,7 @@ public class ProtoRabbitServlet extends HttpServlet {
             } else if ("scripts".equals(id)){
 
                 List<ResourceURI> scripts = t.getAllScripts(wc);
-                crm.processScripts(scripts, wc, false, out);             
+                crm.processScripts(scripts, wc, false, out);
                 cr = crm.getResource(resourceId, wc);
             } else if ("messages".equals(id)) {
                 if (json == null) {
@@ -460,7 +460,7 @@ public class ProtoRabbitServlet extends HttpServlet {
             if (t != null && t.getTimeout() != null) {
                 timeout = t.getTimeout();
             }
-            if (etag != null && t != null && timeout > 0) {
+            if (etag != null && t != null && timeout > 0 && !jcfg.profile()) {
                 resp.setHeader("ETag", etag);
                 resp.setHeader("Expires", cc.getExpires());
                 resp.setHeader("Cache-Control", "public,max-age=" + cc.getMaxAge());
@@ -570,6 +570,7 @@ public class ProtoRabbitServlet extends HttpServlet {
                 long duration = timestamp - startTime;
                 Episode e = jcfg.getEpisodeManager().getEpisode(clientId, startTime);
                 if (e == null) {
+                    getLogger().severe("Unable to find episode " + startTime + " to recourd data into with client " + clientId);
                     return;
                 }
                 e.setTimeshift(timeshift);
@@ -703,22 +704,27 @@ public class ProtoRabbitServlet extends HttpServlet {
 
         ICacheable tr = t.getTemplateResource();
         resp.setHeader("Content-Type", "text/html");
+        if (jcfg.profile()) {
+            resp.setHeader("pragma", "NO-CACHE");
+            resp.setHeader("Cache-Control", "no-cache");
+        }
 
         // get the initial content or get the content if it is expired
         if (t.getTimeout() != null && 
                 ((t.getTimeout() > 0 && (tr == null ||
                 tr.getCacheContext().isExpired() )) ||
                 t.requiresRefresh(wc) ||
+                jcfg.profile() ||
                 t.hasUserAgentPropertyDependencies(wc) )) {
 
             if (canGzip && t.gzipTemplate() != null && t.gzipTemplate() == true) {
                 resp.setHeader("Vary", "Accept-Encoding");
                 resp.setHeader("Content-Encoding", "gzip");
             }
-
-            resp.setHeader("Expires", IOUtil.getExpires(t.getTimeout()));
-            resp.setHeader("Cache-Control", "public,max-age=" + IOUtil.getMaxAge(t.getTimeout()));
-
+            if (jcfg.profile()) {
+                resp.setHeader("Expires", IOUtil.getExpires(t.getTimeout()));
+                resp.setHeader("Cache-Control", "public,max-age=" + IOUtil.getMaxAge(t.getTimeout()));
+            }
             // headers after this point do not get written
             engine.renderTemplate(id, wc, bos);
 
