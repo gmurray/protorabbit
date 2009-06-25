@@ -64,7 +64,7 @@ public class DefaultSerializer implements JSONSerializer {
        // maps
        if (Map.class.isAssignableFrom(o.getClass())) {
            JSONObject jo = new JSONObject();
-           Map m = ((Map<String, ?>)o);
+           Map<String, ?> m = ((Map<String, ?>)o);
            Iterator<String> ki =  m.keySet().iterator();
            while (ki.hasNext()) {
                String key = ki.next();
@@ -98,7 +98,7 @@ public class DefaultSerializer implements JSONSerializer {
        if (b) {
            try {
                Object[] objs = (Object[])o;
-               List l = Arrays.asList(objs);
+               List<Object> l = Arrays.asList(objs);
                return serialize(l);
            } catch (ClassCastException e) {
                return JSONObject.NULL;
@@ -173,4 +173,115 @@ public class DefaultSerializer implements JSONSerializer {
 
        return JSONObject.NULL;
    }
+
+   /*
+    * Get a 1 argument method matching the name and assignable with a given property
+    */
+    @SuppressWarnings("unchecked")
+    void invokeMethod(Method[] methods, String key, String name, JSONObject jo, Object targetObject) {
+        Object param = null;
+        for (int i=0;i < methods.length; i++) {
+            Method m = methods[i];
+            if (m.getName().equals(name)) {
+                Class<?>[] paramTypes = m.getParameterTypes();
+                if (paramTypes.length == 1 && jo.has(key)) {
+                     Class<?> tparam =  paramTypes[0];
+                     try {
+                         if (Long.class.isAssignableFrom(tparam)) {
+                             param = new Long(jo.getLong(key));
+                         } else if (Double.class.isAssignableFrom(tparam)) {
+                             param = new Double(jo.getDouble(key));
+                         } else if (Integer.class.isAssignableFrom(tparam)) {
+                             param = new Integer(jo.getInt(key));
+                         } else if (String.class.isAssignableFrom(tparam)) {
+                             param = jo.getString(key);
+                         } else if (Enum.class.isAssignableFrom(tparam)) {
+                             param = Enum.valueOf((Class<? extends Enum>)tparam, jo.getString(key));
+                         } else if (Boolean.class.isAssignableFrom(tparam)) {
+                             param = new Boolean(jo.getBoolean(key));
+                         } else if (jo.isNull(key)) {
+                             param = null;
+                         }
+                    } catch (JSONException e) {
+                            e.printStackTrace();
+                    }
+
+                      if (param != null) {
+
+                          try {
+
+                              if (m != null) {
+                                  Object[] args = {param};
+                                  m.invoke(targetObject, args);
+
+                              }
+                          } catch (SecurityException e) {
+                              e.printStackTrace();
+                          } catch (IllegalArgumentException e) {
+                              e.printStackTrace();
+                          } catch (IllegalAccessException e) {
+                              e.printStackTrace();
+                          } catch (InvocationTargetException e) {
+                              e.printStackTrace();
+                          }
+                    }
+                }
+            }
+        }
+
+    }
+
+    public void deSerialize(String jsonText, Object targetObject) {
+        try {
+            JSONObject jo = new JSONObject(jsonText);
+            deSerialize(jo, targetObject);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        
+    }
+
+    @SuppressWarnings("unchecked")
+    public void deSerialize(Object jsonObject, Object targetObject) {
+
+        if (jsonObject != null) {
+            JSONObject jo = (JSONObject)jsonObject;
+            Method[] methods = targetObject.getClass().getMethods();
+            Iterator<String> it = jo.keys();
+            while (it.hasNext()) {
+                String key = it.next();
+                // jump out if the key length is too short
+                if (key.length() <= 1) continue;
+                String mName = "set" + key.substring(0,1).toUpperCase() + key.substring(1);
+                invokeMethod( methods,key,  mName, jo, targetObject);
+            }
+        }
+    }
+
+    public Object deSerialize(String jsonText, Class<?> targetClass) {
+        try {
+            Object o = targetClass.newInstance();
+            deSerialize(jsonText, o);
+            return o;
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static void main(String[] args) {
+        DefaultSerializer df = new DefaultSerializer();
+        TestObject to = new TestObject();
+        to.setFirstName("Greg");
+        to.setLastName("Murray");
+        to.setTimeout(55L);
+        to.setFoo( TestObject.Foo.One);
+        System.out.println("Original Object=" + to);
+        JSONObject json = (JSONObject) df.serialize(to);
+        System.out.println("JSON Object=" + json);
+        TestObject to2 = (TestObject) df.deSerialize(json.toString(), TestObject.class);
+        System.out.println("After=" + to2);
+    }
 }

@@ -13,4 +13,6 @@ package org.protorabbit.json;
 
 public interface JSONSerializer {
     public Object serialize(Object o);
+    public void deSerialize(String jsonObject, Object targetObjects);
+    public Object deSerialize(String jsonText, Class<?> targetClass);
 }
