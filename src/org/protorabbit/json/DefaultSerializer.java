@@ -272,6 +272,7 @@ public class DefaultSerializer implements JSONSerializer {
     }
 
     public static void main(String[] args) {
+     /*
         DefaultSerializer df = new DefaultSerializer();
         TestObject to = new TestObject();
         to.setFirstName("Greg");
@@ -283,5 +284,6 @@ public class DefaultSerializer implements JSONSerializer {
         System.out.println("JSON Object=" + json);
         TestObject to2 = (TestObject) df.deSerialize(json.toString(), TestObject.class);
         System.out.println("After=" + to2);
+        */
     }
 }
