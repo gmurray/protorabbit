@@ -123,9 +123,13 @@ public class ResourceURI implements ITestable {
     public String getFullURI() {
         if (fullURI == null) {
             fullURI = baseURI;
-            // make sure to prevent // in paths
-            if (uri.startsWith("/") && baseURI.endsWith("/")) {
+
+        if (uri.startsWith("/")) {
+                fullURI = uri;
+        // make sure to prevent // in paths                
+        } else if (uri.startsWith("/") && baseURI.endsWith("/")) {
                 fullURI += uri.substring(1);
+
             } else {
                 fullURI += uri;
             }
