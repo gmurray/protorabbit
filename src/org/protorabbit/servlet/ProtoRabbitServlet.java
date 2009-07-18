@@ -93,7 +93,7 @@ public class ProtoRabbitServlet extends HttpServlet {
     private long lastCleanup = -1;
     private boolean profile = false;
 
-    private String version = "0.8.2-dev-b";
+    private String version = "0.8.3-dev-d";
 
     // these file types will be provided with the default expires time if run
     // through the servlet
@@ -686,13 +686,16 @@ public class ProtoRabbitServlet extends HttpServlet {
                 jcfg.getEpisodeManager().addEpisode(e);
             }
         }
+        // make sure that if a namespace is required that is is used to access the template. Also account for "" which can 
+        // result from the namespace.
         boolean namespaceOk = true;
         if (t != null && t.getURINamespace() != null ) {
-            if (namespace == null || !t.getURINamespace().startsWith(namespace)) {
+            if (namespace == null || (namespace != null && "".equals(namespace))|| !t.getURINamespace().startsWith(namespace)) {
                 namespaceOk = false;
                 getLogger().warning("request for template " + id + " without matching namespace " + t.getURINamespace());
             }
         }
+
         if (id == null || t == null || !namespaceOk) {
             getLogger().warning("template " + id + " requested but not found.");
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
