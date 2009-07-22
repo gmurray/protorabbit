@@ -137,7 +137,9 @@ public class DefaultSerializer implements JSONSerializer {
                     !"getDeclaringClass".equals(m.getName()) &&
                     !"getEnclosingClass".equals(m.getName()) &&
                     !"getClassLoader".equals(m.getName()) &&
-                    m.getName().startsWith("get") && m.getName().length() > 3 &&
+                    (m.getName().startsWith("get") ||
+                     m.getName().startsWith("is") ) &&
+                     m.getName().length() > 2 &&
                     m.getParameterTypes().length == 0) {
 
                    if (m.isAnnotationPresent(Serialize.class)) {
@@ -148,15 +150,20 @@ public class DefaultSerializer implements JSONSerializer {
                                }
                            }
                        // change the case of the property from camelCase
-                       String key = m.getName().substring(3,4).toLowerCase();
-                       // get the rest of the name;
-                       if (m.getName().length() > 4) {
+                       String key = "";
+                       if (m.getName().startsWith("is") &&
+                           m.getName().length() > 3) {
+                            key += m.getName().substring(2,3).toLowerCase();
+                            // get the rest of the name;
+                            key += m.getName().substring(3);
+                       } else if (m.getName().startsWith("get") &&
+                                  m.getName().length() > 4) {
+                           key +=  m.getName().substring(3,4).toLowerCase();
+                           // get the rest of the name;
                            key += m.getName().substring(4);
-                       }
-
+                       } 
                        Object value =  m.invoke(pojo, args);
                        map.put(key, value);
-
                }
            } catch (IllegalArgumentException e) {
                getLogger().warning("Unable to serialize " + pojo + " : " + e);
