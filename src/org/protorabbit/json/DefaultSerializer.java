@@ -64,13 +64,13 @@ public class DefaultSerializer implements JSONSerializer {
        // maps
        if (Map.class.isAssignableFrom(o.getClass())) {
            JSONObject jo = new JSONObject();
-           Map<String, ?> m = ((Map<String, ?>)o);
-           Iterator<String> ki =  m.keySet().iterator();
+           Map<?, ?> m = ((Map<?, ?>)o);
+           Iterator<?> ki =  m.keySet().iterator();
            while (ki.hasNext()) {
-               String key = ki.next();
+               Object key = ki.next();
                Object value = serialize(m.get(key));
                try {
-                   jo.put(key, value);
+                   jo.put(key.toString(), value);
                } catch (JSONException e) {
                    e.printStackTrace();
                }
