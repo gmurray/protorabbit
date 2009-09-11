@@ -19,6 +19,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
@@ -235,7 +236,6 @@ public class DefaultSerializer implements JSONSerializer {
                 }
             }
         }
-
     }
 
     public void deSerialize(String jsonText, Object targetObject) {
@@ -263,6 +263,93 @@ public class DefaultSerializer implements JSONSerializer {
                 invokeMethod( methods,key,  mName, jo, targetObject);
             }
         }
+    }
+    
+    public Object genericDeserialize(String jsonText) {
+        // check for array
+        jsonText = jsonText.trim();
+        if (jsonText.startsWith("[")) {
+
+           try {
+               JSONArray ja = new JSONArray(jsonText);
+               return genericDeserialize(ja, null, null);
+           } catch (JSONException jex) {
+               throw new RuntimeException("Error Parsing JSON:" + jex); 
+           }
+           // check for object
+        } else if (jsonText.startsWith("{")) {
+           try {
+               JSONObject jo = new JSONObject(jsonText);
+               return genericDeserialize(jo, null, null);
+           } catch (JSONException jex) {
+               throw new RuntimeException("Error Parsing JSON:" + jex); 
+           }
+        } else {
+            throw new RuntimeException("Error : Can only deserialize JSON objects or JSON arrays"); 
+        }
+    }
+    
+    private void addValue(Object targetObject, Object value, String key) {
+        if (targetObject == null) {
+            throw new RuntimeException("Error serializing: Can only deserialize JSON objects or JSON arrays"); 
+        } else if (targetObject instanceof ArrayList) {
+            List l = (List)targetObject;
+            l.add(value);
+        } else if (targetObject instanceof HashMap && key != null) {
+            Map m = (Map)targetObject;
+            m.put(key, value);
+        }
+    }
+    
+    @SuppressWarnings("unchecked")
+    private Object genericDeserialize(Object o, Object targetObject, String key) throws JSONException {
+
+        if (o instanceof JSONObject) {
+            JSONObject jo = (JSONObject)o;
+            Map<String,Object> jaoo = new HashMap<String,Object>();
+
+            // only add if we are not top level
+            if (targetObject != null) {
+                addValue(targetObject, jaoo, key);
+            }
+            Iterator<String> it = jo.keys();
+
+            while (it.hasNext()) {
+                String k = it.next();
+                Object value = jo.get(k);
+                genericDeserialize(value, jaoo, k);
+            }
+            // if we are the top level object return self
+            if (targetObject == null) {
+                return jaoo;
+            }
+
+        } else if (o instanceof JSONArray) {
+
+            JSONArray ja = (JSONArray)o;
+
+            List<Object> jal = new ArrayList<Object>();
+
+            // only add if we are not top level
+            if (targetObject != null) {
+                addValue(targetObject, jal, null);
+            }
+            for (int i=0; i < ja.length(); i++) {
+                 Object jao = ja.get(i);
+                 genericDeserialize(jao, jal, null);
+            }
+            // if we are the top level object return self
+            if (targetObject == null) {
+                return jal; 
+            }
+          // primitives
+        } else if (o instanceof Date) {
+           Object value = ((Date)o).getTime();
+           addValue(targetObject, value, key);
+        } else {
+           addValue(targetObject, o, key);
+       }
+       return null;
     }
 
     public Object deSerialize(String jsonText, Class<?> targetClass) {
