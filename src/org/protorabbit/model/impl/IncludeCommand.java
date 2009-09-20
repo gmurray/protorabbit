@@ -182,7 +182,7 @@ public class IncludeCommand extends BaseCommand {
                             defaultCmds = new ArrayList<ICommand>();
                             document.setAfterCommands(defaultCmds);
                         }
-                        defaultCmds.add(c);                   
+                        defaultCmds.add(c);
                     } else if (c.getProcessOrder() == ICommand.PROCESS_LAST) {
                         if (lastCmds == null) {
                             lastCmds = new ArrayList<ICommand>();

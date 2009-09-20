@@ -27,6 +27,7 @@ import org.protorabbit.model.IContext;
 import org.protorabbit.model.ITemplate;
 import org.protorabbit.model.impl.IncludeCommand;
 import org.protorabbit.model.impl.ResourceURI;
+import org.protorabbit.model.impl.Template;
 import org.protorabbit.util.IOUtil;
 
 /**
@@ -212,12 +213,12 @@ public class ResourceManager {
 
 
        List<String> deferredScripts = (List<String>)ctx.getAttribute(IncludeCommand.DEFERRED_SCRIPTS);
-
+       ITemplate t = ctx.getConfig().getTemplate(ctx.getTemplateId());
        Iterator<ResourceURI> it = scriptResources.iterator();
        while (it.hasNext()) {
            ResourceURI ri = it.next();
            if (ri.isWritten()) continue;
-           String resource = ri.getURI();
+           String resource = ri.getURI(t.getUniqueURL());
            String baseURI =  ctx.getContextRoot();
 
            if (!ri.isExternal()){
@@ -242,12 +243,12 @@ public class ResourceManager {
                ctx.setAttribute(IncludeCommand.DEFERRED_SCRIPTS, deferredScripts);
           
            } else if (!ri.isExternal()){
-               StringBuffer scriptBuffer = ctx.getResource(ri.getBaseURI(), ri.getURI());
+               StringBuffer scriptBuffer = ctx.getResource(ri.getBaseURI(), ri.getURI(t.getUniqueURL()));
                try {
                    scripts.appendContent(scriptBuffer.toString());
                    ri.updateLastUpdated(ctx);
                } catch (Exception ioe) {
-                  getLogger().warning("Unable to locate resource " + ri.getURI());
+                  getLogger().warning("Unable to locate resource " + ri.getURI(null));
                }
            } else {
                if (ctx.getConfig().profile()) {
@@ -281,11 +282,12 @@ public class ResourceManager {
        }
        List<String> deferredScripts = (List<String>)ctx.getAttribute(IncludeCommand.DEFERRED_SCRIPTS);
        Iterator<ResourceURI> it = styleResources.iterator();
+       ITemplate t = ctx.getConfig().getTemplate(ctx.getTemplateId());
        while (it.hasNext()) {
            ResourceURI ri = it.next();
            if (ri.isWritten()) continue;
            String mediaType = ri.getMediaType();
-           String resource = ri.getURI();
+           String resource = ri.getURI(t.getUniqueURL());
            String baseURI =  ctx.getContextRoot();
 
            if (!ri.isExternal()){
@@ -311,13 +313,13 @@ public class ResourceManager {
                ri.setWritten(true);
                ctx.setAttribute(IncludeCommand.DEFERRED_SCRIPTS, deferredScripts);
            } else if (!ri.isExternal()){
-               StringBuffer stylesBuffer = ctx.getResource(ri.getBaseURI(), ri.getURI());
+               StringBuffer stylesBuffer = ctx.getResource(ri.getBaseURI(), ri.getURI(null));
                try {
                    stylesBuffer = replaceRelativeLinks(stylesBuffer, ri.getBaseURI(), ctx, ri.getFullURI());
                    styles.appendContent(stylesBuffer.toString());
                    ri.updateLastUpdated(ctx);
                } catch (Exception ioe) {
-                   getLogger().warning("Non Fatal Error : Unable to locate resource "  +ri.getURI());
+                   getLogger().warning("Non Fatal Error : Unable to locate resource "  +ri.getURI(null));
                }
            } else {
                if (ctx.getConfig().profile()) {

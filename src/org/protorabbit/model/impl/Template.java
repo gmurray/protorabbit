@@ -52,6 +52,7 @@ public class Template implements ITemplate {
     private Boolean gzipScripts = null;
     private Config config = null;
     private long lastUpdate;
+    private long created = 0;
     private Long timeout = null;
     private Boolean combineStyles = null;
     private Boolean combineScripts = null;
@@ -59,6 +60,7 @@ public class Template implements ITemplate {
     private String uriNamespace = null;
     private Map<String, Object> attributes = null;
     private DocumentContext dc = null;
+    private Boolean uniqueURL = null;
     private static Logger logger = null;
 
     public Template(String id, String baseURI, JSONObject json, Config cfg) {
@@ -69,6 +71,7 @@ public class Template implements ITemplate {
         properties = new HashMap<String, IProperty>();
         attributes = new HashMap<String, Object>();
         this.config  = cfg;
+        this.created = System.currentTimeMillis();
     }
 
     static Logger getLogger() {
@@ -82,6 +85,10 @@ public class Template implements ITemplate {
         this.contents = contents;
     }
 
+    public long getCreateTime() {
+        return created;
+    }
+
     @Serialize("skip")
     public StringBuffer getContent(IContext ctx) {
             ResourceURI tri = getTemplateURI();
@@ -92,10 +99,10 @@ public class Template implements ITemplate {
             } else {
                 if (requiresRefresh(ctx)) {
                     try {
-                        contents = ctx.getResource(tri.getBaseURI(), tri.getURI());
+                        contents = ctx.getResource(tri.getBaseURI(), tri.getURI(false));
                         lastUpdate = (new Date()).getTime();
                     } catch (IOException e) {
-                        getLogger().log(Level.SEVERE, "Error retrieving template with baseURI of " + tri.getBaseURI() + " and name " + tri.getURI(), e);
+                        getLogger().log(Level.SEVERE, "Error retrieving template with baseURI of " + tri.getBaseURI() + " and name " + tri.getURI(null), e);
                         String message = "Error retriving template " + id + " please see log files for more details.";
                         contents = new StringBuffer(message);
                     }
@@ -547,10 +554,10 @@ public class Template implements ITemplate {
         if (ctx.getConfig().getDevMode()) {
             String base = tri.getBaseURI();
             // if context root then don't include the base
-            if (tri.getURI().startsWith("/")) {
+            if (tri.getURI(null).startsWith("/")) {
                 base = "";
             }
-            isUpdated = ctx.isUpdated(base + tri.getURI(), lastUpdate);
+            isUpdated = ctx.isUpdated(base + tri.getURI(null), lastUpdate);
         }
         // check against the timeout
         long ltimeout = 0;
@@ -769,4 +776,21 @@ public class Template implements ITemplate {
         this.dc = dc;
     }
 
+    public void setUniqueURL(Boolean uniqueURL) {
+        this.uniqueURL  = uniqueURL;
+    }
+
+    public Boolean getUniqueURL() {
+        if (uniqueURL == null && ancestors != null) {
+            Iterator<String> it = ancestors.iterator();
+            while (it.hasNext()) {
+                ITemplate t = config.getTemplate(it.next());
+                Boolean u = t.getUniqueURL();
+                if (t != null) {
+                    uniqueURL = u;
+                }
+            }
+        }
+        return uniqueURL;
+    }
 }

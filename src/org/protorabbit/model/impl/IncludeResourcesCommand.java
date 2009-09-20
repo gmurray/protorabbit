@@ -122,8 +122,12 @@ public class IncludeResourcesCommand extends BaseCommand {
                          "</script>\n";
                          buffer.write(measure.getBytes());
                     }
+                    String uuid = "";
+                    if (t.getUniqueURL() != null && t.getUniqueURL() == Boolean.TRUE) {
+                        uuid = "&puuid" + t.getCreateTime();
+                    }
                     String uri = "<script src=\"" + 
-                    cfg.getResourceService() + "?resourceid=" + resourceId +  ".js&tid=" + t.getId() + "\"></script>";
+                    cfg.getResourceService() + "?resourceid=" + resourceId +  ".js&tid=" + t.getId() + uuid + "\"></script>";
                     buffer.write(uri.getBytes());
                     if (ctx.getConfig().profile()) {
                         String measure =  "<script>" +
@@ -193,10 +197,13 @@ public class IncludeResourcesCommand extends BaseCommand {
                          "</script>\n";
                          buffer.write(measure.getBytes());
                      }
-
+                     String uuid = "";
+                     if (t.getUniqueURL() != null && t.getUniqueURL() == Boolean.TRUE) {
+                         uuid = "&puuid=" + t.getCreateTime();
+                     }
                     String uri = "<link rel=\"stylesheet\" type=\"text/css\" href=\"" +
                     cfg.getResourceService() + "?resourceid=" + resourceId + 
-                    ".css&tid=" + t.getId() + "\" media=\"" + cfg.getMediaType() + "\"/>";
+                    ".css&tid=" + t.getId() + uuid + "\" media=\"" + cfg.getMediaType() + "\"/>";
                     buffer.write(uri.getBytes());
                     if (ctx.getConfig().profile()) {
                         String measure =  "<script>" +

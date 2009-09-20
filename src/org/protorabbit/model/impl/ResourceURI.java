@@ -34,14 +34,17 @@ public class ResourceURI implements ITestable {
     private int loadIndex;
     private boolean defer = false;
     private long lastUpdated = -1;
+    private Boolean uniqueURL = null;
     private String uaTest = null;
+    private long created = 0;
 
     public ResourceURI(String uri, String baseURI, int type) {
         this.uri = uri;
         this.baseURI = baseURI;
         this.type = type;
+        this.created = System.currentTimeMillis();
     }
-    
+
     public int getLoadIndex() {
         return loadIndex;
     }
@@ -58,9 +61,14 @@ public class ResourceURI implements ITestable {
         this.written = written;
     }
 
-    public String getURI() {
-        return uri;
+    public String getURI(Boolean unique) {
+        String turi = uri;
+        if ((unique != null && unique == Boolean.TRUE) || (uniqueURL != null && uniqueURL == Boolean.TRUE)) {
+            turi += "?puuid=" + created;
+        }
+        return turi;
     }
+
     public void setUri(String uri) {
         this.uri = uri;
     }
@@ -72,15 +80,19 @@ public class ResourceURI implements ITestable {
     public void setbaseURI(String baseURI) {
         this.baseURI = baseURI;
     }
+
     public Boolean getCombine() {
         return combine;
     }
+
     public void setCombine(Boolean combine) {
         this.combine = combine;
     }
+
     public int getType() {
         return type;
     }
+
     public void setType(int type) {
         this.type = type;
     }
@@ -126,7 +138,7 @@ public class ResourceURI implements ITestable {
 
         if (uri.startsWith("/")) {
                 fullURI = uri;
-        // make sure to prevent // in paths                
+        // make sure to prevent // in paths
         } else if (uri.startsWith("/") && baseURI.endsWith("/")) {
                 fullURI += uri.substring(1);
 
@@ -179,5 +191,17 @@ public class ResourceURI implements ITestable {
 
     public void setUATest(String test) {
         this.uaTest = test;
+    }
+
+    public void setUniqueURL(Boolean uniqueURL) {
+        this.uniqueURL = uniqueURL;
+    }
+
+    public Boolean getUniqueURL() {
+        return uniqueURL;
+    }
+
+    public long getCreateTime() {
+        return created;
     }
 }

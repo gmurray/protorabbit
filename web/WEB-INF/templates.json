@@ -6,6 +6,7 @@
      "timeout" : 150000,
      "gzip" : false,
      "id" : "welcome",
+     "uniqueURL" : true,
      "extends" : "blueprints-css",
      "properties" : {
            "title" : {"type" : "string", "value" : "Welcome to ProtoRabbit"},

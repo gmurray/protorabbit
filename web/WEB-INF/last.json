@@ -2,7 +2,7 @@
   "templates" : [
     {
        "id" : "etsuko",
-       "extends" : "blueprints-css",    
+       "extends" : "blueprints-css",
        "properties" : {
            "title" : {"type" : "string", "value" : "Etsuko" },
            "body" : { "type" : "include", "value" : "/etsuko.html" },
@@ -12,9 +12,11 @@
     },   
     {
        "id" : "kitty",
-       "extends" : "etsuko",    
+       "extends" : "etsuko",
+       "uniqueURL" : true,
+       "combineResources" : true,
        "properties" : {
-           "title" : {"type" : "string", "value" : "Kitty"},
+           "title" : {"type" : "string", "value" : "Kitty 4"},
            "sidebar" : { "type" : "include", "value" : "/etsuko.html" },
            "body" : { "type" : "include", "value" : "/kitty.html" },
            "message" : { "type" : "string", "value" : "Meow meow meow mix." }

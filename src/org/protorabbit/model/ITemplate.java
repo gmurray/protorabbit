@@ -70,4 +70,7 @@ public interface ITemplate {
     public DocumentContext getDocumentContext();
     public void setDocumentContext(DocumentContext dc);
     public void getDeferProperties(List<IProperty> deferredProperties, IContext ctx);
+    public void setUniqueURL(Boolean tgzip);
+    public Boolean getUniqueURL();
+    public long getCreateTime();
 }

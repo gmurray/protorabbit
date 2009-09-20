@@ -66,6 +66,8 @@ public class Config {
    private String httpClientClassName = "org.protorabbit.accelerator.impl.HttpClient";
    private static Logger logger = null;
    private EpisodeManager episodeManager = null;
+   private long created = 0;
+
 
    static Logger getLogger() {
        if (logger == null) {
@@ -129,7 +131,12 @@ public class Config {
        return episodeManager;
    }
 
+   public long getCreateTime() {
+       return created;
+   }
+
    void init() {
+       this.created = System.currentTimeMillis();
        globalAttributes = new HashMap<String, Object>();
        commandMap = new HashMap<String, String>();
 
@@ -353,6 +360,14 @@ public class Config {
                if (so.has("combine")) {
                    ri.setCombine(so.getBoolean("combine"));
                }
+               if (so.has("uniqueURL")) {
+                   Boolean unique = so.getBoolean("uniqueURL");
+                   ri.setUniqueURL(unique);
+               // override with template uniqueURL
+               } else if (temp.getUniqueURL() != null) {
+        System.out.println("ri override on" + url + " to " + temp.getUniqueURL());
+                   ri.setUniqueURL(temp.getUniqueURL());
+               }
                refs.add(ri);
            }
        }
@@ -403,6 +418,11 @@ public class Config {
                       temp.setGzipStyles(tgzip);
                       temp.setGzipScripts(tgzip);
                       temp.setGzipTemplate(tgzip);
+                  }
+
+                  if (t.has("uniqueURL")) {
+                      Boolean unique = t.getBoolean("uniqueURL");
+                      temp.setUniqueURL(unique);
                   }
 
                   // template overrides default combineResources
