@@ -143,7 +143,7 @@ public class IncludeResourcesCommand extends BaseCommand {
 
            }
            if (deferredScripts != null) {
-
+               ResourceManager.writeDeferred(ctx, buffer, t);
                for (String s : deferredScripts) {
                    buffer.write(s.getBytes());
                }
@@ -157,6 +157,7 @@ public class IncludeResourcesCommand extends BaseCommand {
                CacheableResource cr = new CacheableResource("application/json", cfg.getResourceTimeout(), resourceId);
                cr.setContent( new StringBuffer(content) );
                crm.putResource(t.getId() + "_" + resourceId, cr);
+               ResourceManager.writeDeferred(ctx, buffer, t);
                buffer.write(("<script>protorabbit.addDeferredProperties('" + cfg.getResourceService() +
                        "?resourceid=" + resourceId + ".json&tid=" + t.getId() + "', '" + ctx.getTemplateId() +"');</script>").getBytes());
            }
@@ -213,6 +214,7 @@ public class IncludeResourcesCommand extends BaseCommand {
                    }
                     
                } else if (resourceId != null){
+                   ResourceManager.writeDeferred(ctx, buffer, t);
                    String uri = "<script>protorabbit.addDeferredStyle('" + 
                    cfg.getResourceService() + "?resourceid=" + resourceId + ".css&tid=" + t.getId() + "')</script>";
                    buffer.write(uri.getBytes());
