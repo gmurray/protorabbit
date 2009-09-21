@@ -363,10 +363,6 @@ public class Config {
                if (so.has("uniqueURL")) {
                    Boolean unique = so.getBoolean("uniqueURL");
                    ri.setUniqueURL(unique);
-               // override with template uniqueURL
-               } else if (temp.getUniqueURL() != null) {
-        System.out.println("ri override on" + url + " to " + temp.getUniqueURL());
-                   ri.setUniqueURL(temp.getUniqueURL());
                }
                refs.add(ri);
            }

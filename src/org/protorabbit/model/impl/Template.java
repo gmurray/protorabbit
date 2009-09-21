@@ -784,10 +784,15 @@ public class Template implements ITemplate {
         if (uniqueURL == null && ancestors != null) {
             Iterator<String> it = ancestors.iterator();
             while (it.hasNext()) {
-                ITemplate t = config.getTemplate(it.next());
-                Boolean u = t.getUniqueURL();
+                String tid = it.next();
+                ITemplate t = config.getTemplate(tid);
                 if (t != null) {
-                    uniqueURL = u;
+                    Boolean u = t.getUniqueURL();
+                    if (t != null) {
+                        uniqueURL = u;
+                    }
+                } else {
+                    getLogger().log(Level.WARNING, "Error retrieving ancestor template with id " + tid);
                 }
             }
         }

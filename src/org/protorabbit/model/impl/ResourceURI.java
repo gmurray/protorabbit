@@ -60,6 +60,10 @@ public class ResourceURI implements ITestable {
     public void setWritten(boolean written) {
         this.written = written;
     }
+    
+    public String getURI() {
+        return getURI(null);
+    }
 
     public String getURI(Boolean unique) {
         String turi = uri;
