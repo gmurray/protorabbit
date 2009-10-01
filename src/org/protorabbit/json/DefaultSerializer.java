@@ -119,8 +119,12 @@ public class DefaultSerializer implements JSONSerializer {
     */
    public Object serializePOJO(Object pojo) {
 
+       if ("java.lang.Class".equals(pojo.getClass().getName())) {
+           return null;
+       }
        Object[] args = {};
        HashMap<String, Object> map = new HashMap<String, Object>();
+
        Method[] methods = pojo.getClass().getMethods();
        for (int i=0; i < methods.length;i++) {
 
@@ -129,6 +133,7 @@ public class DefaultSerializer implements JSONSerializer {
 
                // skip if there is a skip annotation
                if (Modifier.isPublic(m.getModifiers()) &&
+                    !"getHibernateLazyInitializer".equals(m.getName()) &&
                     !"getClass".equals(m.getName()) &&
                     !"getParent".equals(m.getName()) &&
                     !"getSystemClassLoader".equals(m.getName()) &&
@@ -141,7 +146,8 @@ public class DefaultSerializer implements JSONSerializer {
                     (m.getName().startsWith("get") ||
                      m.getName().startsWith("is") ) &&
                      m.getName().length() > 2 &&
-                    m.getParameterTypes().length == 0) {
+                     m.getParameterTypes().length == 0) {
+                     
 
                    if (m.isAnnotationPresent(Serialize.class)) {
                        Serialize s = m.getAnnotation(Serialize.class);
