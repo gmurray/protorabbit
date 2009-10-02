@@ -106,7 +106,7 @@ public class DefaultSerializer implements JSONSerializer {
            }
        }
        // serialize using bean like methods
-       return serializePOJO(o);
+       return serializePOJO(o, true);
 
    }
 
@@ -117,15 +117,24 @@ public class DefaultSerializer implements JSONSerializer {
     * create a property key for the methods and invoke the method using reflection
     * to get value.
     */
-   public Object serializePOJO(Object pojo) {
+public Object serializePOJO(Object pojo, boolean includeSuper) {
 
        if ("java.lang.Class".equals(pojo.getClass().getName())) {
            return null;
        }
+       if (pojo.getClass().getClassLoader() == null) {
+           includeSuper = false;
+       }
        Object[] args = {};
        HashMap<String, Object> map = new HashMap<String, Object>();
 
-       Method[] methods = pojo.getClass().getMethods();
+       Method[] methods = null;
+       if (includeSuper) {
+           methods =pojo.getClass().getMethods();
+       } else {
+           methods =pojo.getClass().getDeclaredMethods();
+       }
+
        for (int i=0; i < methods.length;i++) {
 
            Method m = methods[i];
