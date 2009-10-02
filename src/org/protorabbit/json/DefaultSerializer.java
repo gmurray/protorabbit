@@ -41,7 +41,6 @@ public class DefaultSerializer implements JSONSerializer {
         return logger;
     }
 
-   @SuppressWarnings("unchecked")
    public Object serialize(Object o) {
 
        // null is null
@@ -117,13 +116,13 @@ public class DefaultSerializer implements JSONSerializer {
     * create a property key for the methods and invoke the method using reflection
     * to get value.
     */
-public Object serializePOJO(Object pojo, boolean includeSuper) {
+    public Object serializePOJO(Object pojo, boolean includeSuper) {
 
        if ("java.lang.Class".equals(pojo.getClass().getName())) {
            return null;
        }
        if (pojo.getClass().getClassLoader() == null) {
-           includeSuper = false;
+       includeSuper = false;
        }
        Object[] args = {};
        HashMap<String, Object> map = new HashMap<String, Object>();
@@ -279,7 +278,7 @@ public Object serializePOJO(Object pojo, boolean includeSuper) {
             }
         }
     }
-    
+
     public Object genericDeserialize(String jsonText) {
         // check for array
         jsonText = jsonText.trim();
@@ -303,7 +302,8 @@ public Object serializePOJO(Object pojo, boolean includeSuper) {
             throw new RuntimeException("Error : Can only deserialize JSON objects or JSON arrays"); 
         }
     }
-    
+
+    @SuppressWarnings("unchecked")
     private void addValue(Object targetObject, Object value, String key) {
         if (targetObject == null) {
             throw new RuntimeException("Error serializing: Can only deserialize JSON objects or JSON arrays"); 
