@@ -1,0 +1,189 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+      "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></meta>
+<title>Communicator Example</title>
+
+<script src="resources/jmaki.js"></script>
+<script src="resources/jmaki/communicator/extension.js"></script>
+
+<script>
+jmaki.debug = true;
+jmaki.debugGlue = true;
+
+jmaki.loadExtension({ name : 'jmaki.communicator',
+	                  args : {
+                          pollTimeout : 5000,
+                          subscribe : ['/User/*', '/hello/*'],
+                          server : '../jcom'
+                      }
+});
+
+function processHello() {
+    // clear the server messages
+	document.getElementById("serverMessage").innerHTML = "";
+    // this is to test a custom handler on the server listening for messages on the topic "/hello/test"
+    jmaki.publish('/hello/test', { name : document.getElementById("helloField").value} );
+    // do an immediate fetch of messages from the server
+    // while this is not required (the polling will pick up the messages) it will make a smoother for the UI
+    jmaki.getExtension("jmaki.communicator").getMessages();
+}
+
+
+function processForm() {
+    // clear the server messages
+	document.getElementById("serverMessage").innerHTML = "";
+	// the server is listening for the topic "/User/test1" and the requrest will be forwarded
+	// to the server via the "jmaki.communicator" extension.
+	jmaki.publish('/User/test1', { name : document.getElementById("nameField").value,
+		                            phone : document.getElementById("phoneField").value
+		                          } );
+}
+
+// these two handlers listen to updates published from the server
+jmaki.subscribe("/server/hello", function(message) {
+
+	document.getElementById("serverMessage").innerHTML = "Server resonded with : " + message;
+});
+
+jmaki.subscribe("/UserBean/*", function(message) {
+	document.getElementById("serverMessage").innerHTML = "Server resonded with : " + jmaki.inspect(message);
+});
+
+</script>
+
+
+</head>
+
+
+<body>
+<h1>Communicator Tests</h1>
+
+
+<div id="serverMessage" style="background:yellow"></div>
+
+<h2> Custom Handler Processing - Hello Rabbit</h2>
+<p>
+A custom server side handler named TestHandler is mapped to the topic "/hello/test". 
+Submitting the form will publish your name to the server which will respond with a 
+separate message back to the client to the topic "/server/hello". This example will do
+an immediate fetch for server based published messages following the form publish.
+Following is the client side code:
+<pre>
+function processHello() {
+    // clear the server messages
+	document.getElementById("serverMessage").innerHTML = "";
+    // this is to test a custom handler on the server listening for messages on the topic "/hello/test"
+    jmaki.publish('/hello/test', { name : document.getElementById("helloField").value} );
+    // do an immediate fetch of messages from the server
+    // while this is not required (the polling will pick up the messages) it will make a smoother for the UI
+    jmaki.getExtension("jmaki.communicator").getMessages();
+}
+</pre>
+
+<p>The server side code looks like:</p>
+
+<pre>
+package test;
+
+import org.protorabbit.Handler;
+import org.protorabbit.Message;
+import org.protorabbit.PubSub;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+public class TestHandler implements Handler {
+	
+	public TestHandler() {}
+
+	public String processRequest(JSONObject jo) {
+		try {
+			System.out.println("Test Handler was invoked with name: " + jo.getString("name"));
+			PubSub.getInstance().publish(new Message("/server/hello", "Hello " + jo.getString("name")));
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+}
+</pre>
+
+<form action="#" onsubmit="processHello();return false">
+  <div>Name : <input id="helloField" type="text" value="Any maki will protorabbit" /> </div>
+  <input type="Submit" value="Say Hello"/>
+</form>
+
+<h2> Direct Bean Update </h2>
+
+<p>A Pojo of the class UserBean is found in the session scope on the server and mapped to
+listen to messages on "/User/Test1". Submitting the form will update the bean properties
+on the server and cause a message from the server confirming the update to be published 
+back to the client with the topic "/UserBean/updated" with the server value. This update
+will rely on the polling of the server to get the latest updates (default polling is 5
+seconds). The client side code is as follows:
+
+</p>
+<pre>
+function processForm() {
+    // clear the server messages
+	document.getElementById("serverMessage").innerHTML = "";
+	// the server is listening for the topic "/User/test1" and the requrest will be forwarded
+	// to the server via the "protorabbit.communicator" extension.
+	protorabbit.publish('/User/test1', { name : document.getElementById("nameField").value,
+                                   phone : document.getElementById("phoneField").value
+               } );
+}
+</pre>
+
+<p>The server side bean is:</p>
+<pre>
+package test;
+
+import org.protorabbit.Message;
+import org.protorabbit.PubSub;
+
+public class UserBean {
+
+	protected String name = null;
+	protected String phone = null;
+	
+	public UserBean() {}
+	
+	public String getPhone() {
+		return phone;
+	}
+
+	public void setPhone(String phone) {
+		this.phone = phone;
+		System.out.println("UserBean: phone has been set to " + phone);
+	}
+
+	public void setName(String name) {
+		this.name = name;
+		System.out.println("UserBean: name has been set to " + name);
+		PubSub.getInstance().publish(new Message("/UserBean/updated", this));		
+	}
+	
+	public String getName() {
+		return name;
+	}
+	
+}
+
+</pre>
+
+<form action="#" onsubmit="processForm();return false">
+  <div>Name : <input id="nameField" type="text" value="rabbit" /> </div>
+  <div>Phone : <input id="phoneField" type="text" value="(408) 123-4567" /> </div>
+  <input type="Submit" value="Update"/>
+</form>
+
+
+
+
+</body>
+
+</html>
