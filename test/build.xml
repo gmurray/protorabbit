@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="jmaki-communicator" default="java" basedir=".">
+
+  <property file="../samples.properties"/>
+  <property file="build.properties"/>
+  <property file="${user.home}/build.properties"/>
+
+  <property name="src.web" value="${basedir}/web"/>
+  <property name="dist.dir" value="${basedir}/dist"/>
+  <property name="build.dir" value="${basedir}/build"/>
+  <property name="war.build.dir" value="${build.dir}/war"/>  
+
+  <target name="java"> 
+    <mkdir dir="${build.dir}/war"/>
+   
+    <!--Copy in core jMaki Java includes -->
+  	<ant  inheritAll="false" target="addJavaCore" antfile="../build.xml">
+       <property name="dest.dir" value="${build.dir}/war" />
+    </ant>
+  	
+  
+    <!-- Add the jmaki widgets -->
+  	<ant  inheritAll="false" target="addWidgets" antfile="../build.xml">
+       <property name="dest.dir" value="${build.dir}/war" />
+       <property name="widget.lib" value="${jmaki}" />
+    </ant>
+    	    
+    
+    <!-- Copy in the web -->
+    <copy todir="${build.dir}/war">
+      <fileset dir="web" />     
+    </copy>
+
+    <mkdir dir="${dist.dir}"/>
+    <jar destfile="${dist.dir}/${ant.project.name}.war" >
+        <fileset dir="${build.dir}/war" />
+    </jar>
+    <zip destfile="${dist.dir}/${ant.project.name}-java-${version}.zip" >
+        <fileset dir="dist" includes="${ant.project.name}.war"/>
+        <fileset dir="" includes="README"/>
+    </zip>   
+  </target>
+  
+  <target name="deploy-java" depends="deploy"/>
+  
+  <target name="deploy" depends="java">
+       <ant  inheritAll="false" target="deploy-java" antfile="../build.xml">
+        <property name="target.war" value="${dist.dir}/${ant.project.name}.war" />
+      </ant>
+  </target>
+    
+ <target name="clean">
+   <delete dir="dist" />
+   <delete dir="build" />
+  </target>
+  
+</project>
