@@ -10,8 +10,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.json.JSONObject;
-import org.protorabbit.json.JSONSerializer;
-import org.protorabbit.json.SerializationFactory;
 
 public class BaseJSONHandler implements Handler {
 
