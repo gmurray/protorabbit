@@ -15,6 +15,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.protorabbit.json.JSONSerializer;
 import org.protorabbit.json.SerializationFactory;
+import org.protorabbit.json.Serialize;
+import org.protorabbit.util.ClassUtil;
 
 public class HandlerFactory {
 
@@ -55,7 +57,7 @@ public class HandlerFactory {
         int namespace = path.lastIndexOf("/");
         System.out.println("namespace=" + namespace);
         if (namespace != -1) {
-            handlerNameSpace = path.substring(namespace,namespace +1);
+            handlerNameSpace = path.substring(0,namespace +1);
             namespace +=1;
         } else {
             namespace = 0;
@@ -91,7 +93,23 @@ public class HandlerFactory {
                     Object target = klass.newInstance();
                     thandler = (Handler)target;
                     if (handlerMethod != null) {
-
+                        // check for the Namespace
+                        if (klass.isAnnotationPresent(Namespace.class)) {
+                            Namespace n = (Namespace) klass.getAnnotation(Namespace.class);
+                            if (n != null && handlerNameSpace != null) {
+                                    if (handlerNameSpace.equals(n.value())) {
+                                        System.out.println("Namespace match. Continuing");
+                                    } else {
+                                        System.out.println("Namespace " + n.value() + " required.");
+                                        response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                                        return;
+                                    }
+                           } else {
+                               System.out.println("Namespace " + n.value() + " required.");
+                               response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                               return;
+                           }
+                        }
                         try {
                             Method m = thandler.getClass().getMethod(handlerMethod, null);
                             
@@ -161,6 +179,10 @@ public class HandlerFactory {
         while(params.hasMoreElements()) {
             String param = (String)params.nextElement();
             System.out.println("Processing param " + param);
+            // get a list of possible methods that are setters for this param
+            List<Method> methods = ClassUtil.getMethods(h, param, true);
+            // populate the values
+            ClassUtil.mapParam(methods, param, request.getParameter(param), h);
         }
     }
 
