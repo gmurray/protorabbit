@@ -109,6 +109,33 @@ public class DefaultSerializer implements JSONSerializer {
 
    }
 
+    protected boolean skipSerialization ( Method m ) {
+        boolean skipIt = !( Modifier.isPublic(m.getModifiers()) &&
+                           !"getHibernateLazyInitializer".equals(m.getName()) &&
+                           !"getClass".equals(m.getName()) &&
+                           !"getParent".equals(m.getName()) &&
+                           !"getSystemClassLoader".equals(m.getName()) &&
+                           !"getMethods".equals(m.getName()) &&
+                           !"getDeclaredClasses".equals(m.getName()) &&
+                           !"getConstructors".equals(m.getName()) &&
+                           !"getDeclaringClass".equals(m.getName()) &&
+                           !"getEnclosingClass".equals(m.getName()) &&
+                           !"getClassLoader".equals(m.getName()) &&
+                           (m.getName().startsWith("get") ||
+                            m.getName().startsWith("is") ) &&
+                           m.getName().length() > 2 &&
+                           m.getParameterTypes().length == 0);
+        if( !skipIt &&
+            m.isAnnotationPresent(Serialize.class)) {
+            Serialize s = m.getAnnotation(Serialize.class);
+            
+            if ("skip".equals(s.value())) {
+                skipIt = true;
+            }
+        }
+        return skipIt;
+    }
+
    /*
     * Look at all the public methods in the object
     * find the ones that start with "get"
@@ -140,30 +167,8 @@ public class DefaultSerializer implements JSONSerializer {
            try {
 
                // skip if there is a skip annotation
-               if (Modifier.isPublic(m.getModifiers()) &&
-                    !"getHibernateLazyInitializer".equals(m.getName()) &&
-                    !"getClass".equals(m.getName()) &&
-                    !"getParent".equals(m.getName()) &&
-                    !"getSystemClassLoader".equals(m.getName()) &&
-                    !"getMethods".equals(m.getName()) &&
-                    !"getDeclaredClasses".equals(m.getName()) &&
-                    !"getConstructors".equals(m.getName()) &&
-                    !"getDeclaringClass".equals(m.getName()) &&
-                    !"getEnclosingClass".equals(m.getName()) &&
-                    !"getClassLoader".equals(m.getName()) &&
-                    (m.getName().startsWith("get") ||
-                     m.getName().startsWith("is") ) &&
-                     m.getName().length() > 2 &&
-                     m.getParameterTypes().length == 0) {
-                     
-
-                   if (m.isAnnotationPresent(Serialize.class)) {
-                       Serialize s = m.getAnnotation(Serialize.class);
-
-                               if ("skip".equals(s.value())) {
-                                   continue;
-                               }
-                           }
+               if( !skipSerialization( m ) )
+               {
                        // change the case of the property from camelCase
                        String key = "";
                        if (m.getName().startsWith("is") &&
