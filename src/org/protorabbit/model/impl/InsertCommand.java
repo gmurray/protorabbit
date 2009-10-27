@@ -35,7 +35,7 @@ public class InsertCommand extends BaseCommand {
 
     @SuppressWarnings("unchecked")
     @Override
-    public void doProcess() throws IOException {
+    public synchronized void doProcess() throws IOException {
 
         Config cfg = ctx.getConfig();
 

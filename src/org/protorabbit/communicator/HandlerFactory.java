@@ -111,11 +111,13 @@ public class HandlerFactory {
                            }
                         }
                         try {
-                            Method m = thandler.getClass().getMethod(handlerMethod, null);
+                            Object [] args = {};
+                            Class [] cargs = {};
+                            Method m = thandler.getClass().getMethod(handlerMethod, cargs);
                             
                             if (m.getReturnType() == String.class) {
                                 try {
-                                    result = (String)m.invoke(target, null);
+                                    result = (String)m.invoke(target, args);
                                 } catch (SecurityException e) {
                                     getLogger().log(Level.WARNING, "SecurityException invoking Handler " + handlerMethod);
                                     response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

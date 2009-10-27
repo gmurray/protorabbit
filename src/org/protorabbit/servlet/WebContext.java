@@ -171,7 +171,7 @@ public class WebContext extends BaseContext {
      * none - protorabbit context (similar to request) 
      *
      */
-    public Object parseExpression(String expression) {
+    public synchronized Object parseExpression(String expression) {
 
         String scope = null;
         String[] path = {expression};
