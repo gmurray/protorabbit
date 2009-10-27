@@ -218,7 +218,9 @@ public class DefaultEngine implements IEngine {
                         IDocumentContext dc = c.getDocumentContext();
                         if (dc != null) {
                             if (dc.getAllCommands() == null ||
-                                dc.getAllCommands() != null && dc.getAllCommands().size() == 0) {
+                                dc.getAllCommands() != null && 
+                                dc.getAllCommands().size() == 0 &&
+                                dc.getDocument() != null) {
                                 out.write(dc.getDocument().toString().getBytes());
                             }
                             renderCommands(dc.getAllCommands(), dc.getDocument(), ctx, out) ;
