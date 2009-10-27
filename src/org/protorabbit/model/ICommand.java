@@ -29,7 +29,7 @@ public interface ICommand {
     public IDocumentContext getDocumentContext();
     public void setDocumentContext(IDocumentContext document);
     public ByteArrayOutputStream getBuffer();
-    public void setBuffer(ByteArrayOutputStream buffer);
+//    public void setBuffer(ByteArrayOutputStream buffer);
     public void setProcessOrder(int order);
     public int getProcessOrder();
     public void setContext(IContext ctx);

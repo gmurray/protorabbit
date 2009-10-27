@@ -53,14 +53,14 @@ public class IncludeCommand extends BaseCommand {
     @Override
     public void doProcess() throws IOException {
 
-        Config cfg = ctx.getConfig();
+        Config cfg = getContext().getConfig();
         int counter = 0;
-        if (ctx.getAttribute(COUNTER) != null) {
-            counter = ((Integer)ctx.getAttribute(COUNTER)).intValue();
+        if (getContext().getAttribute(COUNTER) != null) {
+            counter = ((Integer)getContext().getAttribute(COUNTER)).intValue();
         } 
         boolean useThreadedDefer = true;
 
-        String tid = ctx.getTemplateId();
+        String tid = getContext().getTemplateId();
 
         String id = null;
         boolean parseIncludeFile = false;
@@ -81,21 +81,21 @@ public class IncludeCommand extends BaseCommand {
         ITemplate template = cfg.getTemplate(tid);
         if (template != null) {
 
-            property = template.getProperty(id,ctx);
+            property = template.getProperty(id,getContext());
 
             if (property == null) {
                 getLogger().log(Level.FINEST, "Unable to find property " + id + " in template " + tid);
                 return;
             }
             if (property.getUATest() != null) {
-                if (ctx.uaTest(property.getUATest()) == false) {
+                if (getContext().uaTest(property.getUATest()) == false) {
                     // track the test
-                    ctx.addUAScriptTest(property.getUATest());
+                    getContext().addUAScriptTest(property.getUATest());
                     return;
                 }
             }
             if (property.getTest() != null) {
-                if (ctx.test(property.getTest()) == false) {
+                if (getContext().test(property.getTest()) == false) {
                     return;
                 }
             }
@@ -111,10 +111,10 @@ public class IncludeCommand extends BaseCommand {
         StringBuffer buff = new StringBuffer("");
         StringBuffer deferContent = new StringBuffer("");
         if (property.getDefer() != null && property.getDefer().booleanValue() == true){
-            List<String> deferredScripts = (List<String>)ctx.getAttribute(DEFERRED_SCRIPTS);
+            List<String> deferredScripts = (List<String>)getContext().getAttribute(DEFERRED_SCRIPTS);
             if (deferredScripts == null) {
                 deferredScripts = new ArrayList<String>();
-                ctx.setAttribute(DEFERRED_SCRIPTS, deferredScripts);
+                getContext().setAttribute(DEFERRED_SCRIPTS, deferredScripts);
             }
 
             String resourceId = "";
@@ -130,10 +130,10 @@ public class IncludeCommand extends BaseCommand {
                 if (timeout == null) {
                     timeout = 0L;
                 }
-                DeferredResource dr = new DeferredResource(baseDir, resourceName, ctx, timeout);
-                crm.putResource(ctx.getTemplateId() + "_" + resourceId, dr);
+                DeferredResource dr = new DeferredResource(baseDir, resourceName, getContext(), timeout);
+                crm.putResource(getContext().getTemplateId() + "_" + resourceId, dr);
             } else {
-                IncludeFile inc = cfg.getIncludeFileContent(ctx.getTemplateId(), id,ctx);
+                IncludeFile inc = cfg.getIncludeFileContent(getContext().getTemplateId(), id,getContext());
                 buff = inc.getContent();
                 String hash  = IOUtil.generateHash(buff.toString());
                 if (property.getId() != null) {
@@ -147,17 +147,17 @@ public class IncludeCommand extends BaseCommand {
                 ResourceManager crm = cfg.getCombinedResourceManager();
                 CacheableResource cr = new CacheableResource("text/html", inc.getTimeout(), hash);
                 cr.setContent( buff );
-                crm.putResource(ctx.getTemplateId() + "_" + resourceId , cr);
+                crm.putResource(getContext().getTemplateId() + "_" + resourceId , cr);
             }
 
-            buffer.write(("<div id='" + resourceId + "'>" + deferContent.toString() + "</div>").getBytes());
+            getBuffer().write(("<div id='" + resourceId + "'>" + deferContent.toString() + "</div>").getBytes());
 
             String script = "<script>protorabbit.addDeferredFragement({ include : '" + cfg.getResourceService() + 
-                       "?resourceid=" + resourceId + ".htm&tid=" + ctx.getTemplateId() + "', elementId : '" + resourceId + "' });</script>";
+                       "?resourceid=" + resourceId + ".htm&tid=" + getContext().getTemplateId() + "', elementId : '" + resourceId + "' });</script>";
             deferredScripts.add(script);
-            ctx.setAttribute(COUNTER, new Integer(counter + 1));
+            getContext().setAttribute(COUNTER, new Integer(counter + 1));
         } else {
-            IncludeFile inc = cfg.getIncludeFileContent(ctx.getTemplateId(), id,ctx);
+            IncludeFile inc = cfg.getIncludeFileContent(getContext().getTemplateId(), id,getContext());
             if (inc != null) {
                 buff = inc.getContent();
             } else {
@@ -195,7 +195,7 @@ public class IncludeCommand extends BaseCommand {
                     }
                 }
             } else {
-                buffer.write(buff.toString().getBytes());
+                getBuffer().write(buff.toString().getBytes());
             }
         }
 

@@ -21,42 +21,53 @@ import org.protorabbit.model.IDocumentContext;
 
 public abstract class BaseCommand implements ICommand {
 
-    protected ByteArrayOutputStream buffer;
     protected int start = -1;
     protected int end = -1;
     protected int commandType = ICommand.UNKNOWN;
     protected int commandIndex = -1;
 
-    protected IDocumentContext document = null;
-    protected IContext ctx = null;
+   // protected IDocumentContext document = null;
+   // protected IContext ctx = null;
 
     protected IParameter[] params = null;
 
     protected int processOrder = ICommand.PROCESS_DEFAULT;
 
+
+    private static class LocalContext {
+        public ByteArrayOutputStream buffer;
+        public IContext ctx;
+        public IDocumentContext document;
+    }
+
+    private ThreadLocal<LocalContext> localContext = new ThreadLocal<LocalContext>() {
+        protected LocalContext initialValue() {
+            LocalContext lc = new LocalContext();
+            lc.buffer = new ByteArrayOutputStream();
+            return lc;
+        }
+    };
+
     public BaseCommand() {
-        buffer = null;
-        reset();
     }
     
     public void reset() {
-        buffer = new ByteArrayOutputStream();
+        LocalContext lc = new LocalContext();
+        lc.buffer = new ByteArrayOutputStream();
+        localContext.set(lc);
     }
 
     public ByteArrayOutputStream getBuffer() {
-        return buffer;
+        return localContext.get().buffer;
     }
 
-    public IDocumentContext getDocumentContext() {
-        return document;
-    }
     public void setDocumentContext(IDocumentContext document) {
-        this.document = document;
+         localContext.get().document = document;
     }
 
-    public void setBuffer(ByteArrayOutputStream buffer) {
-        this.buffer = buffer;
-    }
+//    public void setBuffer(ByteArrayOutputStream buffer) {
+ //       this.buffer = buffer;
+ //   }
 
     public void setProcessOrder(int processOrder) {
         this.processOrder = processOrder;
@@ -69,7 +80,15 @@ public abstract class BaseCommand implements ICommand {
     public abstract void doProcess() throws IOException;
 
     public void setContext(IContext ctx) {
-        this.ctx = ctx;
+        localContext.get().ctx = ctx;
+    }
+    
+    public IContext getContext() {
+        return localContext.get().ctx;
+    }
+    
+    public IDocumentContext getDocumentContext() {
+      return localContext.get().document;
     }
 
     public IParameter[] getParams() {

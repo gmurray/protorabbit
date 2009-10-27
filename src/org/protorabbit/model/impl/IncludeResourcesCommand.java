@@ -54,7 +54,7 @@ public class IncludeResourcesCommand extends BaseCommand {
             return;
         }
 
-        Config cfg = ctx.getConfig();
+        Config cfg = getContext().getConfig();
         String target = null;
         if (params.length > 0 && params[0].getType() == IParameter.STRING) {
             target = params[0].getValue().toString();
@@ -63,15 +63,15 @@ public class IncludeResourcesCommand extends BaseCommand {
             return;
         }
         target = target.toLowerCase();
-        ITemplate t = cfg.getTemplate(ctx.getTemplateId());
+        ITemplate t = cfg.getTemplate(getContext().getTemplateId());
         ResourceManager crm = cfg.getCombinedResourceManager();
 
-        boolean deferredWritten = (ctx.getAttribute(ResourceManager.DEFERRED_WRITTEN) != null &&
-                ctx.getAttribute(ResourceManager.DEFERRED_WRITTEN) == Boolean.TRUE);
+        boolean deferredWritten = (getContext().getAttribute(ResourceManager.DEFERRED_WRITTEN) != null &&
+                getContext().getAttribute(ResourceManager.DEFERRED_WRITTEN) == Boolean.TRUE);
 
         if ("scripts".equals(target)) {
 
-            List<ResourceURI> scripts = t.getAllScripts(ctx);
+            List<ResourceURI> scripts = t.getAllScripts(getContext());
             List<ResourceURI> combineURIs= new ArrayList<ResourceURI>();
             List<ResourceURI> linkURIs = new ArrayList<ResourceURI>();
 
@@ -93,8 +93,8 @@ public class IncludeResourcesCommand extends BaseCommand {
 
             }
 
-            List<String> deferredScripts = (List<String>)ctx.getAttribute(IncludeCommand.DEFERRED_SCRIPTS);
-            Map<String, String> deferredProperties = (Map<String, String>)ctx.getAttribute(InsertCommand.DEFERRED_PROPERTIES);
+            List<String> deferredScripts = (List<String>)getContext().getAttribute(IncludeCommand.DEFERRED_SCRIPTS);
+            Map<String, String> deferredProperties = (Map<String, String>)getContext().getAttribute(InsertCommand.DEFERRED_PROPERTIES);
 
             boolean hasDeferredScripts = false;
 
@@ -108,19 +108,19 @@ public class IncludeResourcesCommand extends BaseCommand {
 
            }
            if (linkURIs.size() > 0 ){
-                String links = URIResourceManager.generateReferences(t, ctx, linkURIs, ResourceURI.SCRIPT);
-                buffer.write(links.getBytes());
+                String links = URIResourceManager.generateReferences(t, getContext(), linkURIs, ResourceURI.SCRIPT);
+                getBuffer().write(links.getBytes());
            }
            if (combineURIs.size() > 0) {
 
-                String resourceId = crm.processScripts(combineURIs, ctx, hasDeferredScripts, buffer);
+                String resourceId = crm.processScripts(combineURIs, getContext(), hasDeferredScripts, getBuffer());
 
                 if (!hasDeferredScripts && resourceId != null) {
-                    if (ctx.getConfig().profile()) {
+                    if (getContext().getConfig().profile()) {
                          String measure =  "<script>" +
                              "window.postMessage(\"EPISODES:mark:" + resourceId + "\", \"*\");" +
                          "</script>\n";
-                         buffer.write(measure.getBytes());
+                         getBuffer().write(measure.getBytes());
                     }
                     String uuid = "";
                     if (t.getUniqueURL() != null && t.getUniqueURL() == Boolean.TRUE) {
@@ -128,24 +128,24 @@ public class IncludeResourcesCommand extends BaseCommand {
                     }
                     String uri = "<script src=\"" + 
                     cfg.getResourceService() + "?resourceid=" + resourceId +  ".js&tid=" + t.getId() + uuid + "\"></script>";
-                    buffer.write(uri.getBytes());
-                    if (ctx.getConfig().profile()) {
+                    getBuffer().write(uri.getBytes());
+                    if (getContext().getConfig().profile()) {
                         String measure =  "<script>" +
                             "window.postMessage(\"EPISODES:measure:" + resourceId + "\", \"*\");" +
                         "</script>\n";
-                        buffer.write(measure.getBytes());
+                        getBuffer().write(measure.getBytes());
                     }
                } else if (resourceId != null){
-                   ResourceManager.writeDeferred(ctx, buffer, t);
-                   buffer.write(("<script>protorabbit.addDeferredScript('" + cfg.getResourceService() +
+                   ResourceManager.writeDeferred(getContext(), getBuffer(), t);
+                   getBuffer().write(("<script>protorabbit.addDeferredScript('" + cfg.getResourceService() +
                               "?resourceid=" + resourceId + ".js&tid=" + t.getId() + "');</script>").getBytes());
                }
 
            }
            if (deferredScripts != null) {
-               ResourceManager.writeDeferred(ctx, buffer, t);
+               ResourceManager.writeDeferred(getContext(), getBuffer(), t);
                for (String s : deferredScripts) {
-                   buffer.write(s.getBytes());
+                   getBuffer().write(s.getBytes());
                }
            }
            if (deferredProperties != null) {
@@ -157,12 +157,12 @@ public class IncludeResourcesCommand extends BaseCommand {
                CacheableResource cr = new CacheableResource("application/json", cfg.getResourceTimeout(), resourceId);
                cr.setContent( new StringBuffer(content) );
                crm.putResource(t.getId() + "_" + resourceId, cr);
-               ResourceManager.writeDeferred(ctx, buffer, t);
-               buffer.write(("<script>protorabbit.addDeferredProperties('" + cfg.getResourceService() +
-                       "?resourceid=" + resourceId + ".json&tid=" + t.getId() + "', '" + ctx.getTemplateId() +"');</script>").getBytes());
+               ResourceManager.writeDeferred(getContext(), getBuffer(), t);
+               getBuffer().write(("<script>protorabbit.addDeferredProperties('" + cfg.getResourceService() +
+                       "?resourceid=" + resourceId + ".json&tid=" + t.getId() + "', '" + getContext().getTemplateId() +"');</script>").getBytes());
            }
         } else if ("styles".equals(target)) {
-            List<ResourceURI> styles = t.getAllStyles(ctx);
+            List<ResourceURI> styles = t.getAllStyles(getContext());
             boolean hasDeferredStyles = false;
             List<ResourceURI> combineURIs= new ArrayList<ResourceURI>();
             List<ResourceURI> linkURIs = new ArrayList<ResourceURI>();
@@ -185,18 +185,18 @@ public class IncludeResourcesCommand extends BaseCommand {
 
             }
             if (linkURIs.size() > 0) {
-                String links = URIResourceManager.generateReferences(t, ctx, linkURIs, ResourceURI.LINK);
-                buffer.write(links.getBytes());
+                String links = URIResourceManager.generateReferences(t, getContext(), linkURIs, ResourceURI.LINK);
+                getBuffer().write(links.getBytes());
             }
             if (combineURIs.size() > 0) {
-                String resourceId = crm.processStyles(styles, ctx, buffer);
+                String resourceId = crm.processStyles(styles, getContext(), getBuffer());
                 if (!hasDeferredStyles && resourceId != null) {
 
-                     if (ctx.getConfig().profile()) {
+                     if (getContext().getConfig().profile()) {
                          String measure =  "<script>" +
                              "window.postMessage(\"EPISODES:mark:" + resourceId + "\", \"*\");" +
                          "</script>\n";
-                         buffer.write(measure.getBytes());
+                         getBuffer().write(measure.getBytes());
                      }
                      String uuid = "";
                      if (t.getUniqueURL() != null && t.getUniqueURL() == Boolean.TRUE) {
@@ -205,19 +205,19 @@ public class IncludeResourcesCommand extends BaseCommand {
                     String uri = "<link rel=\"stylesheet\" type=\"text/css\" href=\"" +
                     cfg.getResourceService() + "?resourceid=" + resourceId + 
                     ".css&tid=" + t.getId() + uuid + "\" media=\"" + cfg.getMediaType() + "\"/>";
-                    buffer.write(uri.getBytes());
-                    if (ctx.getConfig().profile()) {
+                    getBuffer().write(uri.getBytes());
+                    if (getContext().getConfig().profile()) {
                         String measure =  "<script>" +
                             "window.postMessage(\"EPISODES:measure:" + resourceId + "\", \"*\");" +
                         "</script>\n";
-                        buffer.write(measure.getBytes());
+                        getBuffer().write(measure.getBytes());
                    }
                     
                } else if (resourceId != null){
-                   ResourceManager.writeDeferred(ctx, buffer, t);
+                   ResourceManager.writeDeferred(getContext(), getBuffer(), t);
                    String uri = "<script>protorabbit.addDeferredStyle('" + 
                    cfg.getResourceService() + "?resourceid=" + resourceId + ".css&tid=" + t.getId() + "')</script>";
-                   buffer.write(uri.getBytes());
+                   getBuffer().write(uri.getBytes());
                }
             }
             if (!deferredWritten) {
@@ -229,18 +229,18 @@ public class IncludeResourcesCommand extends BaseCommand {
                 }
 
                 if (hasDeferredStyles) {
-                    ResourceManager.writeDeferred(ctx,buffer, t);
+                    ResourceManager.writeDeferred(getContext(),getBuffer(), t);
                 }
             }
-            if (ctx.getConfig().profile()) {
+            if (getContext().getConfig().profile()) {
                 if (!deferredWritten) {
-                    ResourceManager.writeDeferred(ctx, buffer, t);
+                    ResourceManager.writeDeferred(getContext(), getBuffer(), t);
                 }
 
                 // skip the default processing if the property is not set
-                if (ctx.getAttribute(Config.DEFAULT_EPISODE_PROCESS) == null) {
+                if (getContext().getAttribute(Config.DEFAULT_EPISODE_PROCESS) == null) {
                      String episodeEnd = "<script>window.episodesDefaultLoad = false;</script>";
-                     buffer.write(episodeEnd.getBytes());
+                     getBuffer().write(episodeEnd.getBytes());
                 }
 
             }
