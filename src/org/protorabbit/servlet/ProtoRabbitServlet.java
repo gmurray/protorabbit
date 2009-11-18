@@ -93,7 +93,7 @@ public class ProtoRabbitServlet extends HttpServlet {
     private long lastCleanup = -1;
     private boolean profile = false;
 
-    private String version = "0.9.6c";
+    private String version = "1.0";
 
     // these file types will be provided with the default expires time if run
     // through the servlet

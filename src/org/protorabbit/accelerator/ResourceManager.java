@@ -243,7 +243,7 @@ public class ResourceManager {
                ctx.setAttribute(IncludeCommand.DEFERRED_SCRIPTS, deferredScripts);
           
            } else if (!ri.isExternal()){
-               StringBuffer scriptBuffer = ctx.getResource(ri.getBaseURI(), ri.getURI(t.getUniqueURL()));
+               StringBuffer scriptBuffer = ctx.getResource(ri.getBaseURI(),  ri.getURI(null));
                try {
                    scripts.appendContent(scriptBuffer.toString());
                    ri.updateLastUpdated(ctx);
