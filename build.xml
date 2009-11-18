@@ -17,6 +17,7 @@
           destdir="${build.classes}"
           classpath="${build.classes}:lib/servlet-api-2.4.jar:web/WEB-INF/lib/org.json-0.0.2.jar"
           source="1.5"
+          target="1.5"
           debug="on">
       </javac>
 
