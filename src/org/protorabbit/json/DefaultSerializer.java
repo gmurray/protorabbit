@@ -207,12 +207,14 @@ public class DefaultSerializer implements JSONSerializer {
     @SuppressWarnings("unchecked")
     void invokeMethod(Method[] methods, String key, String name, JSONObject jo, Object targetObject) {
         Object param = null;
+        Throwable ex = null;
         for (int i=0;i < methods.length; i++) {
             Method m = methods[i];
             if (m.getName().equals(name)) {
                 Class<?>[] paramTypes = m.getParameterTypes();
                 if (paramTypes.length == 1 && jo.has(key)) {
                      Class<?> tparam =  paramTypes[0];
+                     boolean allowNull = false;
                      try {
                          if (Long.class.isAssignableFrom(tparam)) {
                              param = new Long(jo.getLong(key));
@@ -228,31 +230,40 @@ public class DefaultSerializer implements JSONSerializer {
                              param = new Boolean(jo.getBoolean(key));
                          } else if (jo.isNull(key)) {
                              param = null;
+                             allowNull = true;
                          }
                     } catch (JSONException e) {
-                            e.printStackTrace();
+                        e.printStackTrace();
                     }
 
-                      if (param != null) {
+                    if (param != null || allowNull) {
 
                           try {
 
                               if (m != null) {
                                   Object[] args = {param};
                                   m.invoke(targetObject, args);
-
+                                  ex = null;
+                                  break;
                               }
                           } catch (SecurityException e) {
-                              e.printStackTrace();
+                              ex = e;
                           } catch (IllegalArgumentException e) {
-                              e.printStackTrace();
+                              ex = e;
                           } catch (IllegalAccessException e) {
-                              e.printStackTrace();
+                              ex = e;
                           } catch (InvocationTargetException e) {
-                              e.printStackTrace();
+                              ex = e;
                           }
                     }
                 }
+            }
+        }
+        if (ex != null) {
+            if (ex instanceof RuntimeException)  {
+                throw (RuntimeException)ex;
+            } else {
+                throw new RuntimeException(ex);
             }
         }
     }
