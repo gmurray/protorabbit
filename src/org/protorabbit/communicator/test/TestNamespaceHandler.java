@@ -4,7 +4,7 @@ package org.protorabbit.communicator.test;
 import org.protorabbit.communicator.BaseJSONHandler;
 import org.protorabbit.communicator.Namespace;
 
-@Namespace("/secure/")
+@Namespace("/secure")
 // test with a URL :
 // good: http://localhost:8080/protorabbit/secure/testNamespace!doFoo.action?name=5.2&json={blah:1}
 // bad : http://localhost:8080/protorabbit/secure2/testNamespace!doFoo.action?name=5.2&json={blah:1}

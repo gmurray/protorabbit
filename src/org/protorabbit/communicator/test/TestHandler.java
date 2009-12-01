@@ -8,14 +8,18 @@ public class TestHandler extends BaseJSONHandler{
     private String name = "not set";
 
     public void setJson(String name) {
-        System.out.println("we got a set with " + name);
+        System.out.println("we got a setJson with " + name);
         this.name = name;
     }
     
-    public void setName(long name) {
-        System.out.println("we got a long set with " + name);
+    public void setName(String name) {
+        System.out.println("we got a setName string set with " + name);	
     }
 
+    public void setName(long name) {
+        System.out.println("we got a setName long set with " + name);
+    }
+    
     public String doFoo() {
         model = "you got it! " + name;
         addActionError("Foo bar bad");

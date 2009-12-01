@@ -56,6 +56,7 @@ import org.protorabbit.profile.Episode;
 import org.protorabbit.profile.Mark;
 import org.protorabbit.profile.Measure;
 import org.protorabbit.util.IOUtil;
+import java.util.Properties;
 
 public class ProtoRabbitServlet extends HttpServlet {
 
@@ -82,7 +83,8 @@ public class ProtoRabbitServlet extends HttpServlet {
     private String engineClassName = null;
     private String defaultTemplateURI = "/WEB-INF/templates.json";
     private String serviceURI = "prt";
-
+    
+    // all these values can be overridden in the default.properties file.
     // in seconds - default is 14 days
     private long maxAge = 1209600;
     private int maxTries = 250;
@@ -93,7 +95,7 @@ public class ProtoRabbitServlet extends HttpServlet {
     private long lastCleanup = -1;
     private boolean profile = false;
 
-    private String version = "1.0.1";
+    private String version = "null";
 
     // these file types will be provided with the default expires time if run
     // through the servlet
@@ -102,6 +104,19 @@ public class ProtoRabbitServlet extends HttpServlet {
     public void init(ServletConfig cfg) throws ServletException {
 
             super.init(cfg);
+            
+            // get default properties
+            Properties p = new Properties();
+            InputStream is = this.getClass().getResourceAsStream("/org/protorabbit/resources/default.properties");
+            try {
+				p.load(is);
+			    version = p.getProperty("version");
+			    cleanupTimeout = Long.parseLong((p.getProperty("cleanupTimeout")));
+			    maxAge = Long.parseLong((p.getProperty("maxAge")));
+			    maxTries = Integer.parseInt((p.getProperty("maxTries")));
+			} catch (Exception e1) {
+                getLogger().severe("Error loading default propeteries");
+			}
 
             // set the lastCleanup to current
             lastCleanup = (new Date()).getTime();
@@ -536,11 +551,11 @@ public class ProtoRabbitServlet extends HttpServlet {
                 long transitStartTime = m.getStartTime();
                 long now = (new Date()).getTime();
                 long duration = (now - (transitStartTime + transitTime));
-                // add the page load directly following the start time
-                e.addMark(new Mark("page_load", transitStartTime + transitTime));
+                // add the page load directly following the start time  (add 1 to always make sure it is after transit time)
+                e.addMark(new Mark("page_load", transitStartTime + transitTime + 1));
                 Measure m1 = new Measure("transit_to", transitTime);
                 // include transit time for this request and intial page load
-                Measure m2 = new Measure("page_load", duration);
+                Measure m2 = new Measure("page_load", (duration + transitTime));
                 e.addMeasure("transit_to", m1);
                 e.addMeasure("page_load", m2);
                 // now - duration is assumed transit time to offset call to this command

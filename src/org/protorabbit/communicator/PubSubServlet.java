@@ -25,8 +25,6 @@ public class PubSubServlet extends HttpServlet {
     protected ServletContext                 ctx;
     protected PubSub                         ps;
     protected PollManager pm = null;
-    private HandlerFactory hf = null;
-
     public void init(ServletConfig cfg) {
         try {
             super.init(cfg);

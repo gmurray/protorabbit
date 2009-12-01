@@ -59,7 +59,6 @@ public class CommunicatorServlet extends HttpServlet {
         super.doOptions(arg0, arg1);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected void doPost(HttpServletRequest request,
             HttpServletResponse response) throws ServletException, IOException {

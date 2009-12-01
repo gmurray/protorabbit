@@ -27,7 +27,6 @@ import org.protorabbit.model.IContext;
 import org.protorabbit.model.ITemplate;
 import org.protorabbit.model.impl.IncludeCommand;
 import org.protorabbit.model.impl.ResourceURI;
-import org.protorabbit.model.impl.Template;
 import org.protorabbit.util.IOUtil;
 
 /**

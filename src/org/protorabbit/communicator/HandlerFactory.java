@@ -15,7 +15,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.protorabbit.json.JSONSerializer;
 import org.protorabbit.json.SerializationFactory;
-import org.protorabbit.json.Serialize;
 import org.protorabbit.util.ClassUtil;
 
 public class HandlerFactory {
@@ -47,17 +46,17 @@ public class HandlerFactory {
         String path = request.getServletPath();
         String pathInfo = request.getPathInfo();
 
-        System.out.println("request path is " + path );
-        System.out.println("pathInfo is : " + pathInfo);
+        getLogger().info("The request path is " + path );
+        getLogger().info("pathInfo is : " + pathInfo);
 
         String handler = null;
         String handlerMethod = null;
         String handlerNameSpace = null;
 
         int namespace = path.lastIndexOf("/");
-        System.out.println("namespace=" + namespace);
+        getLogger().info("namespace=" + namespace);
         if (namespace != -1) {
-            handlerNameSpace = path.substring(0,namespace +1);
+            handlerNameSpace = path.substring( 0,namespace );
             namespace +=1;
         } else {
             namespace = 0;
@@ -72,9 +71,9 @@ public class HandlerFactory {
         } else if (endHandler != -1){
             handler = path.substring(namespace, endHandler);
         }
-        System.out.println("handler=" + handler);
-        System.out.println("handlerMethod=" + handlerMethod);
-        System.out.println("handlerNamespace=" + handlerNameSpace);
+        getLogger().info("handler=" + handler);
+        getLogger().info("handlerMethod=" + handlerMethod);
+        getLogger().info("handlerNamespace=" + handlerNameSpace);
 
         Handler thandler = null;
         String result = null;
@@ -88,7 +87,7 @@ public class HandlerFactory {
                            handler.substring(1,handler.length()) + "Handler";
         for (String s : searchPackages) {
             try {
-                Class klass = this.getClass().getClassLoader().loadClass(s + "." + klassName);
+                Class<?> klass = this.getClass().getClassLoader().loadClass(s + "." + klassName);
                 try {
                     Object target = klass.newInstance();
                     thandler = (Handler)target;
@@ -98,21 +97,21 @@ public class HandlerFactory {
                             Namespace n = (Namespace) klass.getAnnotation(Namespace.class);
                             if (n != null && handlerNameSpace != null) {
                                     if (handlerNameSpace.equals(n.value())) {
-                                        System.out.println("Namespace match. Continuing");
+                                        getLogger().info("Namespace match. Continuing");
                                     } else {
-                                        System.out.println("Namespace " + n.value() + " required.");
+                                        getLogger().info("Namespace " + n.value() + " required.");
                                         response.sendError(HttpServletResponse.SC_FORBIDDEN);
                                         return;
                                     }
                            } else {
-                               System.out.println("Namespace " + n.value() + " required.");
+                               getLogger().info("Namespace " + n.value() + " required.");
                                response.sendError(HttpServletResponse.SC_FORBIDDEN);
                                return;
                            }
                         }
                         try {
                             Object [] args = {};
-                            Class [] cargs = {};
+                            Class<?> [] cargs = {};
                             Method m = thandler.getClass().getMethod(handlerMethod, cargs);
                             
                             if (m.getReturnType() == String.class) {
@@ -164,23 +163,24 @@ public class HandlerFactory {
             }
         }
         if (thandler == null) {
-            System.out.println("Could not find a handler with name " + klassName + " in any of the search packages.");
+            getLogger().info("Could not find a handler with name " + klassName + " in any of the search packages.");
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
-        System.out.println("##We have the handler " + thandler);
+        getLogger().info("##We have the handler " + thandler);
         // map parameters to the setters
         mapParameters(thandler,request);
         processHandler(thandler,result, request,response);
 
     }
     
-    protected void mapParameters(Handler h,
+    @SuppressWarnings("unchecked")
+	protected void mapParameters(Handler h,
                            HttpServletRequest request){
-        Enumeration params = request.getParameterNames();
+        Enumeration<String> params = request.getParameterNames();
         while(params.hasMoreElements()) {
-            String param = (String)params.nextElement();
-            System.out.println("Processing param " + param);
+            String param = params.nextElement();
+            getLogger().info("Processing param " + param);
             // get a list of possible methods that are setters for this param
             List<Method> methods = ClassUtil.getMethods(h, param, true);
             // populate the values
@@ -211,9 +211,11 @@ public class HandlerFactory {
 
         // get the model
         jr.setData( h.getModel() );
-
-        response.setHeader("Content-Type", "text/html");
-//        response.setHeader("Content-Type", "application/json");
+        // only for testing
+//        response.setHeader("Content-Type", "text/html");
+        response.setHeader("Content-Type", "application/json");
+        response.setHeader("Cache-Control", "no-cache");
+        response.setHeader("pragma", "NO-CACHE");
         // now that we have the json object print out the string
         Object responseObject = jsonSerializer.serialize(jr);
         response.getWriter().write(responseObject.toString());
