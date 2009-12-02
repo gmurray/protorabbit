@@ -130,10 +130,10 @@ public class IncludeCommand extends BaseCommand {
                 if (timeout == null) {
                     timeout = 0L;
                 }
-                DeferredResource dr = new DeferredResource(baseDir, resourceName, getContext(), timeout);
-                crm.putResource(getContext().getTemplateId() + "_" + resourceId, dr);
+                DeferredResource dr = new DeferredResource(baseDir, resourceName, getContext(), timeout );
+                crm.putResource( getContext().getTemplateId() + "_" + resourceId, dr );
             } else {
-                IncludeFile inc = cfg.getIncludeFileContent(getContext().getTemplateId(), id,getContext());
+                IncludeFile inc = cfg.getIncludeFileContent( getContext().getTemplateId(), id,getContext() );
                 buff = inc.getContent();
                 String hash  = IOUtil.generateHash(buff.toString());
                 if (property.getId() != null) {
@@ -145,12 +145,12 @@ public class IncludeCommand extends BaseCommand {
                     deferContent = inc.getDeferContent();
                 }
                 ResourceManager crm = cfg.getCombinedResourceManager();
-                CacheableResource cr = new CacheableResource("text/html", inc.getTimeout(), hash);
+                CacheableResource cr = new CacheableResource( "text/html", inc.getTimeout(), hash );
                 cr.setContent( buff );
-                crm.putResource(getContext().getTemplateId() + "_" + resourceId , cr);
+                crm.putResource( getContext().getTemplateId() + "_" + resourceId , cr );
             }
 
-            getBuffer().write(("<div id='" + resourceId + "'>" + deferContent.toString() + "</div>").getBytes());
+            getBuffer().write( ("<div id='" + resourceId + "'>" + deferContent.toString() + "</div>").getBytes() );
 
             String script = "<script>protorabbit.addDeferredFragement({ include : '" + cfg.getResourceService() + 
                        "?resourceid=" + resourceId + ".htm&tid=" + getContext().getTemplateId() + "', elementId : '" + resourceId + "' });</script>";
@@ -176,19 +176,19 @@ public class IncludeCommand extends BaseCommand {
                 List<ICommand> defaultCmds = null;
 
                 for (ICommand c : cmds) {
-                    if (c.getProcessOrder() == ICommand.PROCESS_DEFAULT ||
-                        c.getProcessOrder() == ICommand.PROCESS_FIRST) {
+                    if ( c.getProcessOrder() == ICommand.PROCESS_DEFAULT ||
+                         c.getProcessOrder() == ICommand.PROCESS_FIRST ) {
                         if (defaultCmds == null) {
                             defaultCmds = new ArrayList<ICommand>();
                             document.setAfterCommands(defaultCmds);
                         }
                         defaultCmds.add(c);
-                    } else if (c.getProcessOrder() == ICommand.PROCESS_LAST) {
-                        if (lastCmds == null) {
+                    } else if ( c.getProcessOrder() == ICommand.PROCESS_LAST ) {
+                        if ( lastCmds == null ) {
                             lastCmds = new ArrayList<ICommand>();
-                            document.setAfterCommands(lastCmds);
+                            document.setAfterCommands( lastCmds );
                         }
-                        lastCmds.add(c);
+                        lastCmds.add( c );
                     } else {
                         getLogger().warning("Unable to process command " + c +
                                             ". Command processOrder must be of type ICommand.PROCESS_DEFAULT or ICommand.PROCESS_LAST. Command type is " + c.getProcessOrder());

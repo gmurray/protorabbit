@@ -56,13 +56,13 @@ public class DefaultEngine implements IEngine {
         return logger;
     }
 
-    public void renderTemplate(String tid, IContext ctx, OutputStream out) {
+    public void renderTemplate( String tid, IContext ctx, OutputStream out ) {
 
         Config cfg = ctx.getConfig();
         ctx.setTemplateId(tid);
-        ITemplate template = cfg.getTemplate(tid);
+        ITemplate template = cfg.getTemplate( tid );
         if (template != null) {
-            DocumentContext dc = getDocumentContext(template,ctx);
+            DocumentContext dc = getDocumentContext( template, ctx );
             // go through all the commands and build up the buffers
             // before
             if (dc.getBeforeCommands() != null) {
@@ -76,10 +76,10 @@ public class DefaultEngine implements IEngine {
             if (dc.getAfterCommands() != null) {
                 processCommands( ctx, dc.getAfterCommands());
             }
-            renderCommands(dc.getAllCommands(), dc.getDocument(),ctx,out);
-            resetCommands(dc.getAllCommands());
+            renderCommands( dc.getAllCommands(), dc.getDocument(), ctx, out );
+            resetCommands( dc.getAllCommands() );
         } else {
-            getLogger().info("Unable to find template " + tid);
+            getLogger().info("Unable to find template " + tid );
         }
     }
 
@@ -97,15 +97,16 @@ public class DefaultEngine implements IEngine {
             if (template.getDocumentContext().requiresRefresh()) {
                 requiresRefresh = true;
             } else if (uri != null) {
-                requiresRefresh = ctx.isUpdated(uri.getFullURI(), template.getDocumentContext().getLastRefresh() );
+                requiresRefresh = ctx.isUpdated( 
+                        uri.getFullURI(), template.getDocumentContext().getLastRefresh() );
             }
         }
         if (template.getDocumentContext() == null || requiresRefresh) {
             dc = new DocumentContext();
-            StringBuffer buff = template.getContent(ctx);
-            dc.setDocument(buff);
-            dc.setURI(template.getTemplateURI());
-            gatherCommands(buff,ctx,dc);
+            StringBuffer buff = template.getContent( ctx );
+            dc.setDocument( buff );
+            dc.setURI( template.getTemplateURI() );
+            gatherCommands( buff,ctx,dc );
             template.setDocumentContext(dc);
             if (ctx.getConfig().profile()) {
                 dc.setRequiresRefresh(true);
@@ -121,14 +122,13 @@ public class DefaultEngine implements IEngine {
         if (cmds == null) {
             return;
         }
-        for (ICommand c : cmds) {
-            if (c.getDocumentContext() != null) {
+        for ( ICommand c : cmds ) {
+            c.reset();
+            if ( c.getDocumentContext() != null ) {
                 List<ICommand> scmds = c.getDocumentContext().getAllCommands();
                 resetCommands(scmds);
             }
-            c.reset();
         }
-        
     }
 
     @SuppressWarnings("unchecked")

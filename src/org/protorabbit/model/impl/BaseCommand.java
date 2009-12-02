@@ -26,9 +26,6 @@ public abstract class BaseCommand implements ICommand {
     protected int commandType = ICommand.UNKNOWN;
     protected int commandIndex = -1;
 
-   // protected IDocumentContext document = null;
-   // protected IContext ctx = null;
-
     protected IParameter[] params = null;
 
     protected int processOrder = ICommand.PROCESS_DEFAULT;
@@ -76,11 +73,11 @@ public abstract class BaseCommand implements ICommand {
     public void setContext(IContext ctx) {
         localContext.get().ctx = ctx;
     }
-    
+
     public IContext getContext() {
         return localContext.get().ctx;
     }
-    
+
     public IDocumentContext getDocumentContext() {
       return localContext.get().document;
     }
