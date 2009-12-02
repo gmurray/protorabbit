@@ -50,11 +50,9 @@ public abstract class BaseCommand implements ICommand {
 
     public BaseCommand() {
     }
-    
+
     public void reset() {
-        LocalContext lc = new LocalContext();
-        lc.buffer = new ByteArrayOutputStream();
-        localContext.set(lc);
+        localContext.remove();
     }
 
     public ByteArrayOutputStream getBuffer() {
@@ -64,10 +62,6 @@ public abstract class BaseCommand implements ICommand {
     public void setDocumentContext(IDocumentContext document) {
          localContext.get().document = document;
     }
-
-//    public void setBuffer(ByteArrayOutputStream buffer) {
- //       this.buffer = buffer;
- //   }
 
     public void setProcessOrder(int processOrder) {
         this.processOrder = processOrder;

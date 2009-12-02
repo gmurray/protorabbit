@@ -2,7 +2,7 @@
 
 <project name="protorabbit" default="compile" basedir=".">
 
-  <property file="build.properties"/>
+  <property file="src/org/protorabbit/resources/default.properties"/>
   <property file="${user.home}/build.properties"/>
 
   <property name="src.web" value="${basedir}/web"/>
