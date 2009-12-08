@@ -21,7 +21,7 @@ public class BaseJSONHandler implements Handler {
     protected HttpServletRequest request;
     protected HttpServletResponse response;
 
-    protected Object model = null;
+    private Object model = null;
     private Collection<String> errors = null;
     protected JSONResponse jr = null;
     protected boolean isPoller = false;
@@ -62,7 +62,7 @@ public class BaseJSONHandler implements Handler {
         this.response = response;
     }
 
-    public void setModel(String model) {
+    public void setModel(Object model) {
         this.model = model;
     }
 

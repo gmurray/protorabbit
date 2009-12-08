@@ -109,14 +109,14 @@ public class ProtoRabbitServlet extends HttpServlet {
             Properties p = new Properties();
             InputStream is = this.getClass().getResourceAsStream("/org/protorabbit/resources/default.properties");
             try {
-				p.load(is);
-			    version = p.getProperty("version");
-			    cleanupTimeout = Long.parseLong((p.getProperty("cleanupTimeout")));
-			    maxAge = Long.parseLong((p.getProperty("maxAge")));
-			    maxTries = Integer.parseInt((p.getProperty("maxTries")));
-			} catch (Exception e1) {
+                p.load(is);
+                version = p.getProperty("version");
+                cleanupTimeout = Long.parseLong((p.getProperty("cleanupTimeout")));
+                maxAge = Long.parseLong((p.getProperty("maxAge")));
+                maxTries = Integer.parseInt((p.getProperty("maxTries")));
+            } catch (Exception e1) {
                 getLogger().severe("Error loading default propeteries");
-			}
+            }
 
             // set the lastCleanup to current
             lastCleanup = (new Date()).getTime();
@@ -498,7 +498,7 @@ public class ProtoRabbitServlet extends HttpServlet {
         }
         long now = (new Date()).getTime();
         if (now - lastCleanup > cleanupTimeout) {
-            getLogger().info("Cleaning up old Objects");
+            getLogger().info("Protorabbit cleaning up old Objects");
             jcfg.getCombinedResourceManager().cleanup(maxAge);
             lastCleanup = now;
         }
@@ -754,7 +754,7 @@ public class ProtoRabbitServlet extends HttpServlet {
 
             if (canGzip  &&  t.gzipTemplate() != null && t.gzipTemplate() == true) {
                 byte[] bytes = cr.getGZippedContent();
-                cr.incrementAccessCount();
+                cr.incrementGzipAccessCount();
                 resp.setContentLength(bytes.length);
                 OutputStream out = resp.getOutputStream();
                 if (bytes != null) {
@@ -803,7 +803,7 @@ public class ProtoRabbitServlet extends HttpServlet {
                 resp.setHeader("Content-Encoding", "gzip");
                 resp.setHeader("Vary", "Accept-Encoding");
 
-                tr.incrementAccessCount();
+                tr.incrementGzipAccessCount();
                 byte[] bytes = tr.getGZippedContent();
 
                 if (bytes != null) {
@@ -825,6 +825,7 @@ public class ProtoRabbitServlet extends HttpServlet {
 
         } else {
             OutputStream out = resp.getOutputStream();
+            t.getTemplateResource().incrementAccessCount();
             engine.renderTemplate(id, wc, bos);
             out.write(bos.toByteArray());
         }

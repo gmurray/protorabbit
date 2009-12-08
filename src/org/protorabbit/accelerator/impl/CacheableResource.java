@@ -221,11 +221,11 @@ public class CacheableResource implements ICacheable {
     }
 
     public void incrementAccessCount() {
-        accessCount +=1;
+        accessCount++;
     }
 
     public void incrementGzipAccessCount() {
-        gzipAccessCount +=1;
+        gzipAccessCount++;
     }
 
     public ICacheable getResourceForUserAgent(String test) {

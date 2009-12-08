@@ -21,7 +21,7 @@ public class TestHandler extends BaseJSONHandler{
     }
     
     public String doFoo() {
-        model = "you got it! " + name;
+        setModel( "you got it! " + name );
         addActionError("Foo bar bad");
         return SUCCESS;
     }

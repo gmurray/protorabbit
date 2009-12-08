@@ -1,6 +1,7 @@
 package org.protorabbit.communicator;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -18,14 +19,33 @@ public class CommunicatorServlet extends HttpServlet {
     protected PollManager    pm = null;
     private HandlerFactory   hf = null;
 
+    private static Logger logger = null;
+
+    static final Logger getLogger() {
+        if (logger == null) {
+            logger = Logger.getLogger("org.protrabbit.communicator");
+        }
+        return logger;
+    }
+
     public void init(ServletConfig cfg) {
         try {
             super.init(cfg);
             this.ctx = cfg.getServletContext();
             this.hf = new HandlerFactory(this.ctx);
             pm = new PollManager(this.ctx);
-            // test
-            hf.addSearchPackage("org.protorabbit.communicator.test");
+
+            if (ctx.getInitParameter("prt-communicator-search-packages") != null) {
+                String tString = ctx.getInitParameter("prt-communicator-search-packages");
+                // clean up the templates string
+                tString = tString.trim();
+                tString = tString.replace(" ", "");
+                String[] pkgs = tString.split(",");
+                for (int i=0; i < pkgs.length; i++) {
+                    getLogger().info("Added search package " + pkgs[i]);
+                    hf.addSearchPackage(pkgs[i]);
+                }
+            }
         } catch (ServletException e) {
             e.printStackTrace();
         }

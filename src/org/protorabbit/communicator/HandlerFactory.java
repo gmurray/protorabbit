@@ -22,6 +22,7 @@ public class HandlerFactory {
     protected List<String> searchPackages = new ArrayList<String>();
     private JSONSerializer jsonSerializer;
     ServletContext ctx = null;
+    private String handlerName = "Action";
 
     public HandlerFactory(ServletContext ctx) {
         this.ctx = ctx;
@@ -44,17 +45,13 @@ public class HandlerFactory {
 
         // find the suitable action
         String path = request.getServletPath();
-        String pathInfo = request.getPathInfo();
-
-        getLogger().info("The request path is " + path );
-        getLogger().info("pathInfo is : " + pathInfo);
 
         String handler = null;
         String handlerMethod = null;
         String handlerNameSpace = null;
 
         int namespace = path.lastIndexOf("/");
-        getLogger().info("namespace=" + namespace);
+
         if (namespace != -1) {
             handlerNameSpace = path.substring( 0,namespace );
             namespace +=1;
@@ -71,9 +68,6 @@ public class HandlerFactory {
         } else if (endHandler != -1){
             handler = path.substring(namespace, endHandler);
         }
-        getLogger().info("handler=" + handler);
-        getLogger().info("handlerMethod=" + handlerMethod);
-        getLogger().info("handlerNamespace=" + handlerNameSpace);
 
         Handler thandler = null;
         String result = null;
@@ -84,20 +78,27 @@ public class HandlerFactory {
             return;
         }
         String klassName = handler.substring(0,1).toUpperCase() + 
-                           handler.substring(1,handler.length()) + "Handler";
+                           handler.substring(1,handler.length()) + handlerName;
         for (String s : searchPackages) {
             try {
                 Class<?> klass = this.getClass().getClassLoader().loadClass(s + "." + klassName);
                 try {
                     Object target = klass.newInstance();
                     thandler = (Handler)target;
+                    // prepare the handler by setting the request / response
+                    thandler.setRequest(request);
+                    thandler.setResponse(response);
+
+                    // map parameters to the setters
+                    mapParameters(thandler,request);
+
                     if (handlerMethod != null) {
                         // check for the Namespace
                         if (klass.isAnnotationPresent(Namespace.class)) {
                             Namespace n = (Namespace) klass.getAnnotation(Namespace.class);
                             if (n != null && handlerNameSpace != null) {
                                     if (handlerNameSpace.equals(n.value())) {
-                                        getLogger().info("Namespace match. Continuing");
+                                        // a match so we keep going
                                     } else {
                                         getLogger().info("Namespace " + n.value() + " required.");
                                         response.sendError(HttpServletResponse.SC_FORBIDDEN);
@@ -119,11 +120,12 @@ public class HandlerFactory {
                                     result = (String)m.invoke(target, args);
                                 } catch (SecurityException e) {
                                     getLogger().log(Level.WARNING, "SecurityException invoking Handler " + handlerMethod);
-                                    response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                                    response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getLocalizedMessage());
                                     return;
                                 } catch (InvocationTargetException e) {
                                     getLogger().log(Level.WARNING, "InvocationTargetException invoking Handler " + handlerMethod);
-                                    response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                                    request.setAttribute("javax.servlet.error.message", e);
+                                    response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getLocalizedMessage());
                                     return;
                                 }
                             } else {
@@ -132,7 +134,7 @@ public class HandlerFactory {
                                 return;
                             }
 
-                        }catch (NoSuchMethodException e) {
+                        } catch (NoSuchMethodException e) {
                             getLogger().log(Level.WARNING, "Handler " + handlerMethod + " not found.");
                             response.sendError(HttpServletResponse.SC_NOT_FOUND);
                             return;
@@ -145,10 +147,12 @@ public class HandlerFactory {
                     }
                 } catch (InstantiationException e) {
                     getLogger().log(Level.WARNING, "InstantiationException creating Handler " + handlerMethod);
+                    response.getOutputStream().write(e.getLocalizedMessage().getBytes());
                     response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                     return;
                 } catch (IllegalAccessException e) {
                     getLogger().log(Level.WARNING, "IllegalAccessException creating Handler " + handlerMethod);
+                    response.getOutputStream().write(e.getLocalizedMessage().getBytes());
                     response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                     return;
                 } catch (ClassCastException cce) {
@@ -166,12 +170,10 @@ public class HandlerFactory {
             getLogger().info("Could not find a handler with name " + klassName + " in any of the search packages.");
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
+        } else {
+            // do the JSON post processing
+            processHandler(thandler,result, request,response);
         }
-        getLogger().info("##We have the handler " + thandler);
-        // map parameters to the setters
-        mapParameters(thandler,request);
-        processHandler(thandler,result, request,response);
-
     }
     
     @SuppressWarnings("unchecked")
@@ -180,7 +182,6 @@ public class HandlerFactory {
         Enumeration<String> params = request.getParameterNames();
         while(params.hasMoreElements()) {
             String param = params.nextElement();
-            getLogger().info("Processing param " + param);
             // get a list of possible methods that are setters for this param
             List<Method> methods = ClassUtil.getMethods(h, param, true);
             // populate the values
@@ -211,8 +212,7 @@ public class HandlerFactory {
 
         // get the model
         jr.setData( h.getModel() );
-        // only for testing
-//        response.setHeader("Content-Type", "text/html");
+
         response.setHeader("Content-Type", "application/json");
         response.setHeader("Cache-Control", "no-cache");
         response.setHeader("pragma", "NO-CACHE");

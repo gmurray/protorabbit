@@ -28,7 +28,6 @@ public class ClassUtil {
              if (mName.length() > 1) {
                  mName += param.substring(1, param.length());
              }
-             System.out.println("looking for method name=" + mName);
              if (includeSuper) {
                  methods =  pojo.getClass().getMethods();
              } else {
@@ -39,7 +38,6 @@ public class ClassUtil {
                      Class<?>[] paramTypes = m.getParameterTypes();
                      if (paramTypes.length == 1 ) {
                          list.add(m);
-                         System.out.println("adding " + mName);
                      }
                  }
              }
@@ -56,33 +54,33 @@ public class ClassUtil {
 
          for (Method m : methods) {
              
-             try {
+
                  Class<?>[] paramTypes = m.getParameterTypes();
-                 Object[] args = {1};
+                 Object[] args = new Object[1];
  
                  Class<?>  p1 = paramTypes[0];
-                 if (p1.isAssignableFrom(Long.class)) {
-                     args[0] = new Long(value);
-                     System.out.println("*we are a long");
-                 } else if (p1.isAssignableFrom(Double.class)) {
-                     args[0] = new Double(value);
-                 } else if (p1.isAssignableFrom(Integer.class)) {
-                     args[0] = new Integer(value);
-                 } else if (p1.isAssignableFrom(String.class)) {
-                     args[0] = value;
-                     System.out.println("we are a string");
-                 } else if (p1.isAssignableFrom(Enum.class)) {
+
+                 if (Long.class.isAssignableFrom(p1) || p1 == long.class) {
+                     args[0] =  new Long(Long.parseLong(value));
+                 } else if (Double.class.isAssignableFrom(p1) || p1 == double.class) {
+                     args[0] = new Double(Double.parseDouble(value));
+                 } else if (Integer.class.isAssignableFrom(p1) || p1 == int.class) {
+                     args[0] = new Integer(Integer.parseInt(value));
+                 } else if (Enum.class.isAssignableFrom(p1)) {
                      args[0] = Enum.valueOf((Class<? extends Enum>)p1, value);
-                 } else if (p1.isAssignableFrom(Boolean.class)) {
-                     args[0] = new Boolean(value);
-                 }
+                 } else if (String.class.isAssignableFrom(p1) || p1 == String.class) {
+                     args[0] = value;
+                 } else if (Boolean.class.isAssignableFrom(p1) || p1 == boolean.class) {
+                     args[0] =  new Boolean(Boolean.parseBoolean(value));
+                 } else {
+                     throw new RuntimeException("Unssupported argument type : " + p1);
+                }
                 try {
-    
+
                     if (m != null && args[0] != null) {
 
                         m.invoke(targetObject, args);
                     }
-                    System.out.println("Successufly called " + m.getName() + " with value " + value);
                     return true;
                 } catch (SecurityException e) {
                     e.printStackTrace();
@@ -93,9 +91,7 @@ public class ClassUtil {
                 } catch (InvocationTargetException e) {
                     e.printStackTrace();
                 }
-             } catch (Exception e) {
-                 System.out.println("method : " + m + " failed");
-             }
+
         }
         return false;
      }
