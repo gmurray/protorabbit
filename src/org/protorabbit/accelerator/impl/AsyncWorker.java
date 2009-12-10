@@ -50,7 +50,7 @@ public class AsyncWorker implements IWorker, Runnable{
 
     public void run() {
         try {
-        	StringBuffer buff = null;
+            StringBuffer buff = null;
             InputStream is = hc.getInputStream();
             if (is != null) {
                 encoding = hc.getContentEncoding();
