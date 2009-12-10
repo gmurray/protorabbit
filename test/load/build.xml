@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="load-test" default="test" basedir=".">
+
+  <property file="build.properties"/>
+  <property file="${user.home}/build.properties"/>
+
+  <property name="src.web" value="${basedir}/web"/>
+  <property name="dist.dir" value="${basedir}/dist"/>
+  <property name="build.dir" value="${basedir}/build"/>
+  <property name="build.classes" value="${build.dir}/classes"/>
+  <property name="json.jar" value="../../lib/org.json-0.0.2.jar"/>
+  <property name="protorabbit.jar" value="../../dist/protorabbit-1.0.4.jar"/>
+
+  <target name="compile" depends="clean">
+      <mkdir dir="${build.dir}/classes" />
+      <javac srcdir="src"
+          destdir="${build.classes}"
+          classpath="${build.classes}:${protorabbit.jar}:${json.jar}"
+              source="1.5"
+              target="1.5"
+              debug="on">
+      </javac>
+  </target>
+
+  <target name="test"> 
+    <exec executable="java">
+        <arg line="-cp bin:${build.classes}:${protorabbit.jar}:${json.jar}:${build.dir} org.protorabbit.test.Engine"/>
+    </exec>
+  </target>
+
+  <target name="clean">
+   <delete dir="dist" />
+   <delete dir="build" />
+  </target>
+
+</project>

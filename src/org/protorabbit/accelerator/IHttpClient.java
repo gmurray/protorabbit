@@ -3,6 +3,7 @@ package org.protorabbit.accelerator;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 import java.util.Map;
 
 public interface IHttpClient {
@@ -36,7 +37,13 @@ public interface IHttpClient {
 
     public String getHeader(String name);
 
+    public List<IHeader>  getResponseHeaders() throws IOException;
+
     public String getMethod();
+
+    public void doPost( Map<String, String> params, String contentType ) throws IOException;
+
+    public void doPost( String paramString, String contentType ) throws IOException;
 
     public void setMethod(String method);
 

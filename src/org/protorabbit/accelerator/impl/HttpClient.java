@@ -1,15 +1,22 @@
 package org.protorabbit.accelerator.impl;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Iterator;
+import java.util.Set;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.net.*;
+import java.util.Map.Entry;
 import java.util.logging.*;
 import java.security.Security;
 
+import org.protorabbit.accelerator.IHeader;
 import org.protorabbit.accelerator.IHttpClient;
+import org.protorabbit.model.impl.Header;
 
    /**
     *
@@ -52,7 +59,6 @@ import org.protorabbit.accelerator.IHttpClient;
         */
        void init()
            throws IOException {
-
 
            if (url.trim().startsWith("https:")) {
                isHttps = true;
@@ -130,6 +136,36 @@ import org.protorabbit.accelerator.IHttpClient;
            }
        }
 
+       @SuppressWarnings("unchecked")
+    public void doPost(Map<String, String> postMap, String contentType) throws IOException {
+           String body = "";
+           Iterator ks = postMap.entrySet().iterator();
+           //for ( Entry k : ks ) {
+               while ( ks.hasNext() ) {
+                   Entry k = (Entry)ks.next();
+               body += k.getKey() + "=" + k.getValue();
+               if (ks.hasNext()) {
+                   body += "&";
+               }
+           }
+           doPost( body, contentType );
+       }
+
+       public void doPost(String postData, String contentType) throws IOException {
+           if (this.urlConnection == null ) {
+               init();
+           }
+           this.urlConnection.setDoOutput(true);
+           if (contentType != null) {
+               this.urlConnection.setRequestProperty( "Content-type", contentType );
+           }
+                  
+           OutputStream os = this.getOutputStream();
+           PrintStream ps = new PrintStream(os);
+           ps.print(postData);
+           ps.close(); 
+       }
+
        public OutputStream getOutputStream() {
 
            try {
@@ -195,6 +231,26 @@ import org.protorabbit.accelerator.IHttpClient;
 
     public void setMethod(String method) {
         this.method = method;
+    }
+
+    public List<IHeader> getResponseHeaders() throws IOException {
+        if (urlConnection == null) {
+            init();
+            if (urlConnection == null) {
+                return null;
+            }
+        }
+        List<IHeader> lhm = new ArrayList<IHeader>();
+        for (int i = 0;; i++) {
+            String key = urlConnection.getHeaderFieldKey(i);
+            String value = urlConnection.getHeaderField(i);
+            if (key == null && value == null) {
+              break;
+            }
+            IHeader h = new Header( key, value );
+            lhm.add( h );
+        }
+        return lhm;
     }
 
 }
