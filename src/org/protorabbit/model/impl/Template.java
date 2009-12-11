@@ -61,7 +61,8 @@ public class Template implements ITemplate {
     private Map<String, Object> attributes = null;
     private DocumentContext dc = null;
     private Boolean uniqueURL = null;
-    private static Logger logger = null;
+    private static Logger logger = Logger.getLogger("org.protrabbit");
+    private long accessCount = 0;
 
     public Template(String id, String baseURI, JSONObject json, Config cfg) {
 
@@ -75,9 +76,6 @@ public class Template implements ITemplate {
     }
 
     static Logger getLogger() {
-        if (logger == null) {
-            logger = Logger.getLogger("org.protrabbit");
-        }
         return logger;
     }
 
@@ -792,10 +790,18 @@ public class Template implements ITemplate {
                         uniqueURL = u;
                     }
                 } else {
-                    getLogger().log(Level.WARNING, "Error retrieving ancestor template with id " + tid);
+                    getLogger().log( Level.WARNING, "Error retrieving ancestor template with id " + tid );
                 }
             }
         }
         return uniqueURL;
+    }
+
+    public long getAccessCount() {
+        return accessCount;
+    }
+
+    public void incrementAccessCount() {
+        accessCount++;
     }
 }

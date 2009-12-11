@@ -73,4 +73,6 @@ public interface ITemplate {
     public void setUniqueURL(Boolean tgzip);
     public Boolean getUniqueURL();
     public long getCreateTime();
+    public void incrementAccessCount();
+    public long getAccessCount();
 }

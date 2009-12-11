@@ -55,6 +55,9 @@ import org.protorabbit.model.impl.ResourceURI;
 import org.protorabbit.profile.Episode;
 import org.protorabbit.profile.Mark;
 import org.protorabbit.profile.Measure;
+import org.protorabbit.stats.IStat;
+import org.protorabbit.stats.StatsItem;
+import org.protorabbit.stats.StatsManager;
 import org.protorabbit.util.IOUtil;
 import java.util.Properties;
 
@@ -67,6 +70,7 @@ public class ProtoRabbitServlet extends HttpServlet {
     private HashMap<String, Long> lastUpdated;
     private IEngine engine;
     private JSONSerializer json = null;
+    private StatsManager statsManager = null;
 
     private static Logger logger = null;
 
@@ -104,7 +108,8 @@ public class ProtoRabbitServlet extends HttpServlet {
     public void init(ServletConfig cfg) throws ServletException {
 
             super.init(cfg);
-            
+
+            statsManager = StatsManager.getInstance();
             // get default properties
             Properties p = new Properties();
             InputStream is = this.getClass().getResourceAsStream("/org/protorabbit/resources/default.properties");
@@ -525,11 +530,15 @@ public class ProtoRabbitServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
+
         WebContext wc = null;
-        try {
+        int bytesServed = 0;
+        long iStartTime = System.currentTimeMillis();
         String path = req.getServletPath();
         String pathInfo = req.getPathInfo();
         String clientId = req.getRemoteAddr();
+        try {
+
         String command = req.getParameter("command");
         if (command != null) {
             if ("ping".equals(command)) {
@@ -614,6 +623,18 @@ public class ProtoRabbitServlet extends HttpServlet {
                 }
                 Object data = null;
                 data = jcfg.getEpisodeManager().getEpisodes();
+                resp.setHeader("pragma", "NO-CACHE");
+                resp.setHeader("Cache-Control", "no-cache");
+                Object jo = json.serialize(data);
+                resp.getWriter().write(jo.toString());
+                return;
+            } else if ("accessMetrics".equals(command) ) {
+                if (json == null) {
+                    SerializationFactory factory = new SerializationFactory();
+                    json = factory.getInstance();
+                }
+                Object data = null;
+                data = statsManager.getStats();
                 resp.setHeader("pragma", "NO-CACHE");
                 resp.setHeader("Cache-Control", "no-cache");
                 Object jo = json.serialize(data);
@@ -733,12 +754,12 @@ public class ProtoRabbitServlet extends HttpServlet {
         }
 
         // get the initial content or get the content if it is expired
-        if ( (t.getTimeout() != null && (t.getTimeout() > 0 && (tr == null ||
-                tr.getCacheContext().isExpired() )) ||
+        if ( (t.getTimeout() != null && (t.getTimeout() > 0) &&
+                ((tr == null || tr.getCacheContext().isExpired() ) ||
                 t.requiresRefresh(wc) ||
                 jcfg.profile() ||
-                t.hasUserAgentPropertyDependencies(wc) )) {
-
+                t.hasUserAgentPropertyDependencies(wc) ))
+            ) {
             if (canGzip && t.gzipTemplate() != null && t.gzipTemplate() == true) {
                 resp.setHeader("Vary", "Accept-Encoding");
                 resp.setHeader("Content-Encoding", "gzip");
@@ -757,14 +778,14 @@ public class ProtoRabbitServlet extends HttpServlet {
             cr.setContent(new StringBuffer(content));
             t.setTemplateResource(cr);
 
-            if (canGzip  &&  t.gzipTemplate() != null && t.gzipTemplate() == true) {
+            if ( canGzip  && t.gzipTemplate() != null && t.gzipTemplate() == true ) {
                 byte[] bytes = cr.getGZippedContent();
                 cr.incrementGzipAccessCount();
                 resp.setContentLength(bytes.length);
                 OutputStream out = resp.getOutputStream();
                 if (bytes != null) {
-                    ByteArrayInputStream bis = new ByteArrayInputStream(
-                            bytes);
+                    ByteArrayInputStream bis = new ByteArrayInputStream( bytes );
+                    bytesServed = bytes.length;
                     IOUtil.writeBinaryResource(bis, out);
                 }
             } else {
@@ -772,6 +793,7 @@ public class ProtoRabbitServlet extends HttpServlet {
                 byte[] bytes = cr.getContent().toString().getBytes();
                 cr.incrementAccessCount();
                 resp.setContentLength(bytes.length);
+                bytesServed = bytes.length;
                 if (bytes != null) {
                     ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
                     IOUtil.writeBinaryResource(bis, out);
@@ -813,6 +835,7 @@ public class ProtoRabbitServlet extends HttpServlet {
 
                 if (bytes != null) {
                     resp.setContentLength(bytes.length);
+                    bytesServed = bytes.length;
                     ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
                     IOUtil.writeBinaryResource(bis, out);
                 }
@@ -820,30 +843,53 @@ public class ProtoRabbitServlet extends HttpServlet {
 
                 OutputStream out = resp.getOutputStream();
                 tr.incrementAccessCount();
-                byte[] bytes =tr.getContent().toString().getBytes();
+                byte[] bytes = tr.getContent().toString().getBytes();
                 resp.setContentLength(bytes.length);
                 if (bytes != null) {
                     ByteArrayInputStream bis = new ByteArrayInputStream( bytes);
+                    bytesServed = bytes.length;
                     IOUtil.writeBinaryResource(bis, out);
                 }
             }
 
         } else {
             OutputStream out = resp.getOutputStream();
-            t.getTemplateResource().incrementAccessCount();
+          //  t.getTemplateResource().incrementAccessCount();
             engine.renderTemplate(id, wc, bos);
+            bytesServed = bos.size();
             out.write(bos.toByteArray());
         }
-        
+        // increment the total template accesses
+        if (t != null) {
+            t.incrementAccessCount();
+        }
         if (jcfg.profile()) {
             profile(wc);
         }
+        
         } catch (java.net.SocketException jos) {
             logger.warning("Got broken pipe. Ignoring...");
+            return;
+        } finally {
+            if (wc != null) {
+                wc.destroy();
+            }
         }
-        if (wc != null) {
-            wc.destroy();
-        }
+
+        long endTime = System.currentTimeMillis();
+        // add more stats stuff
+        IStat stat = new StatsItem();
+        stat.setTimestamp( System.currentTimeMillis() );
+        stat.setPath( path );
+        stat.setPathInfo( pathInfo );
+        stat.setRemoteClient( clientId );
+        stat.setType( StatsItem.types.VIEW );
+        stat.setRequestURI( req.getRequestURI() );
+        stat.setProcessTime( new Long( endTime - iStartTime) );
+        stat.setBytesServed( new Long(bytesServed) );
+        stat.setRequestURI( "text/html" );
+        statsManager.add( stat );
+
     }
 
     public void profile(IContext wc) {

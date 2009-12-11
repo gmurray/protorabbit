@@ -223,16 +223,17 @@ public class DefaultEngine implements IEngine {
                         // if we have a sub document context render it
                         IDocumentContext dc = c.getDocumentContext();
                         if (dc != null) {
-                            if (dc.getAllCommands() == null ||
-                                dc.getAllCommands() != null && 
-                                dc.getAllCommands().size() == 0 &&
+                            if ((dc.getAllCommands() == null ||
+                                (dc.getAllCommands() != null && 
+                                dc.getAllCommands().size() == 0)) &&
                                 dc.getDocument() != null) {
-                                out.write(dc.getDocument().toString().getBytes());
+
+                                    out.write(dc.getDocument().toString().getBytes());
+
                             }
                             renderCommands(dc.getAllCommands(), dc.getDocument(), ctx, out) ;
                         }
                         ByteArrayOutputStream bos = ctx.getBuffer(c.getUUId());
-                        //ByteArrayOutputStream bos = c.getBuffer();
                         if (bos != null) {
                             out.write(bos.toByteArray());
                         }
@@ -247,7 +248,7 @@ public class DefaultEngine implements IEngine {
            }
 
         } catch (Exception e) {
-            getLogger().log(Level.SEVERE, "Error rendering ", e);
+            getLogger().log(Level.SEVERE, "* Error rendering ", e);
         }
 
         try {

@@ -45,7 +45,7 @@ public class WebClient extends Thread {
 
         IHttpClient c = new HttpClient();
         long start = System.currentTimeMillis();
-        c.setURL("http://localhost:8080/protorabbit/welcome.prt");
+        c.setURL("http://localhost:9090/protorabbit/welcome.prt");
         /*
         Map params = new HashMap<String, String>();
         params.put("q", "java");
@@ -56,13 +56,18 @@ public class WebClient extends Thread {
         }
         */
         int hcount = 0;
+        int bytesRead = 0;
         try {
             InputStream in  = c.getInputStream();
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             IOUtil.writeBinaryResource( in, bos );
             // show the page
             //System.out.println(bos.toString());
-            totalRead += bos.size();
+            bytesRead = bos.size();
+            totalRead += bytesRead;
+            if (bytesRead != 4627) {
+             System.out.println(bos);
+            }
             //System.out.println("Getting headers...");
             // get the headers
             List<IHeader> rh = c.getResponseHeaders();
@@ -84,7 +89,10 @@ public class WebClient extends Thread {
         } else {
             st = timeout;
         }
-        System.out.println( runnerId + " run " + count + " elapsed time : " + (stop - start) + "ms" + " header count : " + hcount + " bytes read : " + totalRead + " sleeping for : " + st);
+        System.out.println( runnerId + " run " + count + " elapsed time : " + (stop - start) + "ms" + " bytesRead : " + bytesRead + " total bytes read : " + totalRead + " sleeping for : " + st);
+        if (bytesRead != 4627) {
+            System.exit(0);
+           }
         try {
             sleep( st );
         } catch (InterruptedException e) {

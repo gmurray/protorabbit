@@ -145,14 +145,14 @@ function createResourcesBlock(t) {
     var templateResources = [];
     for (var k in t.templates) {
         if (t.templates[k].templateResource) {
-            templateResources.push({ id: k, templateResource : t.templates[k].templateResource});
+            templateResources.push({ id: k, templateResource : t.templates[k].templateResource, accessCount : t.templates[k].accessCount });
         }
     }
    var s6tableElement = document.createElement("div");
 
     if (templateResources.length > 0) {
         var s6table = new tablebuilder("blockTable");
-        s6table.setHeader(["id", "Content Type", "expires", "created", "Max Age", "Last Accessed", "timeout", "Status", "Content Length", "Gzip Content Length", "Access Count", "Gzip Access Count"]);
+        s6table.setHeader(["id", "Content Type", "expires", "created", "Max Age", "Last Accessed", "timeout", "Status", "Content Length", "Gzip Content Length", "Access Count", "Gzip Access Count", "Total Count"]);
         for (var l=0; l < templateResources.length; l+=1 ) {
             var s = templateResources[l].templateResource;
             var cl =  s.contentLength;
@@ -181,7 +181,8 @@ function createResourcesBlock(t) {
                                cl || '',
                                gcl || '',
                                s.accessCount,
-                               s.gzipAccessCount
+                               s.gzipAccessCount,
+                               templateResources[l].accessCount
                               ]);
         }
         s6tableElement.innerHTML = s6table.toString();
