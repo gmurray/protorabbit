@@ -14,6 +14,7 @@ package org.protorabbit.model.impl;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import org.protorabbit.Config;
 import org.protorabbit.model.ICommand;
 import org.protorabbit.model.IContext;
 import org.protorabbit.model.IParameter;
@@ -30,11 +31,14 @@ public abstract class BaseCommand implements ICommand {
 
     protected int processOrder = ICommand.PROCESS_DEFAULT;
 
+    private IDocumentContext document;
 
+    protected String uuid = null;
+    /*
     private static class LocalContext {
         public ByteArrayOutputStream buffer;
         public IContext ctx;
-        public IDocumentContext document;
+
     }
 
     private ThreadLocal<LocalContext> localContext = new ThreadLocal<LocalContext>() {
@@ -43,21 +47,32 @@ public abstract class BaseCommand implements ICommand {
             lc.buffer = new ByteArrayOutputStream();
             return lc;
         }
-    };
+    };*/
 
     public BaseCommand() {
+        uuid = Config.generateUUId();
+    }
+
+    public String getUUId() {
+        return uuid;
     }
 
     public void reset() {
-        localContext.remove();
+       // localContext.remove();
     }
 
-    public ByteArrayOutputStream getBuffer() {
-        return localContext.get().buffer;
+    public ByteArrayOutputStream getBuffer(IContext ctx) {
+        if (ctx.getBuffer(getUUId()) == null) {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            ctx.setBuffer(getUUId(), bos );
+            return bos;
+        } else {
+            return ctx.getBuffer(getUUId());
+        }
     }
 
     public void setDocumentContext(IDocumentContext document) {
-         localContext.get().document = document;
+         this.document = document;
     }
 
     public void setProcessOrder(int processOrder) {
@@ -68,18 +83,18 @@ public abstract class BaseCommand implements ICommand {
         return processOrder;
     }
 
-    public abstract void doProcess() throws IOException;
+    public abstract void doProcess(IContext ctx) throws IOException;
 
-    public void setContext(IContext ctx) {
-        localContext.get().ctx = ctx;
-    }
+ //   public void setContext(IContext ctx) {
+ //       localContext.get().ctx = ctx;
+  //  }
 
-    public IContext getContext() {
-        return localContext.get().ctx;
-    }
+ //   public IContext getContext() {
+ //       return localContext.get().ctx;
+ //   }
 
     public IDocumentContext getDocumentContext() {
-      return localContext.get().document;
+      return document;
     }
 
     public IParameter[] getParams() {

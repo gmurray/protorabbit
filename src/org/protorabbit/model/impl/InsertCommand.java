@@ -12,6 +12,7 @@
 package org.protorabbit.model.impl;
 
 import org.protorabbit.Config;
+import org.protorabbit.model.IContext;
 import org.protorabbit.model.IParameter;
 import org.protorabbit.model.IProperty;
 
@@ -34,10 +35,9 @@ public class InsertCommand extends BaseCommand {
     }
 
     @SuppressWarnings("unchecked")
-    @Override
-    public void doProcess() throws IOException {
+    public void doProcess(IContext ctx) throws IOException {
 
-        Config cfg = getContext().getConfig();
+        Config cfg = ctx.getConfig();
 
         String id = null;
         if (params.length > 0 && params[0].getType() == IParameter.STRING) {
@@ -47,7 +47,7 @@ public class InsertCommand extends BaseCommand {
             return;
         }
 
-        IProperty p = cfg.getProperty(getContext().getTemplateId(), id, getContext());
+        IProperty p = cfg.getProperty(ctx.getTemplateId(), id, ctx);
         if (p == null) {
             return;
         }
@@ -55,7 +55,7 @@ public class InsertCommand extends BaseCommand {
         if (p != null) {
             value = p.getValue();
         } else {
-            getLogger().warning("Non fatal error : null property " + id + " processing template " + getContext().getTemplateId());
+            getLogger().warning("Non fatal error : null property " + id + " processing template " + ctx.getTemplateId());
             return;
         }
         int current = -1;
@@ -73,7 +73,7 @@ public class InsertCommand extends BaseCommand {
                 int currentEnd = value.indexOf("}", current + 2);
                 if (currentEnd != -1) {
                     String expression = value.substring(current + 2,currentEnd);
-                    Object replacement =  getContext().parseExpression(expression);
+                    Object replacement =  ctx.parseExpression(expression);
                     String replacementString = "";
                     if (replacement != null) {
                         replacementString = replacement + "";
@@ -98,18 +98,18 @@ public class InsertCommand extends BaseCommand {
             }
         }
         if (p != null && p.getDefer() != null && p.getDefer() == true) {
-            Map<String, String> deferredProperties = (Map<String, String>)getContext().getAttribute(DEFERRED_PROPERTIES);
+            Map<String, String> deferredProperties = (Map<String, String>)ctx.getAttribute(DEFERRED_PROPERTIES);
             if (deferredProperties == null) {
                 deferredProperties = new HashMap<String,String>();
             }
             deferredProperties.put(p.getKey(),value);
-            getContext().setAttribute(DEFERRED_PROPERTIES, deferredProperties);
-            String span = "<span id=\"" + getContext().getTemplateId() + "_" + p.getKey() + "\">" +
+            ctx.setAttribute(DEFERRED_PROPERTIES, deferredProperties);
+            String span = "<span id=\"" + ctx.getTemplateId() + "_" + p.getKey() + "\">" +
                 ((p.getDeferContent() != null) ? p.getDeferContent().toString() : "") + 
             "</span>"; 
-            getBuffer().write(span.getBytes());
+            getBuffer(ctx).write(span.getBytes());
         } else if (p != null) {
-            getBuffer().write(value.getBytes());
+            getBuffer(ctx).write(value.getBytes());
         } else {
             String message = "InsertWarning: Unable find property " + params[0];
             getLogger().warning(message);

@@ -8,10 +8,21 @@ public class Engine {
     public static void main(String[] args) {
         System.out.println("Engine start!");
         List<WebClient> clients = new ArrayList<WebClient>();
-        int count = 200;
+        int count = 50;
         for ( int i=0; i < count; i++ ) {
-            WebClient wc = new WebClient( "Runner " + i, 20, 1000 );
+            WebClient wc = new WebClient( "gRunner " + i, 20, 1500 );
+            wc.setRandomRange( true );
+            clients.add(wc);
+            wc.start();
         }
-
+        for (WebClient wc : clients) {
+            try {
+                wc.join();
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+        System.out.println("All done!!!1");
     }
 }

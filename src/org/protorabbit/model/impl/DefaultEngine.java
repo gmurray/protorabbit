@@ -62,22 +62,28 @@ public class DefaultEngine implements IEngine {
         ctx.setTemplateId(tid);
         ITemplate template = cfg.getTemplate( tid );
         if (template != null) {
-            DocumentContext dc = getDocumentContext( template, ctx );
-            // go through all the commands and build up the buffers
-            // before
-            if (dc.getBeforeCommands() != null) {
-                processCommands( ctx, dc.getBeforeCommands());
+            DocumentContext dc = null;
+            try {
+                 dc = getDocumentContext( template, ctx );
+                // go through all the commands and build up the buffers
+                // before
+                if (dc.getBeforeCommands() != null) {
+                    processCommands( ctx, dc.getBeforeCommands());
+                }
+                // default commands
+                if (dc.getDefaultCommands() != null) {
+                    processCommands( ctx, dc.getDefaultCommands());
+                }
+                // after commands
+                if (dc.getAfterCommands() != null) {
+                    processCommands( ctx, dc.getAfterCommands());
+                }
+                renderCommands( dc.getAllCommands(), dc.getDocument(), ctx, out );
+            } finally {
+                if ( dc != null ) {
+                    resetCommands( dc.getAllCommands() );
+                }
             }
-            // default commands
-            if (dc.getDefaultCommands() != null) {
-                processCommands( ctx, dc.getDefaultCommands());
-            }
-            // after commands
-            if (dc.getAfterCommands() != null) {
-                processCommands( ctx, dc.getAfterCommands());
-            }
-            renderCommands( dc.getAllCommands(), dc.getDocument(), ctx, out );
-            resetCommands( dc.getAllCommands() );
         } else {
             getLogger().info("Unable to find template " + tid );
         }
@@ -204,7 +210,7 @@ public class DefaultEngine implements IEngine {
                               "var t_transit2= Math.round((t_now2 - t_pingStart2) / 2);\n" +
                               "var t_transit= Math.round((t_transit1 + t_transit2) / 4);\n" +
                               "if ((t_transit * 2) < timeshift) {timeshift = timeshift - (t_transit * 2);} else if (timeshift < 0) {timeshift+=(t_transit * 2);}" +
-                              "var t_sync='prt?command=episodesync&timestamp=" + serverTime +"&transitTime=' + t_transit;" +
+                              "var t_sync='prt?command=episodesync&timestamp=" + serverTime + "&transitTime=' + t_transit;" +
                               "document.write(\"<scr\" + \"ipt src='\" + t_sync + \"'></scr\" + \"ipt>\");</script>" +
                               preText.substring(headStart + 6, preText.length());
                         }
@@ -225,7 +231,8 @@ public class DefaultEngine implements IEngine {
                             }
                             renderCommands(dc.getAllCommands(), dc.getDocument(), ctx, out) ;
                         }
-                        ByteArrayOutputStream bos = c.getBuffer();
+                        ByteArrayOutputStream bos = ctx.getBuffer(c.getUUId());
+                        //ByteArrayOutputStream bos = c.getBuffer();
                         if (bos != null) {
                             out.write(bos.toByteArray());
                         } else {
@@ -259,15 +266,15 @@ public class DefaultEngine implements IEngine {
             return;
         }
         for (ICommand c : cmds) {
-            c.setContext(ctx);
+         //   c.setContext(ctx);
             try {
-                c.doProcess();
+                c.doProcess( ctx );
                 IDocumentContext dc = c.getDocumentContext();
                 if (dc != null) {
                     // make sure sub document commands are processed
-                    processCommands(ctx, dc.getBeforeCommands());
-                    processCommands(ctx, dc.getDefaultCommands());
-                    processCommands(ctx, dc.getAfterCommands());
+                    processCommands( ctx, dc.getBeforeCommands() );
+                    processCommands( ctx, dc.getDefaultCommands() );
+                    processCommands( ctx, dc.getAfterCommands() );
                 }
             } catch (IOException e) {
                 e.printStackTrace();

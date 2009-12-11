@@ -177,7 +177,7 @@ public class HandlerFactory {
     }
     
     @SuppressWarnings("unchecked")
-	protected void mapParameters(Handler h,
+    protected void mapParameters(Handler h,
                            HttpServletRequest request){
         Enumeration<String> params = request.getParameterNames();
         while(params.hasMoreElements()) {

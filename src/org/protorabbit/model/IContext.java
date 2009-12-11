@@ -11,6 +11,7 @@
 
 package org.protorabbit.model;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -54,4 +55,10 @@ public interface IContext {
     public boolean uaTest(String test);
 
     public boolean test(String test);
+
+    public void destroy();
+    
+    public ByteArrayOutputStream getBuffer(String bid);
+
+    public void setBuffer(String uuId, ByteArrayOutputStream bos);
 }

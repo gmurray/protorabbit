@@ -506,7 +506,11 @@ public class ProtoRabbitServlet extends HttpServlet {
 
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
                         throws IOException, javax.servlet.ServletException {
-        doGet(req,resp);
+        try {
+            doGet(req,resp);
+        } catch (java.net.SocketException jos) {
+            logger.warning("Got broken pipe. Ignoring...");
+        }
     }
 
     private void writeHeaders(HttpServletRequest req, HttpServletResponse resp, String path) throws ServletException, IOException {
@@ -521,7 +525,8 @@ public class ProtoRabbitServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-
+        WebContext wc = null;
+        try {
         String path = req.getServletPath();
         String pathInfo = req.getPathInfo();
         String clientId = req.getRemoteAddr();
@@ -653,7 +658,7 @@ public class ProtoRabbitServlet extends HttpServlet {
                 break;
             }
         }
-        WebContext wc = new WebContext(jcfg, ctx, req, resp);
+        wc = new WebContext(jcfg, ctx, req, resp);
         wc.setAttribute(Config.START_TIME, new Long(new Date().getTime()));
         String id = req.getParameter("resourceid");
         if (id != null) {
@@ -829,8 +834,15 @@ public class ProtoRabbitServlet extends HttpServlet {
             engine.renderTemplate(id, wc, bos);
             out.write(bos.toByteArray());
         }
+        
         if (jcfg.profile()) {
             profile(wc);
+        }
+        } catch (java.net.SocketException jos) {
+            logger.warning("Got broken pipe. Ignoring...");
+        }
+        if (wc != null) {
+            wc.destroy();
         }
     }
 

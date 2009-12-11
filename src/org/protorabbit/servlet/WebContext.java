@@ -384,4 +384,15 @@ public class WebContext extends BaseContext {
     public List<String> getUAStyleTests() {
         return matchedUAStyleTests;
     }
+
+    public void destroy() {
+        super.destroy();
+        cfg = null;
+        sctx = null;
+        req = null;
+        resp = null;
+        contextRoot = null;
+        matchedUAScriptTests = null;
+        matchedUAStyleTests = null;
+    }
 }

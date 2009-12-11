@@ -67,6 +67,7 @@ public class Config {
    private static Logger logger = null;
    private EpisodeManager episodeManager = null;
    private long created = 0;
+   private static int counter = 0;
 
 
    static Logger getLogger() {
@@ -671,6 +672,10 @@ public class Config {
 
     public void setProfile(boolean b) {
         this.profile = b;
+    }
+
+    public static String generateUUId() {
+        return  System.currentTimeMillis() + "-" + counter++;
     }
 
 }

@@ -11,7 +11,6 @@
 
 package org.protorabbit.model;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 public interface ICommand {
@@ -28,11 +27,10 @@ public interface ICommand {
 
     public IDocumentContext getDocumentContext();
     public void setDocumentContext(IDocumentContext document);
-    public ByteArrayOutputStream getBuffer();
-//    public void setBuffer(ByteArrayOutputStream buffer);
+//    public ByteArrayOutputStream getBuffer();
+    public String getUUId();
     public void setProcessOrder(int order);
     public int getProcessOrder();
-    public void setContext(IContext ctx);
     public int getStartIndex();
     public void setStartIndex(int index);
     public int getEndIndex();
@@ -42,5 +40,5 @@ public interface ICommand {
     public void reset();
     public IParameter[] getParams();
     public void setParams(IParameter[] params);
-    public void doProcess() throws IOException;
+    public void doProcess(IContext ctx) throws IOException;
 }

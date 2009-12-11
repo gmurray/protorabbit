@@ -11,6 +11,7 @@
 
 package org.protorabbit.model.impl;
 
+import java.io.ByteArrayOutputStream;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.HashMap;
@@ -22,6 +23,7 @@ import org.protorabbit.model.IContext;
 public  abstract class BaseContext implements IContext {
 
     private Map<String, Object>attributes;
+    private Map<String, ByteArrayOutputStream> buffers;
     private String templateId;
     private static Logger logger = null;
 
@@ -34,6 +36,7 @@ public  abstract class BaseContext implements IContext {
 
     public BaseContext(){
         this.attributes = new HashMap<String, Object>();
+        this.buffers = new HashMap<String, ByteArrayOutputStream>();
     }
 
     public Object getAttribute(String key) {
@@ -116,6 +119,23 @@ public  abstract class BaseContext implements IContext {
             return value.substring(start + 1,end);
         }
         return null;
+    }
+
+    public ByteArrayOutputStream getBuffer(String bid) {
+        return buffers.get(bid);
+    }
+    
+    public void setBuffer(String bid, ByteArrayOutputStream bos) {
+        buffers.put( bid, bos );
+    }
+
+    public void destroy() {
+        buffers.clear();
+        buffers = null;
+        attributes.clear();
+        attributes = null;
+        templateId = null;
+        logger = null;
     }
 
 }
