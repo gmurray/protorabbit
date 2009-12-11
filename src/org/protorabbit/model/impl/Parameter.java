@@ -19,5 +19,9 @@ public class Parameter implements IParameter {
     public Object getValue() {
         return value;
     }
+    
+    public String toString() {
+        return " IParameter : { type : " + type + ", value : " + value + " }";
+    }
 
 }

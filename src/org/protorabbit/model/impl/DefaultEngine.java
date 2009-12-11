@@ -235,8 +235,6 @@ public class DefaultEngine implements IEngine {
                         //ByteArrayOutputStream bos = c.getBuffer();
                         if (bos != null) {
                             out.write(bos.toByteArray());
-                        } else {
-                            getLogger().log(Level.SEVERE, "Error rendering buffer of command " + c);
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
