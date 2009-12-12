@@ -8,9 +8,9 @@ public class Engine {
     public static void main(String[] args) {
         System.out.println("Engine start!");
         List<WebClient> clients = new ArrayList<WebClient>();
-        int count = 50;
+        int count = 125;
         for ( int i=0; i < count; i++ ) {
-            WebClient wc = new WebClient( "Runner " + i, 50, 1500 );
+            WebClient wc = new WebClient( "Runner " + i, 50, 2500 );
             wc.setRandomRange( true );
             clients.add(wc);
             wc.start();

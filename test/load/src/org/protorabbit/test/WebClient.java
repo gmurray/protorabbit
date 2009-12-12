@@ -45,7 +45,7 @@ public class WebClient extends Thread {
 
         IHttpClient c = new HttpClient();
         long start = System.currentTimeMillis();
-        c.setURL("http://localhost:9090/protorabbit/welcome.prt");
+        c.setURL("http://localhost:8080/protorabbit/welcome.prt");
         /*
         Map params = new HashMap<String, String>();
         params.put("q", "java");

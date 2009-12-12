@@ -56,7 +56,7 @@ public class DefaultEngine implements IEngine {
         return logger;
     }
 
-    public void renderTemplate( String tid, IContext ctx, OutputStream out ) {
+    public synchronized void renderTemplate( String tid, IContext ctx, OutputStream out ) {
 
         Config cfg = ctx.getConfig();
         ctx.setTemplateId(tid);
@@ -222,17 +222,26 @@ public class DefaultEngine implements IEngine {
                     try {
                         // if we have a sub document context render it
                         IDocumentContext dc = c.getDocumentContext();
+
                         if (dc != null) {
-                            if ((dc.getAllCommands() == null ||
-                                (dc.getAllCommands() != null && 
-                                dc.getAllCommands().size() == 0)) &&
-                                dc.getDocument() != null) {
 
-                                    out.write(dc.getDocument().toString().getBytes());
-
+                                if (
+                                        (dc.getAllCommands() == null ||
+                                    (dc.getAllCommands() != null && 
+                                    dc.getAllCommands().size() == 0)) /* && 
+                                        dc.getDocument() != null */) {
+                                       if (dc.getDocument() != null ) {
+                                            out.write(dc.getDocument().toString().getBytes());
+                                       } else {
+                                           System.out.println("no dc.document=" + dc.getDocument() );
+                                       }
+                                } else {
+                                    System.out.println("i don't think we no doc with " + c );
+                                    System.out.println("dc.document=" + dc.getDocument() );
+                                }
+                                renderCommands(dc.getAllCommands(), dc.getDocument(), ctx, out) ;
                             }
-                            renderCommands(dc.getAllCommands(), dc.getDocument(), ctx, out) ;
-                        }
+
                         ByteArrayOutputStream bos = ctx.getBuffer(c.getUUId());
                         if (bos != null) {
                             out.write(bos.toByteArray());
@@ -265,7 +274,6 @@ public class DefaultEngine implements IEngine {
             return;
         }
         for (ICommand c : cmds) {
-         //   c.setContext(ctx);
             try {
                 c.doProcess( ctx );
                 IDocumentContext dc = c.getDocumentContext();
