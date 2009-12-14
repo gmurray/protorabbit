@@ -357,3 +357,33 @@ function createChart(model) {
    }
    rchart.setValue(hdata);
 }
+
+function loadStats() {
+
+    var req = new ajax({ 
+            url : "../prt?command=accessMetrics",
+            callback : function(req) {
+                var model = eval("(" + req.responseText + ")");
+                formatPageViews( model );
+            }
+        }); 
+}
+
+function formatPageViews(items) {
+ 
+    var s3table = new tablebuilder("blockTable");
+    s3table.setHeader(["URI",  "Timestamp", "Client Id", "Content Type", "Content Length", "Process Time"]);
+
+    for ( var i=0; i < items.length; i+=1 ) {
+        var _row = [];
+        var _item = items[i];
+        _row.push( _item.path );
+        _row.push( new Date(_item.timestamp) );
+        _row.push( _item.remoteClient );
+        _row.push( _item.contentType );
+        _row.push( _item.contentLength );
+        _row.push( _item.processTime );
+        s3table.addRow( _row );
+    }
+    document.getElementById( "bodyContent" ).innerHTML = s3table + "<div> Total request : " + items.length + "</div>";
+}

@@ -886,8 +886,8 @@ public class ProtoRabbitServlet extends HttpServlet {
         stat.setType( StatsItem.types.VIEW );
         stat.setRequestURI( req.getRequestURI() );
         stat.setProcessTime( new Long( endTime - iStartTime) );
-        stat.setBytesServed( new Long(bytesServed) );
-        stat.setRequestURI( "text/html" );
+        stat.setContentLength( new Long(bytesServed) );
+        stat.setContentType( "text/html" );
         statsManager.add( stat );
 
     }

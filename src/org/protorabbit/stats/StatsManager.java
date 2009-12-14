@@ -18,14 +18,22 @@ public class StatsManager {
         return statManager;
     }
 
+    @SuppressWarnings("unchecked")
     public List<IStat> getStats() {
-        return stats;
+        if ( stats == null) {
+            return null;
+        }
+        synchronized (stats) {
+            return (List<IStat>) ((ArrayList)stats).clone();
+        }
     }
 
-    public synchronized void add( IStat s ) {
+    public void add( IStat s ) {
         if ( stats == null) {
             stats = new ArrayList<IStat>();
         }
-        stats.add( s );
+        synchronized(stats) {
+            stats.add( s );
+        }
     }
 }

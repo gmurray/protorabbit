@@ -15,8 +15,8 @@ public interface IStat {
     public void setPathInfo( String pathInfo );
     public String getPath();
     public void setPath( String path );
-    public Long getBytesServed();
-    public void setBytesServed( Long bytesServed );
+    public Long getContentLength();
+    public void setContentLength( Long contentLength );
     public Long getProcessTime();
     public void setProcessTime( Long processTime );
     public void setContentType( String contentType );

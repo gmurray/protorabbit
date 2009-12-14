@@ -3,6 +3,7 @@ package org.protorabbit.test;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -10,7 +11,6 @@ import org.protorabbit.accelerator.IHeader;
 import org.protorabbit.accelerator.IHttpClient;
 import org.protorabbit.accelerator.impl.HttpClient;
 import org.protorabbit.util.IOUtil;
-import java.util.Random;
 
 public class WebClient extends Thread {
 
@@ -21,11 +21,14 @@ public class WebClient extends Thread {
     Thread t = null;
     boolean randomRange = false;
     Random rand = null;
+    private String url = null;
+    private List<String> urls;
 
-    public WebClient( String runnerId, int runcount, long timeout ) {
+    public WebClient( String url, String runnerId, int runcount, long timeout ) {
         this.runcount = runcount;
         this.timeout = timeout;
         this.runnerId = runnerId;
+        this.url = url;
 
     }
 
@@ -45,7 +48,8 @@ public class WebClient extends Thread {
 
         IHttpClient c = new HttpClient();
         long start = System.currentTimeMillis();
-        c.setURL("http://localhost:8080/protorabbit/welcome.prt");
+        c.setURL( url );
+//        c.setURL("http://localhost:8080/protorabbit/welcome.prt");
         /*
         Map params = new HashMap<String, String>();
         params.put("q", "java");
@@ -65,9 +69,9 @@ public class WebClient extends Thread {
             //System.out.println(bos.toString());
             bytesRead = bos.size();
             totalRead += bytesRead;
-            if (bytesRead != 4627) {
-             System.out.println(bos);
-            }
+        //    if (bytesRead != 4627) {
+        //     System.out.println(bos);
+        //    }
             //System.out.println("Getting headers...");
             // get the headers
             List<IHeader> rh = c.getResponseHeaders();
@@ -90,9 +94,9 @@ public class WebClient extends Thread {
             st = timeout;
         }
         System.out.println( runnerId + " run " + count + " elapsed time : " + (stop - start) + "ms" + " bytesRead : " + bytesRead + " total bytes read : " + totalRead + " sleeping for : " + st);
-        if (bytesRead != 4627) {
-            System.exit(0);
-           }
+//        if (bytesRead != 4627) {
+//            System.exit(0);
+//           }
         try {
             sleep( st );
         } catch (InterruptedException e) {

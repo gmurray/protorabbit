@@ -15,6 +15,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.protorabbit.json.JSONSerializer;
 import org.protorabbit.json.SerializationFactory;
+import org.protorabbit.stats.IStat;
+import org.protorabbit.stats.StatsItem;
+import org.protorabbit.stats.StatsManager;
 import org.protorabbit.util.ClassUtil;
 
 public class HandlerFactory {
@@ -23,9 +26,11 @@ public class HandlerFactory {
     private JSONSerializer jsonSerializer;
     ServletContext ctx = null;
     private String handlerName = "Action";
+    private StatsManager statsManager = null;
 
     public HandlerFactory(ServletContext ctx) {
         this.ctx = ctx;
+        statsManager = StatsManager.getInstance();
     }
 
     private static Logger logger = null;
@@ -43,6 +48,7 @@ public class HandlerFactory {
 
     public void processRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
+        long iStartTime = System.currentTimeMillis();
         // find the suitable action
         String path = request.getServletPath();
 
@@ -166,16 +172,31 @@ public class HandlerFactory {
                 return;
             }
         }
+        int bytesServed = 0;
         if (thandler == null) {
             getLogger().info("Could not find a handler with name " + klassName + " in any of the search packages.");
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         } else {
             // do the JSON post processing
-            processHandler(thandler,result, request,response);
+            bytesServed = processHandler(thandler,result, request,response);
         }
+        // record stats
+
+        long endTime = System.currentTimeMillis();
+        IStat stat = new StatsItem();
+        stat.setTimestamp( System.currentTimeMillis() );
+        stat.setPath( path );
+        stat.setPathInfo( request.getPathInfo() );
+        stat.setRemoteClient( request.getRemoteAddr() );
+        stat.setType( StatsItem.types.JSON );
+        stat.setRequestURI( request.getRequestURI() );
+        stat.setProcessTime( new Long( endTime - iStartTime) );
+        stat.setContentLength( new Long(bytesServed) );
+        stat.setContentType( "text/html" );
+        statsManager.add( stat );
     }
-    
+
     @SuppressWarnings("unchecked")
     protected void mapParameters(Handler h,
                            HttpServletRequest request){
@@ -189,7 +210,7 @@ public class HandlerFactory {
         }
     }
 
-    protected void processHandler(Handler h, String result,
+    protected int processHandler(Handler h, String result,
                                   HttpServletRequest request,
                                   HttpServletResponse response) throws IOException {
 
@@ -219,6 +240,7 @@ public class HandlerFactory {
         // now that we have the json object print out the string
         Object responseObject = jsonSerializer.serialize(jr);
         response.getWriter().write(responseObject.toString());
+        return responseObject.toString().getBytes().length;
     }
 
 }

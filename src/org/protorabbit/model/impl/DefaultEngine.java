@@ -224,7 +224,6 @@ public class DefaultEngine implements IEngine {
                         IDocumentContext dc = c.getDocumentContext();
 
                         if (dc != null) {
-
                                 if (
                                         (dc.getAllCommands() == null ||
                                     (dc.getAllCommands() != null && 
@@ -232,12 +231,7 @@ public class DefaultEngine implements IEngine {
                                         dc.getDocument() != null */) {
                                        if (dc.getDocument() != null ) {
                                             out.write(dc.getDocument().toString().getBytes());
-                                       } else {
-                                           System.out.println("no dc.document=" + dc.getDocument() );
                                        }
-                                } else {
-                                    System.out.println("i don't think we no doc with " + c );
-                                    System.out.println("dc.document=" + dc.getDocument() );
                                 }
                                 renderCommands(dc.getAllCommands(), dc.getDocument(), ctx, out) ;
                             }

@@ -10,7 +10,7 @@ public class StatsItem implements IStat {
     private String pathInfo = null;
     private String host = null;
     private String fullURL = null;
-    private Long bytesServed = null;
+    private Long contentLength = null;
     private String contentType = null;
 
     public static enum types {
@@ -18,8 +18,8 @@ public class StatsItem implements IStat {
         JSON
     };
 
-    public Long getBytesServed() {
-        return bytesServed;
+    public Long getContentLength() {
+        return contentLength;
     }
 
     public String getRequestURI() {
@@ -54,8 +54,8 @@ public class StatsItem implements IStat {
         return type;
     }
 
-    public void setBytesServed( Long bytesServed ) {
-        this.bytesServed = bytesServed;
+    public void setContentLength( Long contentLength ) {
+        this.contentLength = contentLength;
     }
 
     public void setRequestURI( String fullURL) {
