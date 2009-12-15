@@ -16,8 +16,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.protorabbit.json.JSONSerializer;
 import org.protorabbit.json.SerializationFactory;
 import org.protorabbit.stats.IStat;
-import org.protorabbit.stats.StatsItem;
-import org.protorabbit.stats.StatsManager;
+import org.protorabbit.stats.impl.StatsItem;
+import org.protorabbit.stats.impl.StatsManager;
 import org.protorabbit.util.ClassUtil;
 
 public class HandlerFactory {
@@ -193,7 +193,7 @@ public class HandlerFactory {
         stat.setRequestURI( request.getRequestURI() );
         stat.setProcessTime( new Long( endTime - iStartTime) );
         stat.setContentLength( new Long(bytesServed) );
-        stat.setContentType( "text/html" );
+        stat.setContentType( "application/json" );
         statsManager.add( stat );
     }
 

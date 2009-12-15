@@ -196,7 +196,7 @@ function createResourcesBlock(t) {
     cachedFragments.innerHTML = "Cached Fragments";
     cachedFragments.className = "propertiesTitle";
     bb.appendChild(cachedFragments);
-    
+
     var s4tableElement = document.createElement("div");
     if (t.includeFiles) {
         var s4table = new tablebuilder("blockTable");
@@ -274,7 +274,6 @@ function createResourcesBlock(t) {
     }
     total.innerHTML = "Total : " + gcl;
 
-
 }
 
 function getPosition(_e){
@@ -333,7 +332,7 @@ function loadData() {
         }); 
 }
 
-function createChart(model) {
+function createChart( model ) {
    var chart = jmaki.getWidget("dispo");
    var data = [];
    for (var i in content) {
@@ -359,24 +358,44 @@ function createChart(model) {
 }
 
 function loadStats() {
+    loadPageStats();
+    loadPageViews();
+}
+
+function loadPageViews() {
+    var timespan = document.getElementById("timespan").value;
+    document.getElementById( "bodyContent" ).innerHTML = "Loading...";
 
     var req = new ajax({ 
-            url : "../prt?command=accessMetrics",
-            callback : function(req) {
-                var model = eval("(" + req.responseText + ")");
-                formatPageViews( model );
-            }
-        }); 
+        url : "../prt?command=accessMetrics&duration=" + timespan,
+        callback : function(req) {
+            var model = eval("(" + req.responseText + ")");
+            formatPageViews( model );
+        }
+    }); 
+}
+
+function roundToSecond(timestamp) {
+    var mod = timestamp % 1000;
+    return timestamp - mod;
 }
 
 function formatPageViews(items) {
- 
+
     var s3table = new tablebuilder("blockTable");
-    s3table.setHeader(["URI",  "Timestamp", "Client Id", "Content Type", "Content Length", "Process Time"]);
+    s3table.setHeader(["URI",  "Timestamp", "Client Id", "Content Type", "Content Length", "Process Time (ms)"]);
+
+    var ds1 = { "yaxis" : 1, label : "text/html Requests", values : [] };
+    var ds2 = { "yaxis" : 1, label : "application/json Requests", values : [] };
 
     for ( var i=0; i < items.length; i+=1 ) {
         var _row = [];
         var _item = items[i];
+        if (_item.contentType === "text/html") {
+     //       ds1.values.push({time : _item.timestamp, )
+        } else if (item.contentType === "application/json"){
+            
+        }
         _row.push( _item.path );
         _row.push( new Date(_item.timestamp) );
         _row.push( _item.remoteClient );
@@ -385,5 +404,52 @@ function formatPageViews(items) {
         _row.push( _item.processTime );
         s3table.addRow( _row );
     }
-    document.getElementById( "bodyContent" ).innerHTML = s3table + "<div> Total request : " + items.length + "</div>";
+    /*
+    jmaki.getWidget("realtimeStats").setValue(
+
+            {"data":[
+
+//{"lines":{"color":null,"barWidth":null,"show":false,"stacked":false},"yaxis":2,"label":"Satisfied","values":[{"time":1235959200000,"y":20},{"time":1235962800000,"y":50},{"time":1235966400000,"y":25},{"time":1235970000000,"y":22},{"time":1235973600000,"y":52},{"time":1235977200000,"y":26},{"time":1235980800000,"y":23},{"time":1235984400000,"y":51},{"time":1235988000000,"y":15},{"time":1235991600000,"y":26},{"time":1235995200000,"y":16},{"time":1235998800000,"y":54},{"time":1236002400000,"y":32},{"time":1236006000000,"y":21},{"time":1236009600000,"y":66},{"time":1236013200000,"y":35},{"time":1236016800000,"y":34},{"time":1236020400000,"y":53},{"time":1236024000000,"y":30},{"time":1236027600000,"y":24},{"time":1236031200000,"y":52},{"time":1236034800000,"y":35},{"time":1236038400000,"y":40}],"bars":{"color":null,"barWidth":"hour","show":true,"stacked":true},"id":"satisfied","points":null},{"lines":{"color":null,"barWidth":null,"show":false,"stacked":false},"yaxis":2,"label":"Unsatisfied with Service","values":[{"time":1235959200000,"y":10},{"time":1235962800000,"y":5},{"time":1235966400000,"y":6},{"time":1235970000000,"y":2},{"time":1235973600000,"y":4},{"time":1235977200000,"y":5},{"time":1235980800000,"y":6},{"time":1235984400000,"y":12},{"time":1235988000000,"y":4},{"time":1235991600000,"y":5},{"time":1235995200000,"y":15},{"time":1235998800000,"y":15},{"time":1236002400000,"y":21},{"time":1236006000000,"y":9},{"time":1236009600000,"y":11},{"time":1236013200000,"y":4},{"time":1236016800000,"y":10},{"time":1236020400000,"y":1},{"time":1236024000000,"y":8},{"time":1236027600000,"y":6},{"time":1236031200000,"y":6},{"time":1236034800000,"y":7},{"time":1236038400000,"y":2}],"bars":
+
+//{"color":null,"barWidth":"hour","show":true,"stacked":true},"id":"unsatisfied-service","points":null},{"lines":{"color":null,"barWidth":null,"show":false,"stacked":false},"yaxis":2,"label":"Unsatisfied with Agent","values":[{"time":1235959200000,"y":3},{"time":1235962800000,"y":2},{"time":1235966400000,"y":1},{"time":1235970000000,"y":4},{"time":1235973600000,"y":4},{"time":1235977200000,"y":5},{"time":1235980800000,"y":3},{"time":1235984400000,"y":2},{"time":1235988000000,"y":6},{"time":1235991600000,"y":19},{"time":1235995200000,"y":15},{"time":1235998800000,"y":22},{"time":1236002400000,"y":24},{"time":1236006000000,"y":16},{"time":1236009600000,"y":10},{"time":1236013200000,"y":3},{"time":1236016800000,"y":5},{"time":1236020400000,"y":3},{"time":1236024000000,"y":4},{"time":1236027600000,"y":6},{"time":1236031200000,"y":2},{"time":1236034800000,"y":3},{"time":1236038400000,"y":5}],"bars":{"color":null,"barWidth":"hour","show":true,"stacked":true},"id":"unsatisfied-rep","points":null},
+
+//{"lines":{"color":null,"barWidth":null,"show":false,"stacked":false},"yaxis":2,"label":"Unsatisfied with Agent and Service","values":[{"time":1235959200000,"y":4},{"time":1235962800000,"y":1},{"time":1235966400000,"y":7},{"time":1235970000000,"y":5},{"time":1235973600000,"y":1},{"time":1235977200000,"y":0},{"time":1235980800000,"y":0},{"time":1235984400000,"y":1},{"time":1235988000000,"y":0},{"time":1235991600000,"y":1},{"time":1235995200000,"y":4},{"time":1235998800000,"y":2},{"time":1236002400000,"y":4},{"time":1236006000000,"y":11},{"time":1236009600000,"y":4},{"time":1236013200000,"y":6},{"time":1236016800000,"y":6},{"time":1236020400000,"y":5},{"time":1236024000000,"y":6},{"time":1236027600000,"y":9},{"time":1236031200000,"y":7},{"time":1236034800000,"y":7},{"time":1236038400000,"y":7}],"bars":{"color":null,"barWidth":"hour","show":true,"stacked":true},"id":"unsatisfied-rep-and-service","points":null},
+
+{"lines":null,"yaxis":1,"label":"Satisfaction Percentage","values":[{"time":1235959200000,"y":85.44},{"time":1235962800000,"y":87.22},{"time":1235966400000,"y":86.22},{"time":1235970000000,"y":83.22},{"time":1235973600000,"y":85.82},{"time":1235977200000,"y":84.22},{"time":1235980800000,"y":80.12},{"time":1235984400000,"y":79.12},{"time":1235988000000,"y":77.12},{"time":1235991600000,"y":75.11},{"time":1235995200000,"y":72.50},{"time":1235998800000,"y":71.33},{"time":1236002400000,"y":67.22},{"time":1236006000000,"y":65.22},{"time":1236009600000,"y":70.12},{"time":1236013200000,"y":75.12},{"time":1236016800000,"y":73.11},{"time":1236020400000,"y":74.12},{"time":1236024000000,"y":80.12},{"time":1236027600000,"y":81.91},{"time":1236031200000,"y":85.12},{"time":1236034800000,"y":88.11},{"time":1236038400000,"y":89.51}],"bars":null,"id":"satisfaction_percentage","points":{"color":null,"barWidth":null,"show":true,"stacked":false}}],}
+]
+
+
+});
+   */ 
+    document.getElementById( "bodyContent" ).innerHTML = s3table;
+    document.getElementById( "status" ).innerHTML = "Total request(s) : " + items.length;
+}
+
+function loadPageStats() {
+
+    var req = new ajax({ 
+            url : "../prt?command=pageMetrics",
+            callback : function(req) {
+                var model = eval("(" + req.responseText + ")");
+                formatPageStatCharts( model );
+                setTimeout(loadPageStats, 10000);
+            }
+        }); 
+}
+
+function formatPageStatCharts( stats ) {
+    var textHTML = stats["text/html"];
+    var applicationJson = stats["application/json"];
+    var chart = jmaki.getWidget("views");
+    var data = [];
+    for (var i in textHTML) {
+        data.push({ label : i, values : [ { value : textHTML[i].accessCount }] });
+    }
+    chart.setValue(data);
+    var chart2 = jmaki.getWidget("actions");
+    var data = [];
+    for (var i in applicationJson) {
+        data.push({ label : i, values : [ { value : applicationJson[i].accessCount }] });
+    }
+    chart2.setValue(data);
 }

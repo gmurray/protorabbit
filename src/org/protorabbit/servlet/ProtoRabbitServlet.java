@@ -56,8 +56,8 @@ import org.protorabbit.profile.Episode;
 import org.protorabbit.profile.Mark;
 import org.protorabbit.profile.Measure;
 import org.protorabbit.stats.IStat;
-import org.protorabbit.stats.StatsItem;
-import org.protorabbit.stats.StatsManager;
+import org.protorabbit.stats.impl.StatsItem;
+import org.protorabbit.stats.impl.StatsManager;
 import org.protorabbit.util.IOUtil;
 import java.util.Properties;
 
@@ -633,8 +633,29 @@ public class ProtoRabbitServlet extends HttpServlet {
                     SerializationFactory factory = new SerializationFactory();
                     json = factory.getInstance();
                 }
+                String duration = req.getParameter( "duration" );
+                int d = 60;
+                if ( duration != null ) {
+                    try {
+                    d = Integer.parseInt(duration);
+                    } catch (NumberFormatException nfe) {
+                        getLogger().warning("Error with duration parameter : " + nfe.getMessage() );
+                    }
+                }
                 Object data = null;
-                data = statsManager.getStats();
+                data = statsManager.getLatest( 1000 * d );
+                resp.setHeader("pragma", "NO-CACHE");
+                resp.setHeader("Cache-Control", "no-cache");
+                Object jo = json.serialize(data);
+                resp.getWriter().write(jo.toString());
+                return;
+            } else if ("pageMetrics".equals(command) ) {
+                if (json == null) {
+                    SerializationFactory factory = new SerializationFactory();
+                    json = factory.getInstance();
+                }
+                Object data = null;
+                data = statsManager.getPageStats();
                 resp.setHeader("pragma", "NO-CACHE");
                 resp.setHeader("Cache-Control", "no-cache");
                 Object jo = json.serialize(data);
