@@ -1,3 +1,14 @@
+/*
+ *  monitor.js
+ *  
+ *  This page contains all the necessary functions to display protorabbit statistics
+ * 
+ */
+// used by this monitor pages
+window.polling = false;
+window.pageRequest = null;
+var resolution = 1000;
+
 window.tablebuilder = function(tableClass) {
 
     var _header;
@@ -359,28 +370,31 @@ function createChart( model ) {
 
 function loadStats() {
     loadPageStats();
-    // set resolutoin and load page
-    updateResolution();
 }
 
-function loadPageViews() {
-    var timespan = document.getElementById("timespan").value;
-    document.getElementById( "status" ).innerHTML = "Loading...";
-
-    var req = new ajax({ 
-        url : "../prt?command=accessMetrics&duration=" + timespan,
-        callback : function(req) {
-            var model = eval("(" + req.responseText + ")");
-            formatPageViews( model );
-        }
-    }); 
+function loadPageViews(_runonce) {
+    if (window.pageRequest === null &&
+         (window.polling === true || _runonce === true) ) {
+        var timespan = document.getElementById("timespan").value;
+        document.getElementById( "status" ).innerHTML = "Loading...";
+        resolution = parseInt( document.getElementById("resolution").value);
+        window.pageRequest = new ajax({ 
+            url : "../prt?command=accessMetrics&duration=" + timespan,
+            callback : function(req) {
+                var model = eval("(" + req.responseText + ")");
+                formatPageViews( model );
+                window.pageRequest = null;
+                if (_runonce !== true) {
+                    setTimeout(loadPageViews, 10000);
+                }
+            }
+        });
+    }
 }
-
-var resolution = 1000;
 
 function updateResolution() {
-
-    loadPageViews();
+    resolution = parseInt( document.getElementById("resolution").value);
+    loadPageViews(true);
 }
 
 function roundToSecond(timestamp) {
@@ -444,7 +458,6 @@ function formatPageViews(items) {
                      ]
             }
      );
-    setTimeout(loadPageViews, 10000);
 
 }
 
@@ -476,3 +489,30 @@ function formatPageStatCharts( stats ) {
     }
     chart2.setValue(data);
 }
+
+function toggleRunning() {
+    var control = document.getElementById("runControl");
+    var controlStatus = document.getElementById("runControlStatus");
+    if (window.polling === false) {
+        window.polling = true;
+        controlStatus.innerHTML = "Running";
+        control.innerHTML = "Stop";
+        loadPageViews();
+    } else {
+        window.polling = false;
+        control.innerHTML = "Start";
+        controlStatus.innerHTML = "Stopped";
+        if (window.pageRequest) {
+            // stop the ajax request
+            window.pageRequest.abort();
+            window.pageRequest = null;
+        }
+    }
+
+}
+
+jmaki.subscribe("/jmaki/charting/line/zoom", function() {
+    if (window.polling === true) {
+        toggleRunning();
+    }
+});

@@ -9,7 +9,7 @@ public class Engine {
     public static void main(String[] args) {
         System.out.println( "Engine start!" );
         List<WebClient> clients = new ArrayList<WebClient>();
-        int count = 125;
+        int count = 55;
         List<ClientDetails> dlist = new ArrayList<ClientDetails>();
 
         ClientDetails d1 = new ClientDetails();
@@ -37,7 +37,7 @@ public class Engine {
         d4.setRunCount( 150 );
         d4.setId( "R4" );
         d4.setUrl( "http://localhost:9090/protorabbit/secure/testNamespace!doFoo.hop?name=5.2&json={blah:1}" );
-        d4.setTimeout( 5000 );
+        d4.setTimeout( 10000 );
         dlist.add( d4 );
 
         ClientDetails d5 = new ClientDetails();

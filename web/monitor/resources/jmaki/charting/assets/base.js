@@ -96,7 +96,7 @@ jmaki.widgets.jmaki.charting.base = function() {
     }
 
     this.processArgs = function(wargs) {
-        _widget.wargs = wargs;       
+        _widget.wargs = wargs;
         if (wargs.publish) {
             _widget.publish = wargs.publish;
         }
@@ -145,7 +145,7 @@ jmaki.widgets.jmaki.charting.base = function() {
             _widget.x2AxislabelDiv.parentNode.removeChild(_widget.x2AxislabelDiv);
             _widget.x2AxislabelDiv = null;
         }
-        if (_widget.xAxislabelDiv) {
+        if (_widget.xAxislabelDiv && _widget.xAxislabelDiv.parentNode) {
             _widget.xAxislabelDiv.parentNode.removeChild(_widget.xAxislabelDiv);
             _widget.xAxislabelDiv = null;
         }
@@ -153,10 +153,10 @@ jmaki.widgets.jmaki.charting.base = function() {
             _widget.y2AxislabelDiv.parentNode.removeChild(_widget.y2AxislabelDiv);
             _widget.y2AxislabelDiv = null;
         }
-        if (_widget.yAxislabelDiv) {
+        if (_widget.yAxislabelDiv && _widget.yAxislabelDiv.parentNode) {
             _widget.yAxislabelDiv.parentNode.removeChild(_widget.yAxislabelDiv);
             _widget.yAxislabelDiv = null;
-        }        
+        }
         if (_widget.wargs && _widget.ctx.legend.targetId && _widget.ctx.legend.targetId) {	
             $("#" + _widget.ctx.legend.targetId).html("");
         }
@@ -164,6 +164,8 @@ jmaki.widgets.jmaki.charting.base = function() {
         _widget.model.data = [];
         _widget.model.markers = {};
         $("#" + _widget.wargs.uuid + "_tooltip").remove();
+        $("#" + _widget.wargs.uuid + "_zoomer").remove();
+        _widget.ctx.zoomHistory = [];
         _widget.render();
     };
 
@@ -223,7 +225,6 @@ jmaki.widgets.jmaki.charting.base = function() {
 
     this.resize = function() {
     };
-
 
     this.updateAxes = function(obj) {
     };
@@ -410,7 +411,6 @@ jmaki.widgets.jmaki.charting.base = function() {
                 }
             }
         }
-
         e.style.position = "absolute";
         e.style.top = "-500px";
         document.body.appendChild(e);
@@ -521,7 +521,7 @@ jmaki.widgets.jmaki.charting.base = function() {
             if (_widget.model.yAxis.rotate === true ) {
                 rotated = true;
                 if (!jmaki.MSIE) {
-                    createRotatedTextNode(_widget.yAxislabelDiv, _widget.model.yAxis.title, -90,  tdim.height, tdim.width +2);
+                    createRotatedTextNode(_widget.yAxislabelDiv, _widget.model.yAxis.title, -90, tdim.height - 5, tdim.width + 2);
                 } else {
                     _widget.yAxislabelDiv.innerHTML = "<div style='position:relative;writing-mode:bt-rl'>" + _widget.model.yAxis.title + '</div>';
                 }
@@ -797,6 +797,7 @@ jmaki.widgets.jmaki.charting.base = function() {
         });
 
         placeholder.bind("plotselected", function (event, ranges) {
+
             // TODO : Publish this
            // $("#selection").text(ranges.xaxis.from.toFixed(1) + " to " + ranges.xaxis.to.toFixed(1));
             if (_widget.ctx.zoom === true) {
@@ -807,32 +808,41 @@ jmaki.widgets.jmaki.charting.base = function() {
                    _widget.ctx.zoomHistory.push( {xaxis:{from: xaxis.datamin, to: xaxis.datamax } } );
                    _widget.ctx.zoomHistory.push( {xaxis: { min: ranges.xaxis.from, max: ranges.xaxis.to } } );  
                }
+                var _target = $("#" + _widget.wargs.uuid + "_content");
                 var _lranges = {
                     xaxis: { min: ranges.xaxis.from, max: ranges.xaxis.to }
                 };
                 _widget.ctx.currentZoom = _lranges;
 
-                _widget.plot = $.plot(placeholder, _widget.model.data,
+                _widget.plot = $.plot(_target, _widget.model.data,
                         $.extend(true, {}, _widget.model.options, _lranges));
                 _widget.zoomMarkers( ranges );
                 addZoomer();
+                jmaki.publish(_widget.publish + "/zoom", { widgetId : _widget.wargs.uuid, ranges : _lranges } );
             }
         });
     };
-    
+
     function addZoomer() {
         _widget.zoomer = document.getElementById(_widget.wargs.uuid + "_zoomer" );
-        if (_widget.zoomer == null) {
+        if (_widget.zoomer === null) {
             _widget.zoomer = document.createElement("div");
             _widget.zoomer.style.right = 2 + "px";
             _widget.zoomer.id = _widget.wargs.uuid + "_zoomer";
             _widget.zoomer.style.bottom = 0 + "px";
             _widget.zoomer.innerHTML ="[-]";
-            _widget.zoomer.style.width = "14px";
+            _widget.zoomer.style.width = "16px";
             _widget.zoomer.style.position = "absolute";
             _widget.container.appendChild(_widget.zoomer);
             _widget.zoomer.onclick = _widget.zoomOut;
             _widget.zoomer.style.cursor = "pointer";
+        }
+    }
+
+    function removeZoomer() {
+        _widget.zoomer = document.getElementById(_widget.wargs.uuid + "_zoomer" );
+        if (_widget.zoomer !== null) {
+            _widget.zoomer.parentNode.removeChild( _widget.zoomer );
         }
     }
 
@@ -842,14 +852,13 @@ jmaki.widgets.jmaki.charting.base = function() {
 
             var ranges = _widget.ctx.zoomHistory[_widget.ctx.zoomHistory.length - 1];
             _widget.ctx.zoomHistory.splice((_widget.ctx.zoomHistory.length - 1), 1);
-            var placeholder = $("#" + _widget.wargs.uuid);
-            
+            var _target = $("#" + _widget.wargs.uuid + "_content");
             if (_widget.ctx.currentZoom.xaxis.max === ranges.xaxis.max && _widget.ctx.currentZoom.xaxis.min === ranges.xaxis.min) {
                 ranges = _widget.ctx.zoomHistory[_widget.ctx.zoomHistory.length - 1];
                 _widget.ctx.zoomHistory.splice((_widget.ctx.zoomHistory.length - 1), 1);
             }
             _widget.ctx.currentZoom = ranges;
-            _widget.plot = $.plot(placeholder, _widget.model.data,
+            _widget.plot = $.plot(_target, _widget.model.data,
                             $.extend(true, {}, _widget.model.options, {
                                 xaxis: ranges.xaxis
                             }));
@@ -858,6 +867,8 @@ jmaki.widgets.jmaki.charting.base = function() {
         }
         if (_widget.ctx.zoomHistory.length > 0) {
             addZoomer(); 
+        } else {
+            removeZoomer();
         }
     };
 
@@ -876,8 +887,8 @@ jmaki.widgets.jmaki.charting.base = function() {
     };
 
     this.render = function() {
-        var placeholder = $("#" + _widget.wargs.uuid + "_content");
-        _widget.plot = $.plot(placeholder, _widget.model.data, _widget.model.options);
+        var _target = $("#" + _widget.wargs.uuid + "_content");
+        _widget.plot = $.plot(_target, _widget.model.data, _widget.model.options);
         if ( _widget.markers) {
             for (var i=0; i <  _widget.markers.length; i+=1) {
                 _widget.addMarker( _widget.markers[i]);
@@ -891,7 +902,7 @@ jmaki.widgets.jmaki.charting.base = function() {
         }
         if (!_widget.model.yAxis.labels) {
             return _val;
-        }    	
+        }
         // find a better search for this
         for (var i=0; _widget.model.yAxis.labels && i < _widget.model.yAxis.labels.length; i+=1) {
             if (_widget.model.yAxis.labels[i].value == _val) return _widget.model.yAxis.labels[i].label;
@@ -919,7 +930,7 @@ jmaki.widgets.jmaki.charting.base = function() {
         if (!_widget.model.xAxis) return;
         if (!_widget.model.xAxis.labels) {
             return _val;
-        }    	
+        }
         // find a better search for this
         for (var i=0; _widget.model.xAxis.labels && i < _widget.model.xAxis.labels.length;i+=1) {
             if (_widget.model.xAxis.labels[i].value == _val) return _widget.model.xAxis.labels[i].label;
@@ -940,7 +951,6 @@ jmaki.widgets.jmaki.charting.base = function() {
         if (_widget.model.x2Axis.labels[_val]) return _widget.model.x2Axis.labels[_val].label;
         else return _val;
     }
-
 
     function processActions(_t, _pid, _type, _value) {
         jmaki.processActions({
@@ -1162,7 +1172,7 @@ jmaki.widgets.jmaki.charting.base = function() {
         var mx;
         var my ;
         if (rotated) {
-            mx = _widget.ctx.axisLabelFontSize + 10;
+            mx = _widget.ctx.axisLabelFontSize + 20;
             target.style.width = tdim.height + "px";
             my =  (_widget.ctx.height / 2) - (tdim.width / 2);
         } else {
@@ -1175,11 +1185,9 @@ jmaki.widgets.jmaki.charting.base = function() {
         } else if (index === 2) {
             target.style.left =  (_widget.ctx.width - _widget.ctx.axisLabelFontSize) + "px";
         }
-        
 
         target.style.top = my + "px";
 
-        
         if (target.style.visibility == "hidden") {
             target.style.visibility = "visible";
         }

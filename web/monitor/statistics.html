@@ -12,7 +12,7 @@ jmaki.config =  {
 
 jmaki.subscribe("/jmaki/extensions/widgetFactory/loadComplete", function() {
     loadStats();
-
+    toggleRunning();
 });
 </script>
 
@@ -134,8 +134,10 @@ jmaki.subscribe("/jmaki/extensions/widgetFactory/loadComplete", function() {
     </div>
     <div style="padding:5px" id="legend"></div>
     <div style="height:10px"></div>
-    <div><span>
-     <select id="timespan" onchange="loadPageViews()">
+    <div>
+    <span>
+    Duration :
+     <select id="timespan" onchange="loadPageViews(true)">
        <option value="60">Last Minute</option>
        <option value="300">Last 5 Minutes</option>
        <option value="600">Last 10 Minutes</option>
@@ -143,6 +145,7 @@ jmaki.subscribe("/jmaki/extensions/widgetFactory/loadComplete", function() {
      </select>
     </span>
     <span>
+    &nbsp;&nbsp;
     Resolution :
      <select id="resolution" onchange="updateResolution()">
        <option value="1000">Second</option>
@@ -150,8 +153,16 @@ jmaki.subscribe("/jmaki/extensions/widgetFactory/loadComplete", function() {
        <option value="360000">Hour</option>
      </select>
     </span>
-    
-    <span><input type="button" onclick="loadPageViews()" value="Refresh"/></span><span>&nbsp;&nbsp;</span><span id="status"></span></div>
+    <span>&nbsp;&nbsp;
+    Status :</span>
+    <span id="runControlStatus">
+    </span>
+    <span>
+       &nbsp;&nbsp;
+       <a id="runControl" href="javascript:void(0)" onclick="toggleRunning()">Initializing...</a>
+    </span>
+    <span>&nbsp;&nbsp;</span>
+    <span id="status"></span></div>
   </div>
   </div>
  </body>
