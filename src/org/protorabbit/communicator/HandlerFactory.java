@@ -194,6 +194,8 @@ public class HandlerFactory {
         stat.setProcessTime( new Long( endTime - iStartTime) );
         stat.setContentLength( new Long(bytesServed) );
         stat.setContentType( "application/json" );
+        stat.setHasErrors( (thandler.getErrors() != null && thandler.getErrors().size() > 0) );
+        System.out.println("has errors is " + stat.getPath() + " has errors " + stat.hasErrors() );
         statsManager.add( stat );
     }
 

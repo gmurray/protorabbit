@@ -14,6 +14,7 @@ public class StatsItem implements IStat {
     private String fullURL = null;
     private Long contentLength = null;
     private String contentType = null;
+    private boolean hasErrors = false;
 
     public static enum types {
         VIEW,
@@ -98,6 +99,14 @@ public class StatsItem implements IStat {
 
     public void setContentType(String contentType) {
         this.contentType = contentType;
+    }
+
+    public boolean hasErrors() {
+        return hasErrors;
+    }
+
+    public void setHasErrors(boolean hasErrors) {
+        this.hasErrors = hasErrors;
     }
 
 }

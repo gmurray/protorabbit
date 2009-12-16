@@ -34,6 +34,7 @@ jmaki.widgets.jmaki.charting.base = function() {
             showTooltip :true,
             axisLabelFontSize :9,
             axisLineWidth :1,
+            zoom : true,
             colorScheme :undefined,
             colors : [ "#edc240", "#afd8f8", "#cb4b4b", "#4da74d", "#9440ed" ],
             legend : {
@@ -43,6 +44,7 @@ jmaki.widgets.jmaki.charting.base = function() {
                 return contents;
             }
     },
+    zoomHistory : [],
     selection : {
         mode :"x",
         color :"#e8cfac"
@@ -52,7 +54,15 @@ jmaki.widgets.jmaki.charting.base = function() {
         clickable :true
     },
     labelFormatter : function(contents, value, x, y) {
-        return value.x + "," + value.y + " " + contents;
+        if ( typeof value !== 'undefined' ) {
+            return value.x + "," + value.y + " " + contents;
+        } else if ( typeof y !== 'undefined'){
+            return x + "," + y;
+        } else if (contents.percent){
+            return contents.percent.toFixed(1) + "%";
+        } else {
+            return contents;
+        }
     },
     hoverFormatter :  function(v) {
         return "[" + v.value.x + "," + v.value.y + "] " + v.label;
@@ -86,17 +96,7 @@ jmaki.widgets.jmaki.charting.base = function() {
     }
 
     this.processArgs = function(wargs) {
-        _widget.wargs = wargs;
-
-        if (_widget.chartType == "pie") {
-            this.ctx.labelFormatter = function(ds) {
-                return Math.floor(ds.percent) + '%';
-            };
-            this.ctx.hoverFormatter = function(_val) {
-                return _val.label + " " + Math.floor(_val.percent) + '%';
-            };
-        }
-
+        _widget.wargs = wargs;       
         if (wargs.publish) {
             _widget.publish = wargs.publish;
         }
@@ -107,7 +107,7 @@ jmaki.widgets.jmaki.charting.base = function() {
             } else {
                 _widget.subscribe = wargs.subscribe;
             }
-        }
+        }     
         if (wargs.args) {
             jmaki.mixin(wargs.args, this.ctx, true);
             if (this.ctx.legend && this.ctx.legend.targetId) {
@@ -283,16 +283,15 @@ jmaki.widgets.jmaki.charting.base = function() {
             _ds.lines.fill = _data.fill;
         }
         if (_data.values && typeof _data.values[0] == 'number') {
-
             _ds.data = [];
             // inner
             for (var j=0; j < _data.values.length; j+=1) {
                 _ds.data.push([ j,_data.values[j]]);
             }
-        } else if (_data.values && _data.values[0].value) {
+        } else if (_data.values && _data.values.length > 0 && _data.values[0].value) {
             _ds.data =_data.values[0].value;
             // convert times
-        } else if (_data.values && _data.values[0].time) {
+        } else if (_data.values && _data.values.length > 0 && _data.values[0].time) {
             _ds.data = [];
             for (var jj=0; jj < _data.values.length; jj+=1) {
                 _ds.data.push([_data.values[jj].time , _data.values[jj].y]);
@@ -725,15 +724,17 @@ jmaki.widgets.jmaki.charting.base = function() {
                             previousPoint = item.datapoint;
 
                             $("#" + _widget.wargs.uuid + "_tooltip").remove();
-                            var x = item.datapoint[0].toFixed(2),
-                                y = item.datapoint[1].toFixed(2);
+                            if (typeof item.datapoint[0] === "number") {
+                                var x = item.datapoint[0].toFixed(2),
+                                    y = item.datapoint[1].toFixed(2);
 
-                            showTooltip(item.pageX,
-                                    item.pageY,
-                                    item.series.label,
-                                    { value : { x : item.datapoint[0], y : item.datapoint[1]},
-                                series : item.series
-                                    });
+                                showTooltip(item.pageX,
+                                        item.pageY,
+                                        item.series.label,
+                                        { value : { x : item.datapoint[0], y : item.datapoint[1]},
+                                    series : item.series
+                                        });
+                            }
                         }
                     } else {
                         $("#" + _widget.wargs.uuid + "_tooltip")
@@ -796,19 +797,67 @@ jmaki.widgets.jmaki.charting.base = function() {
         });
 
         placeholder.bind("plotselected", function (event, ranges) {
-            $("#selection").text(ranges.xaxis.from.toFixed(1) + " to " + ranges.xaxis.to.toFixed(1));
+            // TODO : Publish this
+           // $("#selection").text(ranges.xaxis.from.toFixed(1) + " to " + ranges.xaxis.to.toFixed(1));
+            if (_widget.ctx.zoom === true) {
+                if (_widget.ctx.zoomHistory.length !== 0) {
+                    _widget.ctx.zoomHistory.push( {xaxis: { min: ranges.xaxis.from, max: ranges.xaxis.to } } );
+               } else {
+                   var xaxis = _widget.plot.getAxes().xaxis;
+                   _widget.ctx.zoomHistory.push( {xaxis:{from: xaxis.datamin, to: xaxis.datamax } } );
+                   _widget.ctx.zoomHistory.push( {xaxis: { min: ranges.xaxis.from, max: ranges.xaxis.to } } );  
+               }
+                var _lranges = {
+                    xaxis: { min: ranges.xaxis.from, max: ranges.xaxis.to }
+                };
+                _widget.ctx.currentZoom = _lranges;
 
-            var zoom = $("#zoom").attr("checked");
-            if (zoom) {
                 _widget.plot = $.plot(placeholder, _widget.model.data,
-                        $.extend(true, {}, _widget.model.options, {
-                            xaxis: { min: ranges.xaxis.from, max: ranges.xaxis.to }
-                        }));
-                _widget.zoomMarkers(ranges);
+                        $.extend(true, {}, _widget.model.options, _lranges));
+                _widget.zoomMarkers( ranges );
+                addZoomer();
             }
         });
-        _widget.container.onmouseout = function() {
-            $("#" + _widget.wargs.uuid + "_tooltip").remove();
+    };
+    
+    function addZoomer() {
+        _widget.zoomer = document.getElementById(_widget.wargs.uuid + "_zoomer" );
+        if (_widget.zoomer == null) {
+            _widget.zoomer = document.createElement("div");
+            _widget.zoomer.style.right = 2 + "px";
+            _widget.zoomer.id = _widget.wargs.uuid + "_zoomer";
+            _widget.zoomer.style.bottom = 0 + "px";
+            _widget.zoomer.innerHTML ="[-]";
+            _widget.zoomer.style.width = "14px";
+            _widget.zoomer.style.position = "absolute";
+            _widget.container.appendChild(_widget.zoomer);
+            _widget.zoomer.onclick = _widget.zoomOut;
+            _widget.zoomer.style.cursor = "pointer";
+        }
+    }
+
+    this.zoomOut = function() {
+
+        if (_widget.ctx.zoomHistory.length > 0 && _widget.ctx.zoom === true) {
+
+            var ranges = _widget.ctx.zoomHistory[_widget.ctx.zoomHistory.length - 1];
+            _widget.ctx.zoomHistory.splice((_widget.ctx.zoomHistory.length - 1), 1);
+            var placeholder = $("#" + _widget.wargs.uuid);
+            
+            if (_widget.ctx.currentZoom.xaxis.max === ranges.xaxis.max && _widget.ctx.currentZoom.xaxis.min === ranges.xaxis.min) {
+                ranges = _widget.ctx.zoomHistory[_widget.ctx.zoomHistory.length - 1];
+                _widget.ctx.zoomHistory.splice((_widget.ctx.zoomHistory.length - 1), 1);
+            }
+            _widget.ctx.currentZoom = ranges;
+            _widget.plot = $.plot(placeholder, _widget.model.data,
+                            $.extend(true, {}, _widget.model.options, {
+                                xaxis: ranges.xaxis
+                            }));
+            _widget.zoomMarkers(ranges);
+
+        }
+        if (_widget.ctx.zoomHistory.length > 0) {
+            addZoomer(); 
         }
     };
 
@@ -824,7 +873,7 @@ jmaki.widgets.jmaki.charting.base = function() {
             }
         }
         _widget.render();
-    }
+    };
 
     this.render = function() {
         var placeholder = $("#" + _widget.wargs.uuid + "_content");
@@ -991,9 +1040,9 @@ jmaki.widgets.jmaki.charting.base = function() {
         }
         var my;
         if (marker.ds.yaxis == 2) {
-            my = _widget.plot.getPlotOffset().top + _widget.plot.getAxes().y2axis.p2c(marker.point.y) - 2;       
+            my = _widget.plot.getPlotOffset().top + _widget.plot.getAxes().y2axis.p2c(marker.point.y) - 2;
         } else {
-            my = _widget.plot.getPlotOffset().top + _widget.plot.getAxes().yaxis.p2c(marker.point.y) - 2;        	
+            my = _widget.plot.getPlotOffset().top + _widget.plot.getAxes().yaxis.p2c(marker.point.y) - 2;
         }
         mx +=   _widget.ctx.leftMargin;
         my +=  _widget.ctx.topMargin;
@@ -1005,7 +1054,7 @@ jmaki.widgets.jmaki.charting.base = function() {
         mADiv.style.top = _widget.pos.y  - mADiv.clientHeight + my - yoffset + "px";
         mDiv.onclick = function() {
             processActions(this, this.markerId, 'onMarkerClick',  marker);
-        }
+        };
         mDiv.style.visibility = "visible";
         mADiv.style.visibility = "visible";
     }
@@ -1038,7 +1087,7 @@ jmaki.widgets.jmaki.charting.base = function() {
                         if (_widget.model.data[i].data[targetIndex]) {
                             point = { x :  _widget.model.data[i].data[targetIndex][0],
                                     y : _widget.model.data[i].data[targetIndex][1]
-                            }
+                            };
                         }
                     }
                 }
@@ -1055,7 +1104,7 @@ jmaki.widgets.jmaki.charting.base = function() {
         }
         if (target.id) {
             // prevent
-            if ( _widget.model.markers[target.id]) {              
+            if ( _widget.model.markers[target.id]) {
                 jmaki.log("jMaki Charting: addMaker. Can't add marker with duplicate id");
                 return;
             }
@@ -1175,7 +1224,7 @@ jmaki.widgets.jmaki.charting.base = function() {
             if (typeof _widget.model.markers[i] == 'object') {
                 var marker = _widget.model.markers[i];
                 // find out if this maker x value should be in this view 
-                jmaki.log("checking for " + marker.point.x)
+                jmaki.log("checking for " + marker.point.x);
                 if (marker.point.x >= ranges.xaxis.from &&
                         marker.point.x <= ranges.xaxis.to ) {
                     jmaki.log("adding " + jmaki.inspect(marker));
@@ -1225,8 +1274,8 @@ jmaki.widgets.jmaki.charting.base = function() {
                 if (marker.ds.xaxis == 2) mx = _widget.plot.getPlotOffset().left + _widget.plot.getAxes().x2axis.p2c(marker.point.x);
                 else mx = _widget.plot.getPlotOffset().left + _widget.plot.getAxes().xaxis.p2c(marker.point.x);
                 var my;
-                if (marker.ds.yaxis == 2) my = _widget.plot.getPlotOffset().top + _widget.plot.getAxes().y2axis.p2c(marker.point.y) - 2;  
-                else my = _widget.plot.getPlotOffset().top + _widget.plot.getAxes().yaxis.p2c(marker.point.y) - 2;         	   
+                if (marker.ds.yaxis == 2) my = _widget.plot.getPlotOffset().top + _widget.plot.getAxes().y2axis.p2c(marker.point.y) - 2;
+                else my = _widget.plot.getPlotOffset().top + _widget.plot.getAxes().yaxis.p2c(marker.point.y) - 2;
 
                 if (markerPoints) {
                     markerCount = markerPoints.length;
@@ -1311,5 +1360,5 @@ jmaki.widgets.jmaki.charting.base = function() {
 
         return {w : _w, h: _h, docHeight :_docHeight,
             scrollX : _sx, scrollY : _sy, scrollbarsX : hscrollbars,  scrollbarsY : vscrollbars, scrollHeight : _sh };
-    }
+    }   
 };

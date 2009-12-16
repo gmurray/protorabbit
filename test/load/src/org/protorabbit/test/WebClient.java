@@ -3,7 +3,6 @@ package org.protorabbit.test;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -22,7 +21,6 @@ public class WebClient extends Thread {
     boolean randomRange = false;
     Random rand = null;
     private String url = null;
-    private List<String> urls;
 
     public WebClient( String url, String runnerId, int runcount, long timeout ) {
         this.runcount = runcount;

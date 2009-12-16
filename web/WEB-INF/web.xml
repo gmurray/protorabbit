@@ -8,14 +8,23 @@
        <param-name>org.mortbay.jetty.servlet.Default.redirectWelcome</param-name>
        <param-value>true</param-value>
      </context-param>
-    
+
      <context-param>
       <description> Template Definitions - Order only matters in that the templates further
        to the left will override properties defined to those to the right.</description>
       <param-name>prt-templates</param-name>
       <param-value>/WEB-INF/last.json, /WEB-INF/templates.json,/resources/blueprint/blueprint-templates.json,/resources/yahoo/yahoo-templates.json, /WEB-INF/private/private-template.json</param-value>
     </context-param>
-    
+
+        <context-param>
+        <description>Action (hop) definitions
+        </description>
+        <param-name>prt-communicator-search-packages</param-name>
+        <param-value>
+           org.protorabbit.communicator.test
+        </param-value>
+    </context-param>
+
    <context-param>
       <description>Turn on development mode. Files will reload on save in this mode.</description>
       <param-name>prt-dev-mode</param-name>
@@ -52,7 +61,7 @@
       </servlet>
       <servlet-mapping>
         <servlet-name>Communicator Servlet</servlet-name>
-        <url-pattern>*.action</url-pattern>
+        <url-pattern>*.hop</url-pattern>
       </servlet-mapping>
       
           <!--  PubSub -->

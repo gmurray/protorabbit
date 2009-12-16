@@ -21,4 +21,6 @@ public interface IStat {
     public void setProcessTime( Long processTime );
     public void setContentType( String contentType );
     public String getContentType();
+    public boolean hasErrors();
+    public void setHasErrors(boolean hasErrors);
 }
