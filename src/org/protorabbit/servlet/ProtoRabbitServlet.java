@@ -55,9 +55,11 @@ import org.protorabbit.model.impl.ResourceURI;
 import org.protorabbit.profile.Episode;
 import org.protorabbit.profile.Mark;
 import org.protorabbit.profile.Measure;
+import org.protorabbit.stats.IClientIdGenerator;
 import org.protorabbit.stats.IStat;
 import org.protorabbit.stats.impl.StatsItem;
 import org.protorabbit.stats.impl.StatsManager;
+import org.protorabbit.stats.impl.StatsManager.Resolution;
 import org.protorabbit.util.IOUtil;
 import java.util.Properties;
 
@@ -71,6 +73,7 @@ public class ProtoRabbitServlet extends HttpServlet {
     private IEngine engine;
     private JSONSerializer json = null;
     private StatsManager statsManager = null;
+    private IClientIdGenerator cg = null;
 
     private static Logger logger = null;
 
@@ -106,10 +109,10 @@ public class ProtoRabbitServlet extends HttpServlet {
     private String[] writeHeaders = { "gif", "jpg", "png", "css", "js"};
 
     public void init(ServletConfig cfg) throws ServletException {
-
             super.init(cfg);
-
+            this.ctx = cfg.getServletContext();
             statsManager = StatsManager.getInstance();
+            cg = statsManager.getClientIdGenerator(ctx);
             // get default properties
             Properties p = new Properties();
             InputStream is = this.getClass().getResourceAsStream("/org/protorabbit/resources/default.properties");
@@ -128,7 +131,7 @@ public class ProtoRabbitServlet extends HttpServlet {
 
             getLogger().info("Protorabbit version : " + version);
             lastUpdated = new HashMap<String, Long>();
-            this.ctx = cfg.getServletContext();
+
             if (ctx.getInitParameter("prt-dev-mode") != null) {
                 isDevMode = ("true".equals(ctx.getInitParameter("prt-dev-mode").toLowerCase()));
             }
@@ -628,7 +631,7 @@ public class ProtoRabbitServlet extends HttpServlet {
                 Object jo = json.serialize(data);
                 resp.getWriter().write(jo.toString());
                 return;
-            } else if ("accessMetrics".equals(command) ) {
+            } else if ("accessErrors".equals(command) ) {
                 if (json == null) {
                     SerializationFactory factory = new SerializationFactory();
                     json = factory.getInstance();
@@ -643,19 +646,52 @@ public class ProtoRabbitServlet extends HttpServlet {
                     }
                 }
                 Object data = null;
-                data = statsManager.getLatest( 1000 * d );
+                data = statsManager.getErrors( 1000 * d );
                 resp.setHeader("pragma", "NO-CACHE");
                 resp.setHeader("Cache-Control", "no-cache");
                 Object jo = json.serialize(data);
                 resp.getWriter().write(jo.toString());
                 return;
-            } else if ("pageMetrics".equals(command) ) {
+            } else if ("accessMetrics".equals(command) ) {
+                if (json == null) {
+                    SerializationFactory factory = new SerializationFactory();
+                    json = factory.getInstance();
+                }
+                String duration = req.getParameter( "duration" );
+                int d = 60;
+                if ( duration != null ) {
+                    try {
+                    d = Integer.parseInt(duration);
+                    } catch (NumberFormatException nfe) {
+                        getLogger().warning("Error with duration parameter : " + nfe.getMessage() );
+                    }
+                }
+                String r = req.getParameter( "resolution" );
+                Resolution resolution = null;
+                if ( r != null ) {
+                    try {
+                        resolution = Resolution.valueOf( r );
+                    } catch (Exception e) {
+                        getLogger().warning("Bad resolution " + r + ". Will use default.");
+                    }
+                }
+                if (resolution == null ) {
+                    resolution = Resolution.SECOND;
+                }
+                Object data = null;
+                data = statsManager.getLatest( 1000 * d, resolution );
+                resp.setHeader("pragma", "NO-CACHE");
+                resp.setHeader("Cache-Control", "no-cache");
+                Object jo = json.serialize(data);
+                resp.getWriter().write(jo.toString());
+                return;
+            } else if ("pollerMetrics".equals(command) ) {
                 if (json == null) {
                     SerializationFactory factory = new SerializationFactory();
                     json = factory.getInstance();
                 }
                 Object data = null;
-                data = statsManager.getPageStats();
+                data = statsManager.getPollers();
                 resp.setHeader("pragma", "NO-CACHE");
                 resp.setHeader("Cache-Control", "no-cache");
                 Object jo = json.serialize(data);
@@ -903,7 +939,7 @@ public class ProtoRabbitServlet extends HttpServlet {
         stat.setTimestamp( System.currentTimeMillis() );
         stat.setPath( path );
         stat.setPathInfo( pathInfo );
-        stat.setRemoteClient( clientId );
+        stat.setRemoteClient( cg.getClientId( req ) );
         stat.setType( StatsItem.types.VIEW );
         stat.setRequestURI( req.getRequestURI() );
         stat.setProcessTime( new Long( endTime - iStartTime) );

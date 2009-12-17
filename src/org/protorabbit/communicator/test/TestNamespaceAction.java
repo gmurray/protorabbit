@@ -1,6 +1,8 @@
 package org.protorabbit.communicator.test;
 
 
+import java.util.Random;
+
 import org.protorabbit.communicator.BaseJSONHandler;
 import org.protorabbit.communicator.Namespace;
 
@@ -22,8 +24,14 @@ public class TestNamespaceAction extends BaseJSONHandler{
     }
 
     public String doFoo() {
-        setModel ( "you got it! " + name );
-        addActionError("Foo bar bad");
+        setModel ( "we set the name to " + name );
+        Random r = new Random();
+        int rand = r.nextInt(500);
+        if (rand == 1 ) {
+            addActionError("Bad things happen. We are error #3.");
+        } else if ( rand == 2 ) {
+            addActionError("We are a bad error #4.");
+        } 
         return SUCCESS;
     }
 }

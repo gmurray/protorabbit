@@ -10,6 +10,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.protorabbit.stats.impl.PollManager;
+
 
 
 @SuppressWarnings("serial")
@@ -33,7 +35,7 @@ public class CommunicatorServlet extends HttpServlet {
             super.init(cfg);
             this.ctx = cfg.getServletContext();
             this.hf = new HandlerFactory(this.ctx);
-            pm = new PollManager(this.ctx);
+            pm =  PollManager.getInstance();
 
             if (ctx.getInitParameter("prt-communicator-search-packages") != null) {
                 String tString = ctx.getInitParameter("prt-communicator-search-packages");

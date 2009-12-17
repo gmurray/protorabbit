@@ -11,12 +11,14 @@ jmaki.config =  {
 }
 
 jmaki.subscribe("/jmaki/extensions/widgetFactory/loadComplete", function() {
-    loadStats();
     toggleRunning();
 });
 </script>
 
 <style>
+a  {
+  color : #333;
+}
 
 .pmenu {
   padding:3px;
@@ -33,6 +35,12 @@ jmaki.subscribe("/jmaki/extensions/widgetFactory/loadComplete", function() {
 
 .pmenu a:visited {
   color : #fff;
+}
+
+.subTitle {
+  text-align : center;
+  font-size : 1.1.em;
+  font-weight : bold;
 }
 
 .blockTable {
@@ -65,6 +73,38 @@ jmaki.subscribe("/jmaki/extensions/widgetFactory/loadComplete", function() {
   </div>
   <div id="body" style="padding:15px">
   
+      <!-- start controls -->
+    <div style="text-align:center">
+    <span>
+    Duration :
+     <select id="timespan" onchange="loadPageViews(true)">
+       <option value="60">Last Minute</option>
+       <option value="300">Last 5 Minutes</option>
+       <option value="600">Last 10 Minutes</option>
+       <option value="3600">Last Hour</option>
+     </select>
+    </span>
+    <span>
+    &nbsp;&nbsp;
+    Resolution :
+     <select id="resolution" onchange="updateResolution()">
+       <option value="SECOND">Second</option>
+       <option value="MINUTE">Minute</option>
+       <option value="HOUR">Hour</option>
+     </select>
+    </span>
+    <span>&nbsp;&nbsp;
+    Status :</span>
+    <span id="runControlStatus">
+    </span>
+    <span>
+       &nbsp;&nbsp;
+       <a id="runControl" href="javascript:void(0)" onclick="toggleRunning()">Initializing...</a>
+    </span>
+    <span>&nbsp;&nbsp;</span>
+    <span id="status"></span></div>
+   <!-- end controls -->
+  
   <div style="float:left;width:255px"> 
   <div style="padding-top:10px;text-align:center;font-size:1.2em">Pages (text/html)</div>
 
@@ -95,6 +135,7 @@ jmaki.subscribe("/jmaki/extensions/widgetFactory/loadComplete", function() {
   </div>
 
   <div style="margin-top:5px;margin-left:265px">
+
     <div style="height:300px" id="realtimeChart">
          <div jmakiName="jmaki.charting.line" jmakiId="realtimeStats" style="overflow:hidden;height:100%"
               jmakiArgs="{
@@ -130,40 +171,22 @@ jmaki.subscribe("/jmaki/extensions/widgetFactory/loadComplete", function() {
 
                    }"
                ></div>
-
+          </div> 
+  </div>
+  <div style="padding:5px" id="legend"></div>
+  <div style="height:5px"></div>
+  <!-- start mid poller / error panel -->
+  <div style="margin-top:15px;margin-left:265px;height:300px;">
+    <div style="float:left;width:50%;height:300px">
+        <div id="clientsTitle" class="subTitle">Clients</div>
+        <div id="clientsPanel" style="height:285px; overflow-y:auto;border: 1px solid #eee;padding:5px;margin:1px;"></div>
     </div>
-    <div style="padding:5px" id="legend"></div>
-    <div style="height:10px"></div>
-    <div>
-    <span>
-    Duration :
-     <select id="timespan" onchange="loadPageViews(true)">
-       <option value="60">Last Minute</option>
-       <option value="300">Last 5 Minutes</option>
-       <option value="600">Last 10 Minutes</option>
-       <option value="3600">Last Hour</option>
-     </select>
-    </span>
-    <span>
-    &nbsp;&nbsp;
-    Resolution :
-     <select id="resolution" onchange="updateResolution()">
-       <option value="1000">Second</option>
-       <option value="60000">Minute</option>
-       <option value="360000">Hour</option>
-     </select>
-    </span>
-    <span>&nbsp;&nbsp;
-    Status :</span>
-    <span id="runControlStatus">
-    </span>
-    <span>
-       &nbsp;&nbsp;
-       <a id="runControl" href="javascript:void(0)" onclick="toggleRunning()">Initializing...</a>
-    </span>
-    <span>&nbsp;&nbsp;</span>
-    <span id="status"></span></div>
-  </div>
-  </div>
+    <div style="float:left;width:50%;height:300px;">
+      <div id="errorsTitle" class="subTitle">Errors</div>
+      <div id="errorsPanel" style="height:285px; overflow-y:auto;border: 1px solid #eee;padding:5px;margin:1px;"></div>
+   </div>
+  </div><!-- end mid poller / error panel -->
+
+ </div>
  </body>
 </html>

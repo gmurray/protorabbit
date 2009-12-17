@@ -177,7 +177,7 @@ public class DefaultSerializer implements JSONSerializer {
                             // get the rest of the name;
                             key += m.getName().substring(3);
                        } else if (m.getName().startsWith("get") &&
-                                  m.getName().length() > 4) {
+                                  m.getName().length() >= 4) {
                            key +=  m.getName().substring(3,4).toLowerCase();
                            // get the rest of the name;
                            key += m.getName().substring(4);

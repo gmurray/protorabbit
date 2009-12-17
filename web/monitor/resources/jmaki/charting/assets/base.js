@@ -1,5 +1,4 @@
 jmaki.namespace("jmaki.widgets.jmaki.charting");
-
 /**
  *  This is the base class for all Flot jMaki widgets.
  *

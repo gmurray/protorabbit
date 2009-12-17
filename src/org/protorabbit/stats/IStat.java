@@ -1,5 +1,7 @@
 package org.protorabbit.stats;
 
+import java.util.Collection;
+
 public interface IStat {
     public long getTimestamp();
     public void setTimestamp( long timestamp );
@@ -22,5 +24,7 @@ public interface IStat {
     public void setContentType( String contentType );
     public String getContentType();
     public boolean hasErrors();
-    public void setHasErrors(boolean hasErrors);
+    public Collection<String> getErrors();
+    public void setHasErrors( boolean hasErrors );
+    public void setErrors( Collection<String> errors );
 }

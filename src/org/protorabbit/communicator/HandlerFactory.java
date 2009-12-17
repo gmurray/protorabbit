@@ -15,7 +15,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.protorabbit.json.JSONSerializer;
 import org.protorabbit.json.SerializationFactory;
+import org.protorabbit.stats.IClientIdGenerator;
 import org.protorabbit.stats.IStat;
+import org.protorabbit.stats.impl.PollManager;
 import org.protorabbit.stats.impl.StatsItem;
 import org.protorabbit.stats.impl.StatsManager;
 import org.protorabbit.util.ClassUtil;
@@ -27,10 +29,12 @@ public class HandlerFactory {
     ServletContext ctx = null;
     private String handlerName = "Action";
     private StatsManager statsManager = null;
+    private IClientIdGenerator cg = null;
 
     public HandlerFactory(ServletContext ctx) {
         this.ctx = ctx;
         statsManager = StatsManager.getInstance();
+        cg = statsManager.getClientIdGenerator( ctx );
     }
 
     private static Logger logger = null;
@@ -145,7 +149,7 @@ public class HandlerFactory {
                             response.sendError(HttpServletResponse.SC_NOT_FOUND);
                             return;
                         } catch (IllegalArgumentException e) {
-                            e.printStackTrace();
+                            getLogger().log( Level.WARNING, e.getLocalizedMessage() );
                         }
                         // invoke default handler
                     } else {
@@ -188,13 +192,16 @@ public class HandlerFactory {
         stat.setTimestamp( System.currentTimeMillis() );
         stat.setPath( path );
         stat.setPathInfo( request.getPathInfo() );
-        stat.setRemoteClient( request.getRemoteAddr() );
+        stat.setRemoteClient( cg.getClientId(request) );
         stat.setType( StatsItem.types.JSON );
         stat.setRequestURI( request.getRequestURI() );
         stat.setProcessTime( new Long( endTime - iStartTime) );
         stat.setContentLength( new Long(bytesServed) );
         stat.setContentType( "application/json" );
-        stat.setHasErrors( (thandler.getErrors() != null && thandler.getErrors().size() > 0) );
+        if ( (thandler.getErrors() != null && thandler.getErrors().size() > 0) ) {
+            stat.setHasErrors( true );
+            stat.setErrors( thandler.getErrors());
+        }
         System.out.println("has errors is " + stat.getPath() + " has errors " + stat.hasErrors() );
         statsManager.add( stat );
     }

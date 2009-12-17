@@ -1,18 +1,20 @@
 package org.protorabbit.communicator.test;
 
+import java.util.Random;
+
 import org.protorabbit.communicator.BaseJSONHandler;
 
 // test with a URL :
 //  http://localhost:8080/protorabbit/secure/test!doFoo.action?name=5.2&json={blah:1}
 public class TestAction extends BaseJSONHandler{
-    
+
     private String name = "not set";
 
     public void setJson(String name) {
         System.out.println("we got a setJson with " + name);
         this.name = name;
     }
-    
+
     public void setName(String name) {
         System.out.println("we got a setName string set with " + name);	
     }
@@ -22,8 +24,14 @@ public class TestAction extends BaseJSONHandler{
     }
     
     public String doFoo() {
-        setModel( "you got it! " + name );
-        addActionError("Foo bar bad");
+        setModel( "nam set to " + name );
+        Random r = new Random();
+        int rand = r.nextInt(500);
+        if (rand == 1 ) {
+            addActionError("Bad things happen. We are error #1.");
+        } else if ( rand == 2 ) {
+            addActionError("We are a bad error #2.");
+        } 
         return SUCCESS;
     }
 }

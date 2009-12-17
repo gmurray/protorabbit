@@ -17,6 +17,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.protorabbit.stats.impl.PollManager;
 
 @SuppressWarnings("serial")
 public class PubSubServlet extends HttpServlet {
@@ -31,8 +32,7 @@ public class PubSubServlet extends HttpServlet {
             this.ctx = cfg.getServletContext();
             this.ps = PubSub.getInstance();
             this.mappings = new HashMap<String, MappingObject>();
-            pm = new PollManager(this.ctx);
-            // test
+            pm = PollManager.getInstance();
 
         } catch (ServletException e) {
             e.printStackTrace();

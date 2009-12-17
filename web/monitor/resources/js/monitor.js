@@ -7,7 +7,7 @@
 // used by this monitor pages
 window.polling = false;
 window.pageRequest = null;
-var resolution = 1000;
+var resolution = "SECOND";
 
 window.tablebuilder = function(tableClass) {
 
@@ -368,21 +368,28 @@ function createChart( model ) {
    rchart.setValue(hdata);
 }
 
-function loadStats() {
-    loadPageStats();
-}
-
 function loadPageViews(_runonce) {
     if (window.pageRequest === null &&
          (window.polling === true || _runonce === true) ) {
         var timespan = document.getElementById("timespan").value;
         document.getElementById( "status" ).innerHTML = "Loading...";
-        resolution = parseInt( document.getElementById("resolution").value);
+        resolution =  document.getElementById("resolution").value;
         window.pageRequest = new ajax({ 
-            url : "../prt?command=accessMetrics&duration=" + timespan,
+            url : "../prt?command=accessMetrics&duration=" + timespan + "&resolution=" + resolution,
             callback : function(req) {
                 var model = eval("(" + req.responseText + ")");
                 formatPageViews( model );
+                formatPageStatCharts( model.pageStats );
+                var _count = formatActiveClients( model.clients );
+                var cTitle = document.getElementById("clientsTitle");
+                cTitle.innerHTML = "Clients&nbsp;(" + _count + ")";
+                formatErrors( model.errors );
+                var _count = 0;
+                if ( model !== null && model.errors.length > 0 ) {
+                    _count = model.errors.length;
+                }
+                var eTitle = document.getElementById("errorsTitle");
+                eTitle.innerHTML = "Errors&nbsp;(" + _count + ")";
                 window.pageRequest = null;
                 if (_runonce !== true) {
                     setTimeout(loadPageViews, 10000);
@@ -393,84 +400,70 @@ function loadPageViews(_runonce) {
 }
 
 function updateResolution() {
-    resolution = parseInt( document.getElementById("resolution").value);
+    resolution =  document.getElementById("resolution").value;
     loadPageViews(true);
-}
-
-function roundToSecond(timestamp) {
-    var mod = timestamp % resolution;
-    return timestamp - mod;
 }
 
 function formatPageViews(items) {
 
-   // var s3table = new tablebuilder("blockTable");
-   // s3table.setHeader(["URI",  "Timestamp", "Client Id", "Content Type", "Content Length", "Process Time (ms)"]);
-
-    var ds1 = { "yaxis" : 1, label : "text/html Requests", values : [] };
-    var ds2 = { "yaxis" : 1, label : "application/json Requests", values : [] };
-
-    var seconds1 = {};
-    var seconds2 = {};
-
-    // put everything in buckets
-    for ( var i=0; i < items.length; i+=1 ) {
-        var _row = [];
-        var _item = items[i];
-        var _s = roundToSecond( _item.timestamp );
-        if (_item.contentType === "text/html") {
-            if (typeof seconds1[_s] === 'undefined') {
-                seconds1[_s] = 1;
-            } else {
-                seconds1[_s] = seconds1[_s] + 1;
-            }
-        } else if (_item.contentType === "application/json"){
-            if (typeof seconds2[_s] === 'undefined') {
-                seconds2[_s] = 1;
-            } else {
-                seconds2[_s] = seconds2[_s] + 1;
-            }
-        }
-        /*
-        _row.push( _item.path );
-        _row.push( new Date(_item.timestamp) );
-        _row.push( _item.remoteClient );
-        _row.push( _item.contentType );
-        _row.push( _item.contentLength );
-        _row.push( _item.processTime );
-        s3table.addRow( _row );*/
-    }
-    for (var i in seconds1) {
-        if ( seconds1.hasOwnProperty( i ) ) {
-            ds1.values.push( { time : parseInt(i), y : seconds1[i] } );
-        }
-    }
-    for (var i in seconds2 ) {
-        if ( seconds2.hasOwnProperty( i ) ) {
-            ds2.values.push( { time : parseInt(i), y : seconds2[i] } );
-        }
-    }
-    document.getElementById( "status" ).innerHTML = "Total request(s) : " + items.length;
+    document.getElementById( "status" ).innerHTML = "Total request(s) : " + items.total;
 
     jmaki.getWidget("realtimeStats").setValue(
             {"data":[
-                     ds1, ds2
+                     items.view, items.json
                      ]
             }
      );
 
 }
 
-function loadPageStats() {
+function formatErrors(items) {
+    if (items === null || (items !== null && items.length === 0)) {
+        document.getElementById("errorsPanel").innerHTML = "N/A";
+        return;
+    }
+     var s3table = new tablebuilder("blockTable");
+     s3table.setHeader(["URI",  "Timestamp", "Client Id", "Error(s)"]);
 
-    var req = new ajax({ 
-            url : "../prt?command=pageMetrics",
-            callback : function(req) {
-                var model = eval("(" + req.responseText + ")");
-                formatPageStatCharts( model );
-                setTimeout(loadPageStats, 10000);
-            }
-        }); 
+     // put everything in buckets
+     for ( var i=0; i < items.length; i+=1 ) {
+         var _row = [];
+         var _item = items[i];
+         _row.push( _item.path );
+         _row.push( new Date(_item.timestamp) );
+         _row.push( _item.remoteClient );
+         _row.push( _item.errors.join(",") );
+         s3table.addRow( _row );
+     }
+    document.getElementById("errorsPanel").innerHTML = s3table;
+
+ }
+
+function formatActiveClients(items) {
+    var tDiv = document.getElementById("clientsPanel");
+    var _count = 0;
+    var s3table = new tablebuilder("blockTable");
+    s3table.setHeader(["Client Id", "JSON Count", "View Count", "Error Count", "Last Access"]);
+    // put everything in buckets
+    for ( var i in items ) {
+         if ( items.hasOwnProperty(i) ) {
+             _count++;
+             var _row = [];
+             var _item = items[i];
+             _row.push( _item.clientId );
+             _row.push( _item.jSONRequestCount );
+             _row.push( _item.viewRequestCount );
+             _row.push( _item.errorCount );
+             _row.push( new Date(_item.lastAccess) );
+             s3table.addRow( _row );
+         }
+     }
+     if (_count > 0) {
+         tDiv.innerHTML = s3table;
+     } else {
+         tDiv.innerHTML = "N/A";
+     }
+    return _count;
 }
 
 function formatPageStatCharts( stats ) {

@@ -1,4 +1,4 @@
-package org.protorabbit.communicator;
+package org.protorabbit.stats.impl;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -9,15 +9,15 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
+
+import org.protorabbit.stats.IClient;
+
 
 public class PollManager {
 
-    private ServletContext ctx;
     public static final String POLL_MANAGER = "org.protorabbit.communicator.POLL_MANAGER";
-    private static final String JSON_POLLERS = "org.protorabbit.communicator.JSON_POLLERS";
-    private static final String JSON_POLLER_CLEANUP_TIMEOUT = "org.protorabbit.communicator.JSON_POLLER_CLEANUP_TIMEOUT";
+    private static PollManager pm = null;
 
     // timeout for pollerCleanup
     private long pollerCleanupTimeout = 60 * 1000 * 1;
@@ -26,11 +26,8 @@ public class PollManager {
 
     // timeout the pollers if they are greater than 30 seconds
     private long pollerTimeout = 1000 * 30;
-
-    public PollManager(ServletContext ctx) {
-        this.ctx = ctx;
-        ctx.setAttribute(POLL_MANAGER, this);
-    }
+    private Map<String,IClient> pollers = null;
+    Long lastCleanup = null;
 
     private static Logger logger = null;
 
@@ -40,7 +37,20 @@ public class PollManager {
         }
         return logger;
     }
- 
+
+    private PollManager() {
+    }
+
+    public static PollManager getInstance() {
+        if (pm == null) {
+            pm = new PollManager();
+        }
+        return pm;
+    }
+    public Map<String,IClient> getPollers() {
+        return pollers;
+    }
+
     /*
      * Manage a set of pollers where the poll duration dynamically adjusts to the number of 
      * clients that are accessing the system.
@@ -52,26 +62,23 @@ public class PollManager {
     @SuppressWarnings("unchecked")
     public Long getPollInterval(HttpServletRequest request) {
 
-        Long lastCleanup = (Long)ctx.getAttribute(JSON_POLLER_CLEANUP_TIMEOUT);
         long now = (new Date()).getTime();
 
-        Map<String,JSONPoller> pollers = (Map<String,JSONPoller>)ctx.getAttribute(JSON_POLLERS);
         if (pollers == null) {
-            pollers = new HashMap<String,JSONPoller>();
-            ctx.setAttribute(JSON_POLLERS,pollers);
+            pollers = new HashMap<String,IClient>();
         }
         // handle the current client
         String clientId = request.getRemoteAddr();
-        JSONPoller poller = pollers.get(clientId);
+        IClient poller = pollers.get(clientId);
         if (poller == null) {
-            poller = new JSONPoller(clientId);
+            poller = new Client(clientId);
             poller.setPollInterval(defaultPollInterval);
             pollers.put(clientId, poller);
         }
-        poller.incrementCount();
+        poller.incrementPollCount();
         // do poller cleanup every 5 minutes
         if (lastCleanup == null) {
-            ctx.setAttribute(JSON_POLLER_CLEANUP_TIMEOUT, new Long(now));
+            lastCleanup =  new Long(now);
         } else {
             if (now - lastCleanup.longValue() > pollerCleanupTimeout) {
                 // cleanup
@@ -82,10 +89,10 @@ public class PollManager {
                 synchronized(this) {
                     while (it.hasNext()) {
                         String key = it.next();
-                        JSONPoller p = pollers.get(key);
+                        IClient p = pollers.get(key);
                         if (p != null) {
                             if (now - p.getLastAccess() > pollerTimeout ) {
-                                logger.log(Level.INFO, "Removing stale poller client " + p.getId());
+                                logger.log(Level.INFO, "Removing stale poller client " + p.getClientId());
                                 keysToRemove.add(key);
                             }
                         }
@@ -111,12 +118,12 @@ public class PollManager {
 
                 while (pit.hasNext()) {
                     String key = pit.next();
-                    JSONPoller p = pollers.get(key);
+                    IClient p = pollers.get(key);
                     if (p != null) {
                         p.setPollInterval(pollInterval);
                     }
                 }
-                ctx.setAttribute(JSON_POLLER_CLEANUP_TIMEOUT, new Long(now));
+
             }
         }
 

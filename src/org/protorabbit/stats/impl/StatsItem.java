@@ -2,6 +2,8 @@ package org.protorabbit.stats.impl;
 
 import org.protorabbit.stats.IStat;
 
+import java.util.Collection;
+
 public class StatsItem implements IStat {
 
     private long timestamp = 0;
@@ -15,6 +17,7 @@ public class StatsItem implements IStat {
     private Long contentLength = null;
     private String contentType = null;
     private boolean hasErrors = false;
+    private Collection<String> errors = null;
 
     public static enum types {
         VIEW,
@@ -107,6 +110,14 @@ public class StatsItem implements IStat {
 
     public void setHasErrors(boolean hasErrors) {
         this.hasErrors = hasErrors;
+    }
+
+    public Collection<String> getErrors() {
+        return errors;
+    }
+
+    public void setErrors(Collection<String> errors) {
+        this.errors = errors;
     }
 
 }
