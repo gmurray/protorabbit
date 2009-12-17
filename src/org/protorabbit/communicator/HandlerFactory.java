@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.logging.Level;
@@ -52,7 +53,7 @@ public class HandlerFactory {
 
     public void processRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-        long iStartTime = System.currentTimeMillis();
+        long iStartTime = (new Date()).getTime();
         // find the suitable action
         String path = request.getServletPath();
 
@@ -187,7 +188,6 @@ public class HandlerFactory {
         }
         // record stats
 
-        long endTime = System.currentTimeMillis();
         IStat stat = new StatsItem();
         stat.setTimestamp( System.currentTimeMillis() );
         stat.setPath( path );
@@ -195,14 +195,15 @@ public class HandlerFactory {
         stat.setRemoteClient( cg.getClientId(request) );
         stat.setType( StatsItem.types.JSON );
         stat.setRequestURI( request.getRequestURI() );
-        stat.setProcessTime( new Long( endTime - iStartTime) );
+
         stat.setContentLength( new Long(bytesServed) );
         stat.setContentType( "application/json" );
         if ( (thandler.getErrors() != null && thandler.getErrors().size() > 0) ) {
             stat.setHasErrors( true );
             stat.setErrors( thandler.getErrors());
         }
-        System.out.println("has errors is " + stat.getPath() + " has errors " + stat.hasErrors() );
+        long endTime = (new Date()).getTime();
+        stat.setProcessTime( new Long( endTime - iStartTime) );
         statsManager.add( stat );
     }
 

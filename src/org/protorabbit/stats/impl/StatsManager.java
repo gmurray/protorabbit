@@ -3,6 +3,7 @@ package org.protorabbit.stats.impl;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -113,18 +114,55 @@ public class StatsManager {
         long mod = timestamp % resolution;
         return new Long( (timestamp - mod) );
     }
-    
+
     public class TimeChartItem {
 
         private long timestamp = 0;
         private double value = 0;
+        private long contentLength = 0;
+        private long processingTime = 0;
 
         public TimeChartItem( long timestamp ) {
            this.timestamp = timestamp;
         }
-        
-        public void setValue( double value ) {
+
+        public TimeChartItem( long timestamp, double value ) {
+            this.timestamp = timestamp;
             this.value = value;
+         }
+
+        public void addContentLength( double _value ) {
+            this.contentLength += _value;
+        }
+
+        public long totalProcessingTime() {
+            return processingTime;
+        }
+
+        public double averageProcessingTime() {
+            if ( processingTime > 0 ) {
+                System.out.println("getting average " + processingTime + " / " + value + " = " + ( (double)processingTime / value ));
+                return ( (double)processingTime / value );
+            } else {
+                return 0;
+            }
+        }
+
+        public void addProcessingTime( long pt ) {
+            processingTime += pt;
+        }
+
+        public double averageContentLength() {
+            if ( contentLength > 0 ) {
+                return ( (double)contentLength / value );
+            } else {
+                return 0;
+            }
+        }
+
+        // don't use a getter to prevent serialization
+        public long contentLength() {
+            return contentLength;
         }
  
         public void incrementValue() {
@@ -139,7 +177,6 @@ public class StatsManager {
         }
     }
 
-
     public Map<String, Object> getLatest( long duration, Resolution r ) {
 
         List<IStat> baseList = getStats();
@@ -149,6 +186,7 @@ public class StatsManager {
         long resolution = r.modValue();
         Map<Long,TimeChartItem> vBuckets = new LinkedHashMap<Long,TimeChartItem>();
         Map<Long,TimeChartItem> jBuckets = new LinkedHashMap<Long,TimeChartItem>();
+
         Map<String,IClient> lclients = new HashMap<String,IClient>();
         Map<String, Map<String,IResourceStat>> pageStats = new Hashtable<String, Map<String,IResourceStat>>();
 
@@ -164,6 +202,7 @@ public class StatsManager {
                 totalCount +=1;
                 String key = stat.getPath();
                 String cid = stat.getRemoteClient();
+                Long bucketId = getRoundTime( resolution, stat.getTimestamp() );
                 Map<String, IResourceStat> cstats = pageStats.get( stat.getContentType() );
                 if ( cstats == null ) {
                     cstats = new Hashtable<String,IResourceStat>();
@@ -205,7 +244,7 @@ public class StatsManager {
                     errors.add( stat );
                     client.incrementErrorCount();
                 } 
-                Long bucketId = getRoundTime( resolution, stat.getTimestamp() );
+
                 if (TEXT_HTML.equals(stat.getContentType()) ) {
                     TimeChartItem tci = vBuckets.get( bucketId );
                     if ( tci == null) {
@@ -213,6 +252,8 @@ public class StatsManager {
                         vBuckets.put( bucketId, tci  );
                     }
                     tci.incrementValue();
+                    tci.addContentLength( stat.getContentLength() );
+                    tci.addProcessingTime( stat.getProcessTime() );
                 } else if (APPLICATION_JSON.equals(stat.getContentType()) ) {
                     TimeChartItem tci = jBuckets.get( bucketId );
                     if ( tci == null) {
@@ -220,6 +261,9 @@ public class StatsManager {
                         jBuckets.put( bucketId, tci  );
                     }
                     tci.incrementValue();
+                    tci.addContentLength( stat.getContentLength() );
+                    tci.addProcessingTime( stat.getProcessTime() );
+
                 }
                 // since we go backwards don't iterate if we have a stat already greater
             } else {
@@ -228,12 +272,12 @@ public class StatsManager {
         }
         //
         Map<String, Object>jds = new HashMap<String,Object>();
-        jds.put("label", "JSON");
+        jds.put("label", "application/json");
         jds.put("yaxis", new Long(1) );
         jds.put("values", jBuckets.values() );
         // views
         Map<String, Object>vds = new HashMap<String,Object>();
-        vds.put("label", "text/html requests");
+        vds.put("label", "text/html");
         vds.put("yaxis", new Long(1) );
         vds.put("values", vBuckets.values() );
         Map<String, Object> envelope = new HashMap<String, Object>();
@@ -243,6 +287,28 @@ public class StatsManager {
         envelope.put("clients", lclients );
         envelope.put("pageStats",  pageStats );
         envelope.put("total", new Long( totalCount ) );
+        // create average times
+        List<TimeChartItem> averageJsonProcessingTimes = new ArrayList<TimeChartItem>();
+        List<TimeChartItem> averageJsonPayloads = new ArrayList<TimeChartItem>();
+        Iterator<Long> it = jBuckets.keySet().iterator();
+        while (it.hasNext()) {
+            Long key = it.next();
+            TimeChartItem t = jBuckets.get( key );
+            averageJsonProcessingTimes.add( new TimeChartItem( key, t.averageProcessingTime() ) );
+            averageJsonPayloads.add( new TimeChartItem( key, t.averageContentLength() ) );
+        }
+        Map<String, Object>averageJsonProcessingTimeDS = new HashMap<String,Object>();
+        averageJsonProcessingTimeDS.put("label", "application/json");
+        averageJsonProcessingTimeDS.put("yaxis", new Long(1) );
+        averageJsonProcessingTimeDS.put("values",  averageJsonProcessingTimes);
+        envelope.put("averageJSONProcessingTime", averageJsonProcessingTimeDS );
+        // 
+        Map<String, Object>averageJsonPayloadDS = new HashMap<String,Object>();
+        averageJsonPayloadDS.put("label", "application/json");
+        averageJsonPayloadDS.put("yaxis", new Long(1) );
+        averageJsonPayloadDS.put("values",  averageJsonPayloads);
+ 
+        envelope.put("averageJSONPayload", averageJsonPayloadDS );
         return envelope;
     }
 

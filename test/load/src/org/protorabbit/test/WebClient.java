@@ -27,7 +27,6 @@ public class WebClient extends Thread {
         this.timeout = timeout;
         this.runnerId = runnerId;
         this.url = url;
-
     }
 
     public void start() {

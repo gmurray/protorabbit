@@ -372,7 +372,7 @@ function loadPageViews(_runonce) {
     if (window.pageRequest === null &&
          (window.polling === true || _runonce === true) ) {
         var timespan = document.getElementById("timespan").value;
-        document.getElementById( "status" ).innerHTML = "Loading...";
+
         resolution =  document.getElementById("resolution").value;
         window.pageRequest = new ajax({ 
             url : "../prt?command=accessMetrics&duration=" + timespan + "&resolution=" + resolution,
@@ -407,13 +407,21 @@ function updateResolution() {
 function formatPageViews(items) {
 
     document.getElementById( "status" ).innerHTML = "Total request(s) : " + items.total;
-
+    /*, items.averageJSONPayload*/
     jmaki.getWidget("realtimeStats").setValue(
             {"data":[
-                     items.view, items.json
+                     items.view, items.json 
                      ]
             }
      );
+    items.averageJSONProcessingTime["lines"] = { "fill" : true };
+    jmaki.getWidget("responseTimeChart").setValue(
+            {"data":[
+                    items.averageJSONProcessingTime
+                     ]
+            }
+     );
+    
 
 }
 

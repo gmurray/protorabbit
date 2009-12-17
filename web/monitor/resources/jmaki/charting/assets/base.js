@@ -527,7 +527,6 @@ jmaki.widgets.jmaki.charting.base = function() {
             } else {
                 _widget.yAxislabelDiv.innerHTML = _widget.model.yAxis.title;
             }
-
             _widget.positionYAxisLabel(_widget.yAxislabelDiv, rotated, tdim, 1);
         }
         if (_widget.model.y2Axis && _widget.model.y2Axis.title) {
@@ -1172,11 +1171,12 @@ jmaki.widgets.jmaki.charting.base = function() {
         var my ;
         if (rotated) {
             mx = _widget.ctx.axisLabelFontSize + 20;
+
             target.style.width = tdim.height + "px";
             my =  (_widget.ctx.height / 2) - (tdim.width / 2);
         } else {
             mx = target.clientWidth;
-            my = ( _widget.ctx.height +  _widget.ctx.axisLabelFontSize) / 2;
+            my = ( _widget.ctx.height + _widget.ctx.axisLabelFontSize) / 2;
         }
 
         if (index === 1) {
@@ -1193,14 +1193,13 @@ jmaki.widgets.jmaki.charting.base = function() {
         if (index === 1 &&
             !_widget.ctx.leftMargin ||
             !_widget.ctx.leftMargin === 0 ) {
-            
+
             _widget.model.options.leftMargin = mx;
 
         } else  if (index === 2 &&
                     !_widget.ctx.rightMargin ||
                     !_widget.ctx.rightMargin === 0 ) {
             _widget.model.options.rightMargin = mx;
-        
         }
     };
 
