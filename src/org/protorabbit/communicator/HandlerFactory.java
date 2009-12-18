@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.logging.Level;
@@ -34,7 +33,7 @@ public class HandlerFactory {
 
     public HandlerFactory(ServletContext ctx) {
         this.ctx = ctx;
-        statsManager = StatsManager.getInstance();
+        statsManager = (StatsManager)ctx.getAttribute(StatsManager.STATS_MANAGER);
         cg = statsManager.getClientIdGenerator( ctx );
     }
 
@@ -53,7 +52,6 @@ public class HandlerFactory {
 
     public void processRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-        long iStartTime = (new Date()).getTime();
         // find the suitable action
         String path = request.getServletPath();
 
@@ -88,12 +86,26 @@ public class HandlerFactory {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
+        // find the handler class
         String klassName = handler.substring(0,1).toUpperCase() + 
                            handler.substring(1,handler.length()) + handlerName;
-        for (String s : searchPackages) {
+        Class<?> klass = null;
+        for ( String s : searchPackages) {
             try {
-                Class<?> klass = this.getClass().getClassLoader().loadClass(s + "." + klassName);
-                try {
+                klass = this.getClass().getClassLoader().loadClass(s + "." + klassName);
+                // break if we find it
+                break;
+            } catch (ClassNotFoundException e) {
+                // do nothing 
+            }
+        }
+        // if we have the class invoke it
+        if ( klass == null) {
+            getLogger().log(Level.WARNING, "Handler " + klassName + " not found in search packages.");
+            response.sendError( HttpServletResponse.SC_NOT_FOUND );
+            return;
+        } else {
+            try {
                     Object target = klass.newInstance();
                     thandler = (Handler)target;
                     // prepare the handler by setting the request / response
@@ -170,41 +182,51 @@ public class HandlerFactory {
                     getLogger().log(Level.WARNING, "ClassCastException creating Handler " + klassName);
                     response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                     return;
+                    // all other errors end in a error message
+                } catch (Throwable e) {
+                    if (thandler != null ) {
+                        thandler.getErrors().add( e.getLocalizedMessage() );
+                    }
                 }
-            } catch (ClassNotFoundException e) {
-                getLogger().log(Level.WARNING, "Handler " + klassName + " not found.");
-                response.sendError(HttpServletResponse.SC_NOT_FOUND);
-                return;
-            }
         }
         int bytesServed = 0;
         if (thandler == null) {
             getLogger().info("Could not find a handler with name " + klassName + " in any of the search packages.");
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
-        } else {
+        }
+
+        try {
             // do the JSON post processing
             bytesServed = processHandler(thandler,result, request,response);
-        }
-        // record stats
+        } catch (IOException iox ) {
+            thandler.getErrors().add( iox.getLocalizedMessage() );
+        } finally {
 
-        IStat stat = new StatsItem();
-        stat.setTimestamp( System.currentTimeMillis() );
-        stat.setPath( path );
-        stat.setPathInfo( request.getPathInfo() );
-        stat.setRemoteClient( cg.getClientId(request) );
-        stat.setType( StatsItem.types.JSON );
-        stat.setRequestURI( request.getRequestURI() );
-
-        stat.setContentLength( new Long(bytesServed) );
-        stat.setContentType( "application/json" );
-        if ( (thandler.getErrors() != null && thandler.getErrors().size() > 0) ) {
-            stat.setHasErrors( true );
-            stat.setErrors( thandler.getErrors());
+            // record stats
+            IStat stat = new StatsItem();
+            stat.setTimestamp( System.currentTimeMillis() );
+            stat.setPath( path );
+            stat.setPathInfo( request.getPathInfo() );
+            stat.setRemoteClient( cg.getClientId(request) );
+            stat.setType( StatsItem.types.JSON );
+            stat.setRequestURI( request.getRequestURI() );
+            stat.setContentLength( new Long(bytesServed) );
+            stat.setContentType( "application/json" );
+            if ( (thandler.getErrors() != null && thandler.getErrors().size() > 0) ) {
+                stat.setHasErrors( true );
+                stat.setErrors( thandler.getErrors() );
+            }
+            long endTime = System.currentTimeMillis();
+            Long st = (Long)request.getAttribute( CommunicatorServlet.START_REQUEST_TIMESTAMP );
+            long iStartTime = 0;
+            if ( st != null) {
+                iStartTime = st.longValue();
+                stat.setProcessTime( new Long( endTime - iStartTime) );
+            }
+            statsManager.add( stat );
         }
-        long endTime = (new Date()).getTime();
-        stat.setProcessTime( new Long( endTime - iStartTime) );
-        statsManager.add( stat );
+
     }
 
     @SuppressWarnings("unchecked")
@@ -230,7 +252,7 @@ public class HandlerFactory {
 
         JSONResponse jr = new JSONResponse();
         if (h.isPoller()) {
-            PollManager pm = (PollManager)ctx.getAttribute(PollManager.POLL_MANAGER);
+            PollManager pm = PollManager.getInstance();
             jr.setPollInterval(pm.getPollInterval(request));
         }
 

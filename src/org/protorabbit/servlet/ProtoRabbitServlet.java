@@ -111,11 +111,18 @@ public class ProtoRabbitServlet extends HttpServlet {
     public void init(ServletConfig cfg) throws ServletException {
             super.init(cfg);
             this.ctx = cfg.getServletContext();
-            statsManager = StatsManager.getInstance();
+            statsManager = (StatsManager)ctx.getAttribute(StatsManager.STATS_MANAGER);
+            if ( statsManager == null) {
+                throw new ServletException("You need to configure the Statis Manager as a servlet context listener in your web.xml.\n" +
+                           "<listener>" +
+                           " <listener-class>org.protorabbit.stats.impl.StatsManager" +
+                           " </listener-class>" +
+                           "</listener>");
+            }
             cg = statsManager.getClientIdGenerator(ctx);
             // get default properties
             Properties p = new Properties();
-            InputStream is = this.getClass().getResourceAsStream("/org/protorabbit/resources/default.properties");
+            InputStream is = getClass().getResourceAsStream("/org/protorabbit/resources/default.properties");
             try {
                 p.load(is);
                 version = p.getProperty("version");
@@ -123,7 +130,8 @@ public class ProtoRabbitServlet extends HttpServlet {
                 maxAge = Long.parseLong((p.getProperty("maxAge")));
                 maxTries = Integer.parseInt((p.getProperty("maxTries")));
             } catch (Exception e1) {
-                getLogger().severe("Error loading default propeteries");
+                getLogger().severe("Error loading default propeteries.");
+                e1.printStackTrace();
             }
 
             // set the lastCleanup to current
@@ -626,27 +634,6 @@ public class ProtoRabbitServlet extends HttpServlet {
                 }
                 Object data = null;
                 data = jcfg.getEpisodeManager().getEpisodes();
-                resp.setHeader("pragma", "NO-CACHE");
-                resp.setHeader("Cache-Control", "no-cache");
-                Object jo = json.serialize(data);
-                resp.getWriter().write(jo.toString());
-                return;
-            } else if ("accessErrors".equals(command) ) {
-                if (json == null) {
-                    SerializationFactory factory = new SerializationFactory();
-                    json = factory.getInstance();
-                }
-                String duration = req.getParameter( "duration" );
-                int d = 60;
-                if ( duration != null ) {
-                    try {
-                    d = Integer.parseInt(duration);
-                    } catch (NumberFormatException nfe) {
-                        getLogger().warning("Error with duration parameter : " + nfe.getMessage() );
-                    }
-                }
-                Object data = null;
-                data = statsManager.getErrors( 1000 * d );
                 resp.setHeader("pragma", "NO-CACHE");
                 resp.setHeader("Cache-Control", "no-cache");
                 Object jo = json.serialize(data);

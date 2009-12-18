@@ -410,14 +410,15 @@ function formatPageViews(items) {
     /*, items.averageJSONPayload*/
     jmaki.getWidget("realtimeStats").setValue(
             {"data":[
-                     items.view, items.json 
+                     items.json , items.view
                      ]
             }
      );
     items.averageJSONProcessingTime["lines"] = { "fill" : true };
+    items.averageViewProcessingTime["lines"] = { "fill" : true };
     jmaki.getWidget("responseTimeChart").setValue(
             {"data":[
-                    items.averageJSONProcessingTime
+                     items.averageJSONProcessingTime, items.averageViewProcessingTime
                      ]
             }
      );

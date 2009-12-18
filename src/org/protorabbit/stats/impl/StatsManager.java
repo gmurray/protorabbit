@@ -11,6 +11,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
 
 import org.protorabbit.stats.impl.Client;
 import org.protorabbit.stats.IClient;
@@ -18,30 +20,43 @@ import org.protorabbit.stats.IClientIdGenerator;
 import org.protorabbit.stats.IStat;
 import org.protorabbit.stats.IResourceStat;
 
-public class StatsManager {
+public class StatsManager  implements ServletContextListener {
 
-    private static final String CLIENT_ID_GENERATOR = "prt-client-id-generator-class";
+    public static final String STATS_MANAGER = "org.protorabbit.STATS_MANAGER";
+    public static final String CLIENT_ID_GENERATOR = "prt-client-id-generator-class";
 
     public static final Object APPLICATION_JSON = "application/json";
     public static final Object TEXT_HTML = "text/html";
 
     private List<IStat> stats = null;
 
-    private static StatsManager statManager = null;
+    private static TimeMonitor tm = null;
 
-    private PollManager pollManager = PollManager.getInstance();
+    private PollManager pollManager = null;
 
-    // prevent non use of constructor
-    private StatsManager() {
-        stats =  new ArrayList<IStat>();
+    private ServletContext ctx = null;
 
+    public enum Resolution {
+        SECOND ( 1000),
+        MINUTE ( 60000),
+        HOUR  (360000);
+
+        private final long modValue;
+        private Resolution( long time ) {
+            modValue = time;
+        }
+
+        public long modValue() {
+            return modValue;
+        }
     }
 
-    public static StatsManager getInstance() {
-        if (statManager == null) {
-            statManager = new StatsManager();
-        }
-        return statManager;
+    // prevent non use of constructor
+    public StatsManager() {
+        PollManager.getInstance();
+        stats =  new ArrayList<IStat>();
+        tm = new TimeMonitor( this );
+        tm.start();
     }
 
     private static Logger logger = null;
@@ -95,21 +110,6 @@ public class StatsManager {
         return cStats;
     }
 
-    public enum Resolution {
-        SECOND ( 1000),
-        MINUTE ( 60000),
-        HOUR  (360000);
-
-        private final long modValue;
-        private Resolution( long time ) {
-            modValue = time;
-        }
-
-        public long modValue() {
-            return modValue;
-        }
-    }
-    
     public Long getRoundTime( long resolution, long timestamp) {
         long mod = timestamp % resolution;
         return new Long( (timestamp - mod) );
@@ -141,7 +141,7 @@ public class StatsManager {
 
         public double averageProcessingTime() {
             if ( processingTime > 0 ) {
-                System.out.println("getting average " + processingTime + " / " + value + " = " + ( (double)processingTime / value ));
+               // System.out.println("getting average " + processingTime + " / " + value + " = " + ( (double)processingTime / value ));
                 return ( (double)processingTime / value );
             } else {
                 return 0;
@@ -288,6 +288,13 @@ public class StatsManager {
         envelope.put("pageStats",  pageStats );
         envelope.put("total", new Long( totalCount ) );
         // create average times
+        addPayloadsAndProcessingTime( jBuckets, envelope, "application/json", "JSON" );
+        addPayloadsAndProcessingTime( vBuckets, envelope, "text/html", "View" );
+        
+        return envelope;
+    }
+    
+    private  void addPayloadsAndProcessingTime( Map<Long,TimeChartItem> jBuckets, Map<String, Object> envelope, String label, String type ) {
         List<TimeChartItem> averageJsonProcessingTimes = new ArrayList<TimeChartItem>();
         List<TimeChartItem> averageJsonPayloads = new ArrayList<TimeChartItem>();
         Iterator<Long> it = jBuckets.keySet().iterator();
@@ -297,41 +304,19 @@ public class StatsManager {
             averageJsonProcessingTimes.add( new TimeChartItem( key, t.averageProcessingTime() ) );
             averageJsonPayloads.add( new TimeChartItem( key, t.averageContentLength() ) );
         }
+        
         Map<String, Object>averageJsonProcessingTimeDS = new HashMap<String,Object>();
-        averageJsonProcessingTimeDS.put("label", "application/json");
+        averageJsonProcessingTimeDS.put("label", label);
         averageJsonProcessingTimeDS.put("yaxis", new Long(1) );
         averageJsonProcessingTimeDS.put("values",  averageJsonProcessingTimes);
-        envelope.put("averageJSONProcessingTime", averageJsonProcessingTimeDS );
+        envelope.put("average" + type + "ProcessingTime", averageJsonProcessingTimeDS );
         // 
         Map<String, Object>averageJsonPayloadDS = new HashMap<String,Object>();
-        averageJsonPayloadDS.put("label", "application/json");
+        averageJsonPayloadDS.put("label", label );
         averageJsonPayloadDS.put("yaxis", new Long(1) );
         averageJsonPayloadDS.put("values",  averageJsonPayloads);
  
-        envelope.put("averageJSONPayload", averageJsonPayloadDS );
-        return envelope;
-    }
-
-    public List<IStat> getErrors( long duration ) {
-        List<IStat> baseList = getStats();
-        if ( baseList == null ) {
-            return null;
-        }
-        List<IStat> cStats = new ArrayList<IStat>();
-        long threshold = System.currentTimeMillis() - duration;
-        // iterate the list backwards because it is LIFO and we can stop iterating early if we 
-        // find a stat outside the threshold
-        for ( int i= baseList.size() -1; i >= 0; i--) {
-            IStat stat = baseList.get( i );
-            if ( !stat.hasErrors() ) continue;
-            if ( stat.getTimestamp() > threshold ) {
-                cStats.add( stat );
-                // since we go backwards don't iterate if we have a stat already greater
-            } else {
-                break;
-            }
-        }
-        return cStats;
+        envelope.put("average" + type + "Payload", averageJsonPayloadDS );
     }
 
     public IClientIdGenerator getClientIdGenerator( ServletContext ctx) {
@@ -357,5 +342,32 @@ public class StatsManager {
             cg = new ClientIdGenerator();
         }
         return cg;
+    }
+
+    public void contextDestroyed(ServletContextEvent arg0) {
+        getLogger().log(Level.INFO, "Shutting down stats monitor....");
+        tm.shutdown();
+    }
+
+    public void pruneHistory( long threshold ) {
+
+        int pruneCount = 0;
+        synchronized (stats) {
+            for ( int i= stats.size() -1; i >= 0; i--) {
+                IStat stat = stats.get( i );
+                if ( stat.getTimestamp() < threshold ) {
+                    stats.remove( i );
+                    pruneCount++;
+                }
+            }
+        }
+        if ( pruneCount > 0) {
+            getLogger().log(Level.INFO, "StatsManager pruned " + pruneCount + " items.");
+        }
+    }
+
+    public void contextInitialized(ServletContextEvent e ) {
+        ctx  = e.getServletContext();
+        ctx.setAttribute( STATS_MANAGER, this );
     }
 }

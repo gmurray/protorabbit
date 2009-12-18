@@ -16,10 +16,7 @@ public interface IClient {
     public String getClientId();
     public int getErrorCount();
     public long getJSONRequestCount();
-
     public long getViewRequestCount();
-
     public void setPollInterval(Long defaultPollInterval);
-
     public Long getPollInterval();
 }

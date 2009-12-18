@@ -11,12 +11,12 @@ public class TestAction extends BaseJSONHandler{
     private String name = "not set";
 
     public void setJson(String name) {
-        System.out.println("we got a setJson with " + name);
+  //      System.out.println("we got a setJson with " + name);
         this.name = name;
     }
 
     public void setName(String name) {
-        System.out.println("we got a setName string set with " + name);	
+     //   System.out.println("we got a setName string set with " + name);	
     }
 
     public void setName(long name) {
@@ -31,7 +31,11 @@ public class TestAction extends BaseJSONHandler{
             addActionError("Bad things happen. We are error #1.");
         } else if ( rand == 2 ) {
             addActionError("We are a bad error #2.");
-        } 
+        }
+        try {
+            Thread.currentThread().sleep(2);
+        } catch (InterruptedException e) {
+        }
         return SUCCESS;
     }
 }

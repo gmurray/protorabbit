@@ -17,6 +17,7 @@ import org.protorabbit.stats.impl.PollManager;
 @SuppressWarnings("serial")
 public class CommunicatorServlet extends HttpServlet {
 
+    public static final String START_REQUEST_TIMESTAMP = "org.protrabbit.communicator.START_REQUEST";
     protected ServletContext ctx;
     protected PollManager    pm = null;
     private HandlerFactory   hf = null;
@@ -63,6 +64,9 @@ public class CommunicatorServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request,
             HttpServletResponse response) throws ServletException, IOException {
+
+        request.setAttribute(START_REQUEST_TIMESTAMP, new Long(System.currentTimeMillis()));
+
         // default is to return the messages
         hf.processRequest(request, response);
     }
@@ -84,7 +88,7 @@ public class CommunicatorServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request,
             HttpServletResponse response) throws ServletException, IOException {
-
+        request.setAttribute(START_REQUEST_TIMESTAMP, new Long(System.currentTimeMillis()));
         hf.processRequest(request, response);
     }
 

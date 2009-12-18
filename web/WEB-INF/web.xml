@@ -76,6 +76,11 @@
         <url-pattern>/jcom</url-pattern>
       </servlet-mapping>
 
+    <listener>
+        <listener-class>org.protorabbit.stats.impl.StatsManager
+        </listener-class>
+    </listener>
+
     <welcome-file-list>
         <welcome-file>/welcome.prt</welcome-file>
     </welcome-file-list>

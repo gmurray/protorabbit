@@ -15,12 +15,12 @@ public class TestNamespaceAction extends BaseJSONHandler{
     private String name = "not set";
 
     public void setJson(String name) {
-        System.out.println("we got a set with " + name);
+       // System.out.println("we got a set with " + name);
         this.name = name;
     }
     
     public void setName(double name) {
-        System.out.println("we got a long set with " + name);
+      //  System.out.println("we got a long set with " + name);
     }
 
     public String doFoo() {
@@ -31,7 +31,11 @@ public class TestNamespaceAction extends BaseJSONHandler{
             addActionError("Bad things happen. We are error #3.");
         } else if ( rand == 2 ) {
             addActionError("We are a bad error #4.");
-        } 
+        }
+        try {
+            Thread.currentThread().sleep(2);
+        } catch (InterruptedException e) {
+        }
         return SUCCESS;
     }
 }

@@ -59,7 +59,7 @@ public class Client implements IClient {
     public long getViewRequestCount() {
         return viewRequestCount;
     }
-    
+
     public int getErrorCount() {
         return errorCount;
     }
@@ -67,7 +67,9 @@ public class Client implements IClient {
     public String getClientId() {
         return id;
     }
+
     public void incrementPollCount() {
+        this.lastAccess = (new Date()).getTime();
         pollRequestCount += 1;
     }
 
