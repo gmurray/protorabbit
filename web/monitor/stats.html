@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html>
+ <head>
+  <title>Protorabbit Monitor - Stats</title>
+<script type="text/javascript" src="resources/jmaki/jmaki-full.js"></script>
+<script type="text/javascript" src="resources/js/monitor.js"></script>
+<script>
+jmaki.config =  {
+        forceActiveXXHR : true,
+        logLevel : 'off'
+}
+jmaki.subscribe("/jmaki/extensions/widgetFactory/loadComplete", function() {
+  loadStats();
+});
+</script>
+
+<style>
+
+.pmenu {
+  padding:3px;
+  height:40px;
+  font-size:2em;
+  background:#333;
+  color:#fff
+}
+
+.pmenu a {
+  color : #fff;
+  font-size:0.4em;
+}
+
+.pmenu a:visited {
+  color : #fff;
+}
+
+div.cacheBlockBox {
+    float:left;
+    margin : 5px;
+    z-index: 1;
+    opacity: 0.9;
+    float : left;
+    /* Others */
+    width: 1000px;
+    background : #FFF
+    cursor: move;
+    padding: 5px;
+    border : 2px solid #ccc;
+}
+
+.blockTitle {
+  padding : 2px;
+  background : #333;
+  color : #fff;
+  font-size : 1.2em;
+  font-weight : bold;
+}
+
+.blockBody {
+  padding : 10px;
+  width : 380px;
+  font-size : 1em;
+  background : #fff;
+}
+
+.cacheBlockBody {
+  padding : 10px;
+  width : 850px;
+  font-size : 1em;
+  background : #fff;
+}
+
+
+.propertiesTitle {
+  padding-top : 3px;
+  padding-bottom : 3px;
+  color : #333;
+  font-size : .9em;
+}
+
+.stylesTitle {
+  padding-top : 3px;
+  padding-bottom : 3px;
+  color : #333;
+  font-size : .9em;
+}
+
+.scriptsTitle {
+  padding-top : 3px;
+  padding-bottom : 3px;
+  color : #333;
+  font-size : .9em;
+}
+
+.blockTable {
+  background : #eee;
+  border : 1px solid #333;
+  width : 99%;
+  font-size : .8em;
+  overflow : hidden;
+}
+
+.blockTable td {
+  background : #fff;
+}
+</style>
+
+<script>
+
+</script>
+ </head>
+ <body>
+  <div class="pmenu">
+   <div style="float:left">Protorabbit Resources</div>
+    <div style="float:right">
+    <a href="episodes.html">Episodes</a>
+    <a href="components.html">Components</a>
+    <a href="resources.html">Resources</a>
+    <a href="stats.">Stats</a>
+    <a href="../"> Home</a>
+   </div>
+  </div>
+  <div style="float:left;width:225px"> 
+  <div style="padding-top:10px;text-align:center;font-size:1.2em">Resources Access</div>
+  <div jmakiId="dispo" jmakiName="jmaki.charting.pie"
+       jmakiArgs="{ legend : { targetId : 'dispoLegend',
+                    labelFormatter : function(contents,value, x,y) {
+                    return contents + ' (' + (value.data / 1024).toFixed(2) + 'kb)';
+                  }
+                  }, showHoverLabels : false }"
+       style="height:200px"></div>
+   <div id="dispoLegend" style="clear:left;float:left"></div>
+  
+   <div style="clear:both;height:5px"></div>
+   
+   <div id="totalResources" style="text-align:center;clear:both"></div>
+
+   <div style="clear:both;height:15px"></div>
+
+   <div style="text-align:center;font-size:1.2em">Top 10 Resources</div>
+  <div jmakiId="topResources" jmakiName="jmaki.charting.pie"
+       jmakiArgs="{ legend : { targetId : 'topResourcesLegend',
+                    labelFormatter : function(contents,value, x,y) {
+                    return contents + ' (' + value.data + ')';
+                  }
+                  }, showHoverLabels : false }"
+       style="height:200px"></div>   
+   <div id="topResourcesLegend" style="clear:left;float:left"></div>
+  </div>
+  <div style="padding-top: 5px;margin-left: 250px" id="bodyContent"></div>
+ </body>
+</html>

@@ -54,6 +54,10 @@ a  {
 .blockTable td {
   background : #fff;
 }
+
+.legend {
+  font-size : .9em;
+}
 </style>
 
 <script>
@@ -81,6 +85,8 @@ a  {
        <option value="60">Last Minute</option>
        <option value="300">Last 5 Minutes</option>
        <option value="600">Last 10 Minutes</option>
+       <option value="1200">Last 20 Minutes</option>
+       <option value="1800">Last 40 Minutes</option>
        <option value="3600">Last Hour</option>
      </select>
     </span>
@@ -105,18 +111,18 @@ a  {
     <span id="status"></span></div>
    <!-- end controls -->
   
-  <div style="float:left;width:255px"> 
+  <div style="float:left;width:300px"> 
   <div style="padding-top:10px;text-align:center;font-size:1.2em">Pages (text/html)</div>
 
   <div jmakiId="views" jmakiName="jmaki.charting.pie"
        jmakiArgs="{ legend : { targetId : 'dispoLegend',
                     labelFormatter : function(contents,value, x,y) {
-                    return contents + '&nbsp;(' + (value.data) + ')';
+                    return contents + '&nbsp;' + value.percent.toFixed(1) + '%&nbsp;(' +  (value.data) + ')';
                   }
                   }, showHoverLabels : false }"
-       style="height:250px"></div>
-   <div id="dispoLegend" style="clear:left;float:left"></div>
-  
+       style="height:175px"></div>
+   <div id="dispoLegend" class="legend" style="clear:left;float:left"></div>
+
    <div style="clear:both;height:5px"></div>
    
    <div id="totalResources" style="text-align:center;clear:both"></div>
@@ -127,14 +133,26 @@ a  {
   <div jmakiId="actions" jmakiName="jmaki.charting.pie"
        jmakiArgs="{ legend : { targetId : 'topResourcesLegend',
                     labelFormatter : function(contents,value, x,y) {
-                    return contents + '&nbsp;(' + value.data + ')';
+                    return contents + '&nbsp;' + value.percent.toFixed(1) + '%&nbsp;(' +  (value.data) + ')';
                   }
                   }, showHoverLabels : false }"
-       style="height:250px"></div>   
-   <div id="topResourcesLegend" style="clear:left;float:left"></div>
+       style="height:175px"></div>   
+   <div id="topResourcesLegend" class="legend" style="clear:left;float:left"></div>
+      <div style="clear:both;height:5px"></div>
+     <div style="padding-top:10px;text-align:center;font-size:1.2em">Pollers (application/json)</div>
+   
+     <div jmakiId="pollers" jmakiName="jmaki.charting.pie"
+       jmakiArgs="{ legend : { targetId : 'pollerLegend',
+                    labelFormatter : function(contents,value, x,y) {
+                    return contents + '&nbsp;' + value.percent.toFixed(1) + '%&nbsp;(' +  (value.data) + ')';
+                  }
+                  }, showHoverLabels : false }"
+       style="height:175px"></div>
+   <div id="pollerLegend" class="legend" style="clear:left;float:left"></div>
+
   </div>
 
-  <div style="margin-top:5px;margin-left:265px">
+  <div style="margin-top:5px;margin-left:305px">
 
     <div style="height:200px">
          <div jmakiName="jmaki.charting.line" jmakiId="realtimeStats" style="overflow:hidden;height:100%"
@@ -199,7 +217,6 @@ a  {
                       rotate : true,
                       min : 0,
                     }
-
                    }"
                ></div>
           </div> 
@@ -207,7 +224,7 @@ a  {
   
   <div style="height:5px"></div>
   <!-- start mid poller / error panel -->
-  <div style="margin-top:15px;margin-left:265px;height:300px;">
+  <div style="margin-top:15px;margin-left:305px;height:300px;">
     <div style="float:left;width:50%;height:300px">
         <div id="clientsTitle" class="subTitle">Clients</div>
         <div id="clientsPanel" style="height:285px; overflow-y:auto;border: 1px solid #eee;padding:5px;margin:1px;"></div>

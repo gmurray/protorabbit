@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html>
+ <head>
+  <title>Protorabbit Monitor - Stats Test</title>
+<script type="text/javascript" src="resources/jmaki/jmaki-full.js"></script>
+<script type="text/javascript" src="resources/js/monitor.js"></script>
+<script type="text/javascript" src="resources/js/tests.js"></script>
+<script>
+jmaki.config =  {
+    forceActiveXXHR : true,
+    logLevel : 'off'
+}
+</script>
+
+<style>
+a  {
+  color : #333;
+}
+
+.pmenu {
+  padding:3px;
+  height:40px;
+  font-size:2em;
+  background:#333;
+  color:#fff
+}
+
+.pmenu a {
+  color : #fff;
+  font-size:0.4em;
+}
+
+.pmenu a:visited {
+  color : #fff;
+}
+
+
+</style>
+
+<script>
+
+</script>
+ </head>
+ <body>
+  <div class="pmenu">
+   <div style="float:left">Protorabbit Resources</div>
+    <div style="float:right">
+    <a href="episodes.html">Episodes</a>
+    <a href="components.html">Components</a>
+    <a href="resources.html">Resources</a>
+    <a href="statistics.html">  Statistics</a>
+    <a href="../"> Home</a>
+   </div>
+  </div>
+  <div id="body" style="padding:15px">
+  
+      <!-- start controls -->
+    <div style="text-align:center">
+    <span>
+    Max Time between tests :
+     <select id="timespan">
+       <option value="0">None</option>
+       <option selected="selected" value="50">50ms</option>
+       <option value="100">100ms</option>
+       <option value="500">500ms</option>
+       <option value="1000">1 second</option>
+       <option value="5000">5 seconds</option>
+       <option value="10000">10 seconds</option>
+       <option value="30000">30 seconds</option>
+       <option value="60000">60 seconds</option>
+     </select>
+    </span>
+    <span>
+    &nbsp;&nbsp;
+    Run Count :
+     <select id="runCount">
+       <option value="50">50</option>
+       <option value="100">100</option>
+       <option value="500">500</option>
+       <option value="1000">1000</option>
+     </select>
+    </span>
+    <input type="button" value="Start" onclick="startTest()"></input>
+    </div>
+   <!-- end controls -->
+   
+   
+  <div id="status"></div>
+ 
+
+ </div>
+ </body>
+</html>

@@ -476,7 +476,7 @@
             overlay = $('<canvas style="position:absolute;left:' + leftMargin + 'px;top:' + topMargin + 'px" width="' + canvasWidth + '" height="' + canvasHeight + '"></canvas>').appendTo(target).get(0);
             if ($.browser.msie) {// excanvas hack
                 overlay = window.G_vmlCanvasManager.initElement(overlay);
-                canvas.onmouseout =  onMouseMove;             
+                canvas.onmouseout =  onMouseMove;
             }
             octx = overlay.getContext("2d");
 
@@ -973,7 +973,7 @@
             measureYLabels(axes.yaxis);
             measureXLabels(axes.x2axis);
             measureYLabels(axes.y2axis);
-
+            var _moffset = 0;
             // get the most space needed around the grid for things
             // that may stick out
             var maxOutset = options.grid.borderWidth / 2;
@@ -984,16 +984,21 @@
 
             if (axes.xaxis.labelHeight > 0)
                 plotOffset.bottom = Math.max(maxOutset, axes.xaxis.labelHeight + options.grid.labelMargin);
-            if (axes.yaxis.labelWidth > 0)
+            if (axes.yaxis.labelWidth > 0 && ( typeof leftMargin !== "number" && leftMargin > 0)) {
                 plotOffset.left = Math.max(maxOutset, axes.yaxis.labelWidth + options.grid.labelMargin);
-
+            } else {
+                plotOffset.left = leftMargin;
+            }
             if (axes.x2axis.labelHeight > 0)
                 plotOffset.top = Math.max(maxOutset, axes.x2axis.labelHeight + options.grid.labelMargin);
             
-            if (axes.y2axis.labelWidth > 0)
+            if (axes.y2axis.labelWidth > 0 && ( typeof rightMargin !== "number" && rightMargin > 0)) {
                 plotOffset.right = Math.max(maxOutset, axes.y2axis.labelWidth + options.grid.labelMargin);
+             } else if ( rightMargin > 0 ){
+                 plotOffset.right = rightMargin;
+             }
 
-            plotWidth = canvasWidth - plotOffset.left - plotOffset.right;
+            plotWidth = canvasWidth - plotOffset.left - plotOffset.right - _moffset;
             plotHeight = canvasHeight - plotOffset.bottom - plotOffset.top;
 
             // precompute how much the axis is scaling a point in canvas space

@@ -318,18 +318,67 @@ function getXHR () {
 
 function ajax(args) {
     var _req = getXHR();
+    var _async = true;
+    if ( args.asynchronous === false) {
+        _async = false;
+    }
     _req.onreadystatechange = function() { 
         if (_req.readyState == 4) {
-            if ((_req.status == 200 || _req.status === 0) &&
-                    args.callback) {
-              args.callback(_req);
+            if (_req.status == 200 || _req.status === 0) {
+                if ( args.callback) {
+                    args.callback(_req);
+                } else if ( typeof args.onsuccess === "function") {
+                    var model = eval("(" + _req.responseText + ")");
+                    args.onsuccess.apply( {}, [ model, _req ] );
+                }
             } else if (_req.status != 200) {
-                alert("Error making request. Please try again later");
+                if ( typeof args.onerror === "function" ) {
+                    args.onerror.apply( {}, [ _req ]);
+                } else {
+                    alert("Error making request. Please try again later");
+                }
             }
         }
     };
-    _req.open("GET", args.url, true);
-    _req.send(null);
+    _req.open( "GET", args.url, _async );
+    _req.send( null );
+    if ( _async === false ) {
+        if (_req.status == 200 || _req.status === 0) {
+            if ( args.callback) {
+                args.callback(_req);
+            } else if ( typeof args.onsuccess === "function") {
+                var model = eval("(" + _req.responseText + ")");
+                args.onsuccess.apply( {}, [ model, _req ] );
+            }
+        } else if (_req.status != 200) {
+            if ( typeof args.onerror === "function" ) {
+                args.onerror.apply( {}, [ _req ]);
+            } else {
+                alert("Error making request. Please try again later");
+            }
+        }
+    }
+}
+
+function zeroFill( _num ) {
+    if ( _num < 10 ) {
+        return "0" + _num;
+    } else {
+        return _num;
+    }
+}
+
+function formatTimestamp( timestamp ) {
+    if (timestamp === null ) {
+        return "N/A";
+    }
+    var _d = new Date( timestamp );
+    return zeroFill( _d.getMonth() ) + "/" +
+           zeroFill( _d.getDate() ) + "/" +
+           _d.getFullYear() + " " +
+           zeroFill( _d.getHours() ) + ":" +
+           zeroFill( _d.getMinutes() ) + ":" +
+           zeroFill( _d.getSeconds() );
 }
 
 function loadData() {
@@ -439,7 +488,7 @@ function formatErrors(items) {
          var _row = [];
          var _item = items[i];
          _row.push( _item.path );
-         _row.push( new Date(_item.timestamp) );
+         _row.push( formatTimestamp( _item.timestamp ) );
          _row.push( _item.remoteClient );
          _row.push( _item.errors.join(",") );
          s3table.addRow( _row );
@@ -463,7 +512,7 @@ function formatActiveClients(items) {
              _row.push( _item.jSONRequestCount );
              _row.push( _item.viewRequestCount );
              _row.push( _item.errorCount );
-             _row.push( new Date(_item.lastAccess) );
+             _row.push( formatTimestamp( _item.lastAccess ) );
              s3table.addRow( _row );
          }
      }
@@ -478,6 +527,7 @@ function formatActiveClients(items) {
 function formatPageStatCharts( stats ) {
     var textHTML = stats["text/html"];
     var applicationJson = stats["application/json"];
+    var pollers = stats['pollers'];
     var chart = jmaki.getWidget("views");
     var data = [];
     for (var i in textHTML) {
@@ -490,6 +540,13 @@ function formatPageStatCharts( stats ) {
         data.push({ label : i, values : [ { value : applicationJson[i].accessCount }] });
     }
     chart2.setValue(data);
+    // pollers
+    var chart3 = jmaki.getWidget("pollers");
+    var data = [];
+    for (var i in pollers) {
+        data.push({ label : i, values : [ { value : pollers[i].accessCount }] });
+    }
+    chart3.setValue(data);
 }
 
 function toggleRunning() {
