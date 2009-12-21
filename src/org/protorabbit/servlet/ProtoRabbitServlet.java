@@ -639,51 +639,6 @@ public class ProtoRabbitServlet extends HttpServlet {
                 Object jo = json.serialize(data);
                 resp.getWriter().write(jo.toString());
                 return;
-            } else if ("accessMetrics".equals(command) ) {
-                if (json == null) {
-                    SerializationFactory factory = new SerializationFactory();
-                    json = factory.getInstance();
-                }
-                String duration = req.getParameter( "duration" );
-                int d = 60;
-                if ( duration != null ) {
-                    try {
-                    d = Integer.parseInt(duration);
-                    } catch (NumberFormatException nfe) {
-                        getLogger().warning("Error with duration parameter : " + nfe.getMessage() );
-                    }
-                }
-                String r = req.getParameter( "resolution" );
-                Resolution resolution = null;
-                if ( r != null ) {
-                    try {
-                        resolution = Resolution.valueOf( r );
-                    } catch (Exception e) {
-                        getLogger().warning("Bad resolution " + r + ". Will use default.");
-                    }
-                }
-                if (resolution == null ) {
-                    resolution = Resolution.SECOND;
-                }
-                Object data = null;
-                data = statsManager.getLatest( 1000 * d, resolution );
-                resp.setHeader("pragma", "NO-CACHE");
-                resp.setHeader("Cache-Control", "no-cache");
-                Object jo = json.serialize(data);
-                resp.getWriter().write(jo.toString());
-                return;
-            } else if ("pollerMetrics".equals(command) ) {
-                if (json == null) {
-                    SerializationFactory factory = new SerializationFactory();
-                    json = factory.getInstance();
-                }
-                Object data = null;
-                data = statsManager.getPollers();
-                resp.setHeader("pragma", "NO-CACHE");
-                resp.setHeader("Cache-Control", "no-cache");
-                Object jo = json.serialize(data);
-                resp.getWriter().write(jo.toString());
-                return;
             } else if ("version".equals(command) ) {
                 resp.getWriter().write(version);
                 return;

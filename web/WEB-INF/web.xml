@@ -32,15 +32,26 @@
     </context-param>
 
     <servlet>
+        <servlet-name>ProtoRabbit Stats Servlet</servlet-name>
+        <servlet-class>org.protorabbit.servlet.StatisticsServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet>
         <servlet-name>ProtoRabbit Servlet</servlet-name>
         <servlet-class>org.protorabbit.servlet.ProtoRabbitServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
-
     <servlet-mapping>
         <servlet-name>ProtoRabbit Servlet</servlet-name>
         <url-pattern>/prt/*</url-pattern>
     </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>ProtoRabbit Stats Servlet</servlet-name>
+        <url-pattern>/stats/*</url-pattern>
+    </servlet-mapping>
+    
 
     <servlet-mapping>
         <servlet-name>ProtoRabbit Servlet</servlet-name>

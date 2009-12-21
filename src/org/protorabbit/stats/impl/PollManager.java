@@ -87,15 +87,20 @@ public class PollManager {
                 // we only want this block running once at a time
                 // to prevent concurrent access exceptions
                 synchronized(this) {
+                    try {
                     while (it.hasNext()) {
                         String key = it.next();
                         IClient p = pollers.get(key);
-                        if (p != null) {
+                        if (p != null ) {
                             if (now - p.getLastAccess() > pollerTimeout ) {
-                                logger.log(Level.INFO, "Removing stale poller client " + p.getClientId());
+                                getLogger().log(Level.INFO, "Removing stale poller client " + p.getClientId() );
                                 keysToRemove.add(key);
                             }
                         }
+                    }
+                    } catch (Exception e) {
+                        System.out.println("***** we caught " + e);
+                        e.printStackTrace();
                     }
                     for (String key : keysToRemove) {
                         pollers.remove(key);
@@ -104,7 +109,6 @@ public class PollManager {
                 // update the poller Intervals
                 int clientCount = pollers.keySet().size();
 
-                getLogger().log(Level.INFO, "Adjusting pollerCounts for " + clientCount + " clients.");
                 Long pollInterval = defaultPollInterval;
                 if (clientCount > 20 && clientCount < 40) {
                     pollInterval += 4000;

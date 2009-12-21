@@ -33,15 +33,29 @@ public class Engine {
         d3.setUrl( "http://localhost:9090/protorabbit/private.prt" );
         dlist.add( d3 );
 
+        ClientDetails p1 = new ClientDetails();
+        p1.setRunCount( 550 );
+        p1.setId( "P1" );
+        p1.setUrl( "http://localhost:9090/protorabbit/secure/testPoller!doFoo.hop?name=5.2&json={blah:1}" );
+        p1.setTimeout( 10000 );
+        dlist.add( p1 );
+
+        ClientDetails p2 = new ClientDetails();
+        p2.setRunCount( 550 );
+        p2.setId( "P1" );
+        p2.setUrl( "http://localhost:9090/protorabbit/secure/testLongPoller!doFoo.hop?name=5.2&json={blah:1}" );
+        p2.setTimeout( 10000 );
+        dlist.add( p2 );
+
         ClientDetails d4 = new ClientDetails();
-        d4.setRunCount( 150 );
+        d4.setRunCount( 550 );
         d4.setId( "R4" );
         d4.setUrl( "http://localhost:9090/protorabbit/secure/testNamespace!doFoo.hop?name=5.2&json={blah:1}" );
         d4.setTimeout( 10000 );
         dlist.add( d4 );
 
         ClientDetails d5 = new ClientDetails();
-        d5.setRunCount( 150 );
+        d5.setRunCount( 550 );
         d5.setTimeout( 5000 );
         d5.setId( "R5" );
         d5.setUrl( "http://localhost:9090/protorabbit/secure2/test!doFoo.hop?name=5.2&json={blah:1}" );

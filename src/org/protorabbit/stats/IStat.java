@@ -27,4 +27,6 @@ public interface IStat {
     public Collection<String> getErrors();
     public void setHasErrors( boolean hasErrors );
     public void setErrors( Collection<String> errors );
+    public void setIsPoller( boolean pollerstat );
+    public boolean isPoller();
 }

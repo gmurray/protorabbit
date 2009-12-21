@@ -424,7 +424,7 @@ function loadPageViews(_runonce) {
 
         resolution =  document.getElementById("resolution").value;
         window.pageRequest = new ajax({ 
-            url : "../prt?command=accessMetrics&duration=" + timespan + "&resolution=" + resolution,
+            url : "../stats/all?duration=" + timespan + "&resolution=" + resolution,
             callback : function(req) {
                 var model = eval("(" + req.responseText + ")");
                 formatPageViews( model );

@@ -10,7 +10,7 @@ public class Client implements IClient {
     private long jsonRequestCount = 0;
     private long pollRequestCount = 0;
     private long lastAccess;
-    private Long pollInterval;
+    private Long pollInterval = 5000L;
     private int errorCount = 0;
 
     public Client(String id) {

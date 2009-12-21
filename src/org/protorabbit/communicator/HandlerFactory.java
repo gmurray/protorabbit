@@ -26,13 +26,11 @@ public class HandlerFactory {
 
     protected List<String> searchPackages = new ArrayList<String>();
     private JSONSerializer jsonSerializer;
-    ServletContext ctx = null;
     private String handlerName = "Action";
     private StatsManager statsManager = null;
     private IClientIdGenerator cg = null;
 
     public HandlerFactory(ServletContext ctx) {
-        this.ctx = ctx;
         statsManager = (StatsManager)ctx.getAttribute(StatsManager.STATS_MANAGER);
         cg = statsManager.getClientIdGenerator( ctx );
     }
@@ -205,6 +203,9 @@ public class HandlerFactory {
 
             // record stats
             IStat stat = new StatsItem();
+            if ( thandler.isPoller() ) {
+                stat.setIsPoller( true );
+            }
             stat.setTimestamp( System.currentTimeMillis() );
             stat.setPath( path );
             stat.setPathInfo( request.getPathInfo() );

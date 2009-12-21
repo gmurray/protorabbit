@@ -27,6 +27,7 @@ public class StatsManager  implements ServletContextListener {
 
     public static final Object APPLICATION_JSON = "application/json";
     public static final Object TEXT_HTML = "text/html";
+    public static final String JSON_POLLER = "pollers";
 
     private List<IStat> stats = null;
 
@@ -203,10 +204,16 @@ public class StatsManager  implements ServletContextListener {
                 String key = stat.getPath();
                 String cid = stat.getRemoteClient();
                 Long bucketId = getRoundTime( resolution, stat.getTimestamp() );
-                Map<String, IResourceStat> cstats = pageStats.get( stat.getContentType() );
+                String contentKey = null;
+                if ( stat.isPoller() ) {
+                    contentKey = JSON_POLLER;
+                } else {
+                    contentKey = stat.getContentType();
+                }
+                 Map<String, IResourceStat> cstats = pageStats.get( contentKey );
                 if ( cstats == null ) {
                     cstats = new Hashtable<String,IResourceStat>();
-                    pageStats.put( stat.getContentType(), cstats );
+                    pageStats.put( contentKey, cstats );
                 }
                 IResourceStat c = cstats.get( key );
                 if ( c == null) {

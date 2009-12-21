@@ -18,6 +18,7 @@ public class StatsItem implements IStat {
     private String contentType = null;
     private boolean hasErrors = false;
     private Collection<String> errors = null;
+    private boolean isPollStat = false;
 
     public static enum types {
         VIEW,
@@ -118,6 +119,14 @@ public class StatsItem implements IStat {
 
     public void setErrors(Collection<String> errors) {
         this.errors = errors;
+    }
+
+    public void setIsPoller(boolean pollerstat) {
+        this.isPollStat = pollerstat;
+    }
+    
+    public boolean isPoller() {
+        return isPollStat;
     }
 
 }
