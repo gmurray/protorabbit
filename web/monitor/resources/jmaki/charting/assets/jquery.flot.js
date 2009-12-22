@@ -88,7 +88,7 @@
                     color: "#545454", // primary color used for outline and labels
                     backgroundColor: null, // null for transparent, else color
                     tickColor: "#dddddd", // color used for the ticks
-                    labelMargin: 5, // in pixels
+                    labelMargin: 15, // in pixels
                     borderWidth: 2,
                     markings: null, // array of ranges or fn: axes -> array of ranges
                     markingsColor: "#f4f4f4",
@@ -988,6 +988,7 @@
                 plotOffset.left = Math.max(maxOutset, axes.yaxis.labelWidth + options.grid.labelMargin);
             } else {
                 plotOffset.left = leftMargin;
+                _moffset = 10;
             }
             if (axes.x2axis.labelHeight > 0)
                 plotOffset.top = Math.max(maxOutset, axes.x2axis.labelHeight + options.grid.labelMargin);
@@ -997,7 +998,6 @@
              } else if ( rightMargin > 0 ){
                  plotOffset.right = rightMargin;
              }
-
             plotWidth = canvasWidth - plotOffset.left - plotOffset.right - _moffset;
             plotHeight = canvasHeight - plotOffset.bottom - plotOffset.top;
 
@@ -1007,7 +1007,6 @@
             axes.x2axis.scale = plotWidth / (axes.x2axis.max - axes.x2axis.min);
             axes.y2axis.scale = plotHeight / (axes.y2axis.max - axes.y2axis.min);
         }
-        
         function draw() {
             drawGrid();
             for (var i = 0; i < series.length; i++) {
@@ -2000,7 +1999,7 @@
                     pos += 'bottom:' + (m + plotOffset.bottom) + 'px;';
                 // gmurray71 added 25 px to account for long labels
                 if (p.charAt(1) == "e")
-                    pos += 'right:' + (m + plotOffset.right + rightMargin) + 'px;';
+                    pos += 'right:' + (m + plotOffset.right + rightMargin + 10) + 'px;';
                 else if (p.charAt(1) == "w")
                     pos += 'left:' + (m + plotOffset.left) + 'px;';
                 var legend = $('<div id="' + target.attr('id') + '_legend" class="legend">' + table.replace('style="', 'style="position:absolute;' + pos +';') + '</div>').appendTo(target);

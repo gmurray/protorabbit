@@ -43,6 +43,7 @@ import org.protorabbit.accelerator.CacheContext;
 import org.protorabbit.accelerator.ICacheable;
 import org.protorabbit.accelerator.ResourceManager;
 import org.protorabbit.accelerator.impl.CacheableResource;
+import org.protorabbit.communicator.HandlerFactory;
 import org.protorabbit.json.JSONSerializer;
 import org.protorabbit.json.JSONUtil;
 import org.protorabbit.json.SerializationFactory;
@@ -121,6 +122,7 @@ public class ProtoRabbitServlet extends HttpServlet {
             }
             cg = statsManager.getClientIdGenerator(ctx);
             // get default properties
+            String handlerName = ctx.getInitParameter( "prt-handler-name" );
             Properties p = new Properties();
             InputStream is = getClass().getResourceAsStream("/org/protorabbit/resources/default.properties");
             try {
@@ -129,11 +131,16 @@ public class ProtoRabbitServlet extends HttpServlet {
                 cleanupTimeout = Long.parseLong((p.getProperty("cleanupTimeout")));
                 maxAge = Long.parseLong((p.getProperty("maxAge")));
                 maxTries = Integer.parseInt((p.getProperty("maxTries")));
+                if ( handlerName == null ) {
+                    handlerName = p.getProperty( "handlerName" );
+                }
             } catch (Exception e1) {
                 getLogger().severe("Error loading default propeteries.");
                 e1.printStackTrace();
             }
-
+            if (handlerName != null) {
+                ctx.setAttribute( HandlerFactory.HANDLER_NAME, handlerName );
+            }
             // set the lastCleanup to current
             lastCleanup = (new Date()).getTime();
 

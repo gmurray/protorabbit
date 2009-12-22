@@ -24,15 +24,21 @@ import org.protorabbit.util.ClassUtil;
 
 public class HandlerFactory {
 
+    public static String HANDLER_NAME = "org.protorabbit.HANDLER_NAME";
+
     protected List<String> searchPackages = new ArrayList<String>();
     private JSONSerializer jsonSerializer;
-    private String handlerName = "Action";
+    private String handlerName = "Handler";
     private StatsManager statsManager = null;
     private IClientIdGenerator cg = null;
 
     public HandlerFactory(ServletContext ctx) {
         statsManager = (StatsManager)ctx.getAttribute(StatsManager.STATS_MANAGER);
         cg = statsManager.getClientIdGenerator( ctx );
+        String cHName = (String)ctx.getAttribute( HANDLER_NAME );
+        if ( cHName != null ) {
+            handlerName = cHName;
+        }
     }
 
     private static Logger logger = null;
