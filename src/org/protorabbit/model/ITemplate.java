@@ -26,7 +26,6 @@ public interface ITemplate {
     public String getId();
 
     public Long getTimeout( IContext ctx );
-    public JSONObject getJSON();
     public ResourceURI getTemplateURI( IContext ctx );
     public List<ResourceURI> getScripts();
     public List<ResourceURI> getStyles( );

@@ -56,7 +56,7 @@ public class ResourceURI implements ITestable {
     public boolean isWritten() {
         return written;
     }
-    
+
     public void setWritten(boolean written) {
         this.written = written;
     }
@@ -207,5 +207,9 @@ public class ResourceURI implements ITestable {
 
     public long getCreateTime() {
         return created;
+    }
+    
+    public String toString() {
+        return " ResourceURI { id : " + id + ", uri : " + getFullURI() + " }";
     }
 }

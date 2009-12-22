@@ -59,7 +59,7 @@ public class ExtendedTemplate extends Template {
 
     public Boolean getUniqueURL( IContext ctx ) {
         Boolean unique = super.getUniqueURL( ctx );
-        if ( unique == null) {
+        if ( unique != null) {
             return unique;
         } else {
             return parent.getUniqueURL( ctx );
@@ -68,17 +68,20 @@ public class ExtendedTemplate extends Template {
 
     public List<ResourceURI> getAllScripts( IContext ctx ){
         // process our own
-        List<ResourceURI> tlist = super.getAllScripts( ctx, ancestors, scripts );
+        List<ResourceURI> _parent = super.getAllScripts( ctx, ancestors, scripts );
         // add the parent's scripts
-        return parent.getAllScripts( ctx, parent.getAncestors(), tlist);
+        List<ResourceURI> _children = parent.getAllScripts( ctx );
+        return combineResources( _parent, _children );
     }
 
     public List<ResourceURI> getAllStyles(IContext ctx) {
         // process our own
-        List<ResourceURI> tlist = super.getAllStyles( ctx, ancestors, styles );
-        // add the parent's scripts
-        return parent.getAllStyles( ctx, parent.getAncestors(), tlist);
+        List<ResourceURI> _parent = super.getAllStyles( ctx, ancestors, styles );
+        // add the parent's styles
+        List<ResourceURI> _children = parent.getAllStyles( ctx );
+        return combineResources( _parent, _children );
     }
+
     public String getURINamespace( IContext ctx ) {
         String uri = super.getURINamespace( ctx );
         if ( uri != null ) {
@@ -114,7 +117,7 @@ public class ExtendedTemplate extends Template {
             return parent.combineResources( ctx);
         }
     }
-    
+
     public Boolean gzipScripts( IContext ctx ) {
         Boolean gz = super.gzipScripts( ctx );
         if ( gz != null ) {
@@ -130,6 +133,15 @@ public class ExtendedTemplate extends Template {
             return gz;
         } else {
             return parent.gzipStyles( ctx );
+        }
+    }
+
+    public List<String> getAncestors() {
+        List<String> an = super.getAncestors();
+        if ( an != null ) {
+            return an;
+        } else {
+            return parent.getAncestors();
         }
     }
 

@@ -11,6 +11,7 @@
 
 package org.protorabbit;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,6 +27,7 @@ import org.json.JSONObject;
 
 import org.protorabbit.accelerator.IHttpClient;
 import org.protorabbit.accelerator.ResourceManager;
+import org.protorabbit.json.JSONUtil;
 import org.protorabbit.model.ICommand;
 import org.protorabbit.model.IContext;
 import org.protorabbit.model.IEngine;
@@ -261,7 +263,7 @@ public class Config {
        try {
            template = ctx.getTemplate();
 
-           if (template != null && template.getJSON() != null) {
+           if (template != null) {
                tid = template.getId();
                IProperty prop = template.getProperty(id,ctx);
                if (prop == null) {
@@ -327,7 +329,7 @@ public class Config {
            }
        } catch (Exception e) {
            getLogger().log(Level.SEVERE, "Error getting include file content for template " +
-                           template.getId() + " resource " + id + ".", e);
+                           tid + " resource " + id + ".", e);
        }
 
        return null;
@@ -337,7 +339,7 @@ public class Config {
 
    }
 
-   static void processURIResources(int type, JSONObject bsjo, ITemplate temp,
+   static void processURIResources( int type, JSONObject bsjo, ITemplate temp,
            String baseURI) throws JSONException {
 
        List<ResourceURI> refs = null;
@@ -354,9 +356,9 @@ public class Config {
                if (url.startsWith("/") || url.startsWith("http")) {
                    baseURI = "";
                }
-               ResourceURI ri = new ResourceURI(url, baseURI, type);
-               if (so.has("id")) {
-                   ri.setId(so.getString("id"));
+               ResourceURI ri = new ResourceURI( url, baseURI, type );
+               if ( so.has("id") ) {
+                   ri.setId( so.getString("id") );
                }
                if (so.has("uaTest")) {
                    ri.setUATest(so.getString("uaTest"));
@@ -395,10 +397,6 @@ public class Config {
            temp.setStyles(refs);
            temp.setCombineStyles(combine);
        }
-   }
-
-   private void overrideTemplate( ITemplate parent,JSONArray templates, String baseURI ) {
-       ITemplate temp = new ExtendedTemplate(this, parent, baseURI);
    }
 
    public void registerTemplates( JSONArray templates, String baseURI ) {
@@ -486,7 +484,7 @@ public class Config {
                }
                
                if ( t.has( "overrides") ) {
-                   System.out.println("We have overriders!");
+
                    List<TemplateOverride> overrides = new ArrayList<TemplateOverride>();
                    JSONArray joa = t.getJSONArray( "overrides" );
                    for (int z=0; z < joa.length(); z++) {
@@ -502,7 +500,6 @@ public class Config {
                            tor.setImportURI( toro.getString( "import") );
                        }
                        overrides.add( tor );
-                       System.out.println("****** added " + tor );
                    }
                    temp.setTemplateOverrides( overrides );
                }
@@ -583,11 +580,63 @@ public class Config {
 
    }
 
-   public ITemplate getTemplate(String id, IContext ctx) {
+   public String getTemplateDefDir(String location) {
+
+       int last = location.lastIndexOf("/");
+       if (last != -1) {
+           return location.substring(0, last + 1);
+       }
+       return null;
+   }
+
+   private ITemplate getExtendedTemplate( ITemplate parent, String importURI, IContext ctx ) {
+       ITemplate teo = new ExtendedTemplate( this, parent, parent.getBaseURI() );
+
+       JSONObject base = null;
+       StringBuffer buff = null;
+           try {
+            buff =  ctx.getResource( "", importURI );
+            base = new JSONObject( buff.toString() );
+        } catch (JSONException e) {
+            getLogger().log(Level.SEVERE, "Error  loading " + importURI, e);
+        } catch (IOException e) {
+            getLogger().log(Level.SEVERE, "Error  loading " + importURI, e);
+        }
+       if (base == null) {
+           getLogger().log(Level.SEVERE, "Error  loading " + importURI );
+           return null;
+       }
+       String baseURI = getTemplateDefDir( importURI );
+       try {
+           registerTemplates( teo, base, baseURI );
+           getLogger().info("Loaded extended " + importURI);
+       } catch (Exception ex){
+           getLogger().log(Level.SEVERE, "Error  loading" + importURI, ex);
+       }
+       return teo;
+   }
+ 
+   public ITemplate getTemplate( String id, IContext ctx ) {
        if (tmap.containsKey(id)) {
            ITemplate t = tmap.get(id);
            if ( t.getTemplateOverrides() != null) {
-               System.out.println("@@@@@@@@@request for an overridden template");
+               // match on the first override
+               for ( TemplateOverride o : t.getTemplateOverrides() ) {
+                   Boolean tmatches = null;
+                   if ( o.getTest() != null ) {
+                       tmatches = ctx.test( o.getTest() );
+                   }
+                   Boolean uaMatches = null;
+                   if ( o.getUATest() != null ) {
+                       uaMatches = ctx.uaTest( o.getUATest() );
+                   }
+                   if ( (tmatches != null && tmatches == Boolean.TRUE  && uaMatches == null) || 
+                         ( uaMatches!= null && uaMatches == Boolean.TRUE && tmatches == null) ||
+                         ((tmatches != null && tmatches == Boolean.TRUE ) && ( uaMatches!= null && uaMatches == Boolean.TRUE))
+                      ) {
+                       return getExtendedTemplate( t, o.getImportURI(), ctx );
+                   }
+               }
            }
            return t;
        }

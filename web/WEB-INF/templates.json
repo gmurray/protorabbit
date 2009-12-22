@@ -1,23 +1,5 @@
 {
   "templates" : [
-
-    {
-     "combineResources" : true,
-     "timeout" : 0,
-     "gzip" : false,
-     "id" : "welcome",
-     "uniqueURL" : true,
-     "extends" : "blueprints-css",
-     "scripts" : {
-         "libs" : [
-           { "url" : "/resources/js/test.js" }
-         ]
-     },
-     "properties" : {
-           "title" : {"type" : "string", "value" : "Welcome to ProtoRabbit"},
-           "body" : { "type" : "include", "value" : "/main.html"}
-       }
-    },
     {
      "id" : "welcome",
      "combineResources" : true,
@@ -26,11 +8,11 @@
      "gzip" : false,
      "uniqueURL" : true,
      "overrides" : [
-          { "test" : "${ 'greg' == 'greg' }", "import" : "/welcome-extras.json" }
+          { "test" : "'greg' == 'greg'", "import" : "/json/welcome-extras.json", "uaTest" : "Mozilla" }
         ],
      "scripts" : {
          "libs" : [
-           { "url" : "/resources/js/test.js" }
+           { "id" : "base",  "url" : "/resources/js/test.js" }
          ]
      },
      "properties" : {
