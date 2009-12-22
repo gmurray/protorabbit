@@ -16,6 +16,7 @@ public interface Handler {
     public String doExecute() throws IOException;
     public boolean isPoller();
     public Object getModel();
+    public void addActionError( String error);
     public Collection<String> getErrors();
 
 }

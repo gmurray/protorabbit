@@ -189,7 +189,7 @@ public class HandlerFactory {
                     // all other errors end in a error message
                 } catch (Throwable e) {
                     if (thandler != null ) {
-                        thandler.getErrors().add( e.getLocalizedMessage() );
+                        thandler.addActionError( e.getLocalizedMessage() );
                     }
                 }
         }
