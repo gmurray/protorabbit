@@ -19,6 +19,26 @@
        }
     },
     {
+     "id" : "welcome",
+     "combineResources" : true,
+     "extends" : "blueprints-css",
+     "timeout" : 0,
+     "gzip" : false,
+     "uniqueURL" : true,
+     "overrides" : [
+          { "test" : "${ 'greg' == 'greg' }", "import" : "/welcome-extras.json" }
+        ],
+     "scripts" : {
+         "libs" : [
+           { "url" : "/resources/js/test.js" }
+         ]
+     },
+     "properties" : {
+           "title" : {"type" : "string", "value" : "Welcome to ProtoRabbit"},
+           "body" : { "type" : "include", "value" : "/main.html"}
+       }
+    },
+    {
      "id" : "deferred-load",
      "extends" : "welcome",
      "scripts" : {

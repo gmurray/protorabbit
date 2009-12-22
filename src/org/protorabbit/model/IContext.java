@@ -20,6 +20,9 @@ import org.protorabbit.Config;
 
 public interface IContext {
 
+    public ITemplate getTemplate();
+    public void setTemplate( ITemplate template );
+
     public List<String> getUAScriptTests();
 
     public List<String> getUAStyleTests();

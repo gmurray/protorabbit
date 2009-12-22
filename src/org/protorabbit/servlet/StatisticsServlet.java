@@ -51,7 +51,7 @@ public class StatisticsServlet extends HttpServlet {
             command = request.getPathInfo();
         }
         if ("/all".equals(command) ) {
-            if (json == null) {
+            if ( json == null ) {
                 SerializationFactory factory = new SerializationFactory();
                 json = factory.getInstance();
             }
@@ -59,9 +59,9 @@ public class StatisticsServlet extends HttpServlet {
             int d = 60;
             if ( duration != null ) {
                 try {
-                d = Integer.parseInt(duration);
-                } catch (NumberFormatException nfe) {
-                    getLogger().warning("Error with duration parameter : " + nfe.getMessage() );
+                d = Integer.parseInt( duration );
+                } catch ( NumberFormatException nfe ) {
+                    getLogger().warning( "Error with duration parameter : " + nfe.getMessage() );
                 }
             }
             String r = request.getParameter( "resolution" );
@@ -69,31 +69,31 @@ public class StatisticsServlet extends HttpServlet {
             if ( r != null ) {
                 try {
                     resolution = Resolution.valueOf( r );
-                } catch (Exception e) {
-                    getLogger().warning("Bad resolution " + r + ". Will use default.");
+                } catch ( Exception e) {
+                    getLogger().warning( "Bad resolution " + r + ". Will use default." );
                 }
             }
-            if (resolution == null ) {
+            if ( resolution == null ) {
                 resolution = Resolution.SECOND;
             }
             Object data = null;
             data = statsManager.getLatest( 1000 * d, resolution );
-            response.setHeader("pragma", "NO-CACHE");
-            response.setHeader("Cache-Control", "no-cache");
-            Object jo = json.serialize(data);
-            response.getWriter().write(jo.toString());
+            response.setHeader( "pragma", "NO-CACHE");
+            response.setHeader( "Cache-Control", "no-cache" );
+            Object jo = json.serialize( data );
+            response.getWriter().write( jo.toString() );
             return;
-        } else if ("pollerMetrics".equals(command) ) {
+        } else if ( "pollerMetrics".equals( command ) ) {
             if (json == null) {
                 SerializationFactory factory = new SerializationFactory();
                 json = factory.getInstance();
             }
             Object data = null;
             data = statsManager.getPollers();
-            response.setHeader("pragma", "NO-CACHE");
-            response.setHeader("Cache-Control", "no-cache");
-            Object jo = json.serialize(data);
-            response.getWriter().write(jo.toString());
+            response.setHeader( "pragma", "NO-CACHE");
+            response.setHeader( "Cache-Control", "no-cache" );
+            Object jo = json.serialize( data );
+            response.getWriter().write( jo.toString() );
             return;
         }
     }

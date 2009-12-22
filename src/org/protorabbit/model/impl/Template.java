@@ -34,35 +34,47 @@ import org.protorabbit.model.ITestable;
 
 public class Template implements ITemplate {
 
+    protected String id = null;
     private ResourceURI templateURI = null;
-    private JSONObject json = null;
-    private String id = null;
-    private StringBuffer contents = null;
-    private List<ICommand> commands = null;
-    private List<String> ancestors = null;
-    private Map<String, IProperty> properties = null;
-    private List<ResourceURI> scripts = null;
-    private List<ResourceURI> styles = null;
-    private String baseURI = null;
-    private Boolean hasUAScriptTests = null;
-    private Boolean hasUAStyleTests = null;
+    private Boolean uniqueURL = null;
+    private String uriNamespace = null;
     private Boolean combineResources = null;
-    private Boolean gzip = null;
-    private Boolean gzipStyles = null;
-    private Boolean gzipScripts = null;
-    private Config config = null;
-    private long lastUpdate;
-    private long created = 0;
-    private Long timeout = null;
     private Boolean combineStyles = null;
     private Boolean combineScripts = null;
-    private ICacheable templateResource = null;
-    private String uriNamespace = null;
-    private Map<String, Object> attributes = null;
-    private DocumentContext dc = null;
-    private Boolean uniqueURL = null;
-    private static Logger logger = Logger.getLogger("org.protrabbit");
-    private long accessCount = 0;
+    private Boolean gzipStyles = null;
+    private Boolean gzipScripts = null;
+    private Boolean gzip = null;
+    private Long timeout = null;
+
+    protected String baseURI = null;
+    protected JSONObject json = null;
+
+    protected StringBuffer contents = null;
+    protected List<ICommand> commands = null;
+    protected List<String> ancestors = null;
+    protected Map<String, IProperty> properties = null;
+    protected List<ResourceURI> scripts = null;
+    protected List<ResourceURI> styles = null;
+
+    protected Boolean hasUAScriptTests = null;
+    protected Boolean hasUAStyleTests = null;
+
+
+    protected Config config = null;
+    protected long lastUpdate;
+    protected long created = 0;
+
+
+    protected ICacheable templateResource = null;
+    protected Map<String, Object> attributes = null;
+    protected DocumentContext dc = null;
+    protected long accessCount = 0;
+    protected List<TemplateOverride> overrides = null;
+
+    protected static Logger logger = Logger.getLogger("org.protrabbit");
+
+
+    public Template() {};
 
     public Template(String id, String baseURI, JSONObject json, Config cfg) {
 
@@ -89,7 +101,7 @@ public class Template implements ITemplate {
 
     @Serialize("skip")
     public StringBuffer getContent(IContext ctx) {
-            ResourceURI tri = getTemplateURI();
+            ResourceURI tri = getTemplateURI( ctx );
 
             if (tri == null) {
                 String message = "Unable to locate template for " + id;
@@ -137,31 +149,33 @@ public class Template implements ITemplate {
     public Map<String, IProperty> getProperties() {
         return properties;
     }
-
+    public IProperty getProperty(String id, IContext ctx) {
+        return getProperty(id, ctx, ancestors, properties);
+    }
     /**
      * Look locally for the property then at all the ancestors
      */
-    public IProperty getProperty(String id, IContext ctx) {
+    protected IProperty getProperty(String id, IContext ctx, List<String> _ancestors,  Map<String,IProperty> _properties) {
  
-        if (properties.containsKey(id)) {
-           IProperty prop = properties.get(id);
+        if ( _properties.containsKey(id)) {
+           IProperty prop = _properties.get(id);
            // only return if it matches the uaTest (or doesn't have test)
            if (includeResource(prop,ctx)) {
                return prop;
            }
            return null;
         }
-        if (ancestors == null) {
+        if (_ancestors == null) {
             return null;
         }
         // check ancestors
-        Iterator<String> it = ancestors.iterator();
+        Iterator<String> it = _ancestors.iterator();
         while (it.hasNext()) {
-            ITemplate t = config.getTemplate(it.next());
+            ITemplate t = config.getTemplate(it.next(), ctx);
             IProperty p = t.getProperty(id, ctx);
             if (p != null) {
                 // add property to the local cache
-                properties.put(id, p);
+                _properties.put(id, p);
                 // only return if it matches the uaTest (or doesn't have test)
                 if (includeResource(p,ctx)) {
                     return p;
@@ -171,7 +185,7 @@ public class Template implements ITemplate {
         }
         return null;
     }
-    
+
     /**
      * Look locally for a property with a given id. If not found check all ancestors.
      * 
@@ -179,20 +193,24 @@ public class Template implements ITemplate {
      * internally for the templates.
      * 
      */
-    public IProperty getPropertyById(String id, IContext ctx) {
-        for (String key : properties.keySet()) {
-            IProperty property = properties.get(key);
+    public IProperty getPropertyById(String id, IContext ctx){
+        return getPropertyById( id, ctx, properties, ancestors );
+    }
+
+    protected IProperty getPropertyById(String id, IContext ctx, Map<String,IProperty> _properties, List<String> _ancestors ) {
+        for (String key : _properties.keySet()) {
+            IProperty property = _properties.get(key);
             if (id.equals(key) || id.equals(property.getId())) {
                 return property;
             }
         }
-        if (ancestors == null) {
+        if ( _ancestors == null) {
             return null;
         }
         // check ancestors
-        Iterator<String> it = ancestors.iterator();
+        Iterator<String> it = _ancestors.iterator();
         while (it.hasNext()) {
-            ITemplate t = config.getTemplate(it.next());
+            ITemplate t = config.getTemplate( it.next(), ctx);
             IProperty p = t.getPropertyById(id, ctx);
             if (p != null) {
                 return p;
@@ -201,19 +219,22 @@ public class Template implements ITemplate {
         return null;
     }
 
-    public void getDeferProperties(List<IProperty> dprops, IContext ctx) {
-        for (String key : properties.keySet()) {
-            IProperty p = properties.get(key);
+    public void getDeferProperties( List<IProperty> dprops, IContext ctx){
+        getDeferProperties( dprops, ctx, ancestors, properties );
+    }
+
+    protected void getDeferProperties(List<IProperty> dprops, IContext ctx, List<String> _ancestors,  Map<String,IProperty> _properties ) {
+        for (String key : _properties.keySet()) {
+            IProperty p = _properties.get(key);
             if (p.getDefer() != null && p.getDefer().booleanValue() == true) {
                 dprops.add(p);
             }
         }
-        if (ancestors != null) {
-
+        if (_ancestors != null) {
             // check ancestors
-            Iterator<String> it = ancestors.iterator();
+            Iterator<String> it = _ancestors.iterator();
             while (it.hasNext()) {
-                ITemplate t = config.getTemplate(it.next());
+                ITemplate t = config.getTemplate( it.next(), ctx );
                 t.getDeferProperties(dprops, ctx);
             }
         }
@@ -223,74 +244,17 @@ public class Template implements ITemplate {
         return scripts;
     }
 
-    /*
-     *  Returns all scripts of this template and it's ancestors as ResourceURI objects
-     *  This method also insures that no duplicate references are returned and that 
-     *  children take preference over the ancestors.
-     *
-     */
-    public List<ResourceURI> getAllScripts(IContext ctx) {
-
-        HashMap<String, ResourceURI> existingRefs = new HashMap<String, ResourceURI> ();
-        List<ResourceURI> ascripts = new ArrayList<ResourceURI>();
-        if (ancestors != null) {
-          //  Iterator<String> it = ancestors.iterator();
-            int size = ancestors.size()-1;
-            for (int i = size; i >= 0; i-=1) {
-                String ancestorId = ancestors.get(i);
-                ITemplate p = config.getTemplate(ancestorId);
-                if (p != null) {
-                    List<ResourceURI>pscripts = p.getAllScripts(ctx);
-                    Iterator<ResourceURI> pit = pscripts.iterator();
-                    while (pit.hasNext()) {
-                        ResourceURI ri = pit.next();
-                        String id = ri.getId();
-                        if (!existingRefs.containsKey(id)) {
-                            if (includeResource(ri,ctx)) {
-                                // reset the written flag
-                                ri.setWritten(false);
-                                ascripts.add(ri);
-                                existingRefs.put(id, ri);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        if (scripts != null) {
-            int size = scripts.size();
-            for (int i = 0; i < size; i+=1) {
-                ResourceURI ri = scripts.get(i);
-                String id = ri.getId();
-                
-                if (includeResource(ri,ctx)) {
-                    // template can override
-                    if (existingRefs.containsKey(id)) {
-                        ascripts.remove(existingRefs.get(id));
-                    }
-                    // reset the written flag
-                    ri.setWritten(false);
-                    ascripts.add(ri);
-                    existingRefs.put(id, ri);
-                }
-            }
-        }
-
-        return ascripts;
-    }
-
-    public ResourceURI getTemplateURI() {
+    public ResourceURI getTemplateURI( IContext ctx ) {
         if (templateURI != null) {
             return templateURI;
         }
         if (ancestors != null) {
             Iterator<String> it = ancestors.iterator();
             while (it.hasNext()) {
-                ITemplate p = config.getTemplate(it.next());
+                ITemplate p = config.getTemplate(it.next(), ctx);
                 if (p != null) {
-                    
-                    if (p.getTemplateURI() != null) {
-                        templateURI = p.getTemplateURI();
+                    if (p.getTemplateURI( ctx ) != null) {
+                        templateURI = p.getTemplateURI( ctx );
                         break;
                     }
                 }
@@ -321,45 +285,17 @@ public class Template implements ITemplate {
         return includeResource;
     }
 
-    public List<ResourceURI> getAllStyles(IContext ctx) {
+    protected void inherits(IContext ctx,
+                            HashMap<String, ResourceURI> existingRefs,
+                            List<ResourceURI> astyles,
+                            List<ResourceURI>pstyles) {
 
-        HashMap<String, ResourceURI> existingRefs = new HashMap<String, ResourceURI> ();
-
-        List<ResourceURI> astyles = new ArrayList<ResourceURI>();
-
-        if (ancestors != null) {
-            int size = ancestors.size() -1;
-            for (int i = size; i >= 0; i-=1) {
-                String ancestorId = ancestors.get(i);
-                ITemplate p = config.getTemplate(ancestorId);
-                if (p != null) {
-                    List<ResourceURI>pstyles = p.getAllStyles(ctx);
-                    Iterator<ResourceURI> pit = pstyles.iterator();
-                    while (pit.hasNext()) {
-                        ResourceURI ri = pit.next();
-                        String id = ri.getId();
-                        if (!existingRefs.containsKey(id)) {
-                            if (includeResource(ri,ctx)) {
-                                // reset the written flag
-                                ri.setWritten(false);
-                                astyles.add(ri);
-                                existingRefs.put(id, ri);
-                            }
-                        }
-                    }
-                }
-            }
-        }    
-        if (styles != null) {
-            int size = styles.size();
-            for (int i = 0; i < size; i+=1) {
-                ResourceURI ri = styles.get(i);
-                String id = ri.getId();
-                if (includeResource(ri,ctx)) {
-                    // template can override
-                    if (existingRefs.containsKey(id)) {
-                        astyles.remove(existingRefs.get(id));
-                    }
+        Iterator<ResourceURI> pit = pstyles.iterator();
+        while (pit.hasNext()) {
+            ResourceURI ri = pit.next();
+            String id = ri.getId();
+            if (!existingRefs.containsKey(id)) {
+                if (includeResource(ri, ctx)) {
                     // reset the written flag
                     ri.setWritten(false);
                     astyles.add(ri);
@@ -367,7 +303,77 @@ public class Template implements ITemplate {
                 }
             }
         }
-        return astyles;
+
+    }
+
+    enum ResourceType {
+        SCRIPT,
+        STYLE
+    }
+
+    protected List<ResourceURI> getAllResources(IContext ctx, List<String> _ancestors, List<ResourceURI> _resources, 
+            ResourceType type) {
+
+        HashMap<String, ResourceURI> existingRefs = new HashMap<String, ResourceURI> ();
+
+        List<ResourceURI> _rlist = new ArrayList<ResourceURI>();
+
+        if (_ancestors != null) {
+            int size = _ancestors.size() -1;
+            for (int i = size; i >= 0; i-=1) {
+                String ancestorId = _ancestors.get(i);
+                ITemplate p = config.getTemplate(ancestorId,ctx);
+                if (p != null) {
+                    List<ResourceURI>pstyles = null;
+                    if (type == ResourceType.STYLE ){
+                        pstyles = p.getAllStyles(ctx);
+                    } else if (type == ResourceType.SCRIPT ) {
+                        pstyles = p.getAllScripts(ctx);
+                    }
+                    inherits( ctx,existingRefs, _rlist, pstyles);
+                }
+            }
+        }
+        if (_resources != null) {
+            int size = _resources.size();
+            for (int i = 0; i < size; i+=1) {
+                ResourceURI ri = _resources.get(i);
+                String id = ri.getId();
+                if (includeResource(ri,ctx)) {
+                    // template can override
+                    if (existingRefs.containsKey(id)) {
+                        _rlist.remove(existingRefs.get(id));
+                    }
+                    // reset the written flag
+                    ri.setWritten(false);
+                    _rlist.add(ri);
+                    existingRefs.put(id, ri);
+                }
+            }
+        }
+        return _rlist;
+    }
+    
+    public List<ResourceURI> getAllStyles(IContext ctx) {
+        return getAllStyles( ctx, ancestors, styles);
+    }
+
+    public List<ResourceURI> getAllStyles(IContext ctx, List<String> _ancestors, List<ResourceURI> _styles) {
+        return getAllResources( ctx, _ancestors, _styles, ResourceType.STYLE ); 
+    }
+
+    /*
+     *  Returns all scripts of this template and it's ancestors as ResourceURI objects
+     *  This method also insures that no duplicate references are returned and that 
+     *  children take preference over the ancestors.
+     *
+     */
+    public List<ResourceURI> getAllScripts(IContext ctx){
+        return getAllScripts(ctx, ancestors, scripts);
+    }
+
+    public List<ResourceURI> getAllScripts(IContext ctx, List<String> _ancestors, List<ResourceURI> _scripts) {
+        return getAllResources( ctx, _ancestors, _scripts, ResourceType.SCRIPT ); 
     }
 
     public synchronized void setAttribute(String key, Object value) {
@@ -422,16 +428,16 @@ public class Template implements ITemplate {
         this.combineScripts = combineScripts;
     }
 
-    public Boolean combineResources() {
+    public Boolean combineResources( IContext ctx ) {
 
         if (combineResources == null) {
             if (ancestors != null) {
                 Iterator<String> it = ancestors.iterator();
                 while (it.hasNext()) {
-                    ITemplate p = config.getTemplate(it.next());
+                    ITemplate p = config.getTemplate(it.next(), ctx);
                     if (p != null) {
-                        if (p.combineResources() != null) {
-                            combineResources = p.combineResources();
+                        if (p.combineResources( ctx ) != null) {
+                            combineResources = p.combineResources( ctx );
                             break;
                         }
                     }
@@ -465,15 +471,15 @@ public class Template implements ITemplate {
         this.timeout = timeout;
     }
 
-    public Long getTimeout() {
+    public Long getTimeout( IContext ctx) {
         if (timeout == null) {
             if (ancestors != null) {
                 Iterator<String> it = ancestors.iterator();
                 while (it.hasNext()) {
-                    ITemplate p = config.getTemplate(it.next());
+                    ITemplate p = config.getTemplate(it.next(), ctx);
                     if (p != null) {
-                        if (p.getTimeout() != null) {
-                            timeout = p.getTimeout();
+                        if (p.getTimeout(ctx ) != null) {
+                            timeout = p.getTimeout( ctx );
                             break;
                         }
                     }
@@ -483,43 +489,43 @@ public class Template implements ITemplate {
         return timeout;
     }
 
-    public Boolean getCombineScripts() {
+    public Boolean getCombineScripts( IContext ctx) {
             if (combineScripts == null) {
                 if (ancestors != null) {
                     Iterator<String> it = ancestors.iterator();
                     while (it.hasNext()) {
-                        ITemplate p = config.getTemplate(it.next());
+                        ITemplate p = config.getTemplate(it.next(), ctx);
                         if (p != null) {
-                            if (p.getCombineScripts() != null) {
-                                combineScripts = p.getCombineScripts();
+                            if (p.getCombineScripts( ctx ) != null) {
+                                combineScripts = p.getCombineScripts( ctx );
                                 break;
                             }
                         }
                     }
                 }
                 if (combineScripts == null) {
-                    combineScripts = combineResources();
+                    combineScripts = combineResources( ctx );
                 }
         }
         return combineScripts;
     }
 
-    public Boolean getCombineStyles() {
+    public Boolean getCombineStyles( IContext ctx ) {
         if (combineStyles == null) {
             if (ancestors != null) {
                 Iterator<String> it = ancestors.iterator();
                 while (it.hasNext()) {
-                    ITemplate p = config.getTemplate(it.next());
+                    ITemplate p = config.getTemplate(it.next(), ctx);
                     if (p != null) {
-                        if (p.getCombineStyles() != null) {
-                            combineStyles = p.getCombineStyles();
+                        if (p.getCombineStyles( ctx ) != null) {
+                            combineStyles = p.getCombineStyles( ctx );
                             break;
                         }
                     }
                 }
             }
             if (combineStyles == null) {
-                combineStyles = combineResources();
+                combineStyles = combineResources( ctx );
             }
         }
         return combineStyles;
@@ -544,7 +550,7 @@ public class Template implements ITemplate {
                 return true;
             }
         }
-        ResourceURI tri = getTemplateURI();
+        ResourceURI tri = getTemplateURI( ctx );
         long now = (new Date()).getTime();
         boolean needsUpdate = false;
         boolean isUpdated = false;
@@ -576,15 +582,15 @@ public class Template implements ITemplate {
         gzipStyles = gzip;
     }
 
-    public Boolean gzipScripts() {
+    public Boolean gzipScripts( IContext ctx) {
         if (gzipScripts == null) {
             if (ancestors != null) {
                 Iterator<String> it = ancestors.iterator();
                 while (it.hasNext()) {
-                    ITemplate p = config.getTemplate(it.next());
+                    ITemplate p = config.getTemplate(it.next(), ctx);
                     if (p != null) {
-                        if (p.gzipScripts() != null) {
-                            gzipScripts = p.gzipScripts();
+                        if (p.gzipScripts( ctx ) != null) {
+                            gzipScripts = p.gzipScripts( ctx );
                             break;
                         }
                     }
@@ -594,15 +600,15 @@ public class Template implements ITemplate {
         return gzipScripts;
     }
 
-    public Boolean gzipStyles() {
+    public Boolean gzipStyles( IContext ctx ) {
         if (gzipStyles == null) {
             if (ancestors != null) {
                 Iterator<String> it = ancestors.iterator();
                 while (it.hasNext()) {
-                    ITemplate p = config.getTemplate(it.next());
+                    ITemplate p = config.getTemplate( it.next(), ctx);
                     if (p != null) {
-                        if (p.gzipStyles() != null) {
-                            gzipStyles = p.gzipStyles();
+                        if (p.gzipStyles( ctx ) != null) {
+                            gzipStyles = p.gzipStyles( ctx );
                             break;
                         }
                     }
@@ -612,15 +618,15 @@ public class Template implements ITemplate {
         return gzipStyles;
     }
 
-    public Boolean gzipTemplate() {
+    public Boolean gzipTemplate( IContext ctx ) {
         if (gzip == null) {
             if (ancestors != null) {
                 Iterator<String> it = ancestors.iterator();
                 while (it.hasNext()) {
-                    ITemplate p = config.getTemplate(it.next());
+                    ITemplate p = config.getTemplate( it.next(), ctx);
                     if (p != null) {
-                        if (p.gzipTemplate() != null) {
-                            gzip = p.gzipTemplate();
+                        if (p.gzipTemplate( ctx ) != null) {
+                            gzip = p.gzipTemplate( ctx );
                             break;
                         }
                     }
@@ -661,7 +667,7 @@ public class Template implements ITemplate {
         // check ancestors
         Iterator<String> it = ancestors.iterator();
         while (it.hasNext()) {
-            ITemplate t = config.getTemplate(it.next());
+            ITemplate t = config.getTemplate(it.next(), ctx );
             if (checkPropsListForUATests(t.getProperties() , ctx)) {
                 _hasDependnencies = true;
             }
@@ -703,7 +709,7 @@ public class Template implements ITemplate {
         if (ancestors != null) {
             Iterator<String> it = ancestors.iterator();
             while (it.hasNext()) {
-                ITemplate p = config.getTemplate(it.next());
+                ITemplate p = config.getTemplate( it.next(), ctx);
                 if (p != null) {
                     List<ResourceURI>pscripts = p.getAllScripts(ctx);
                     if (checkListForUATests(pscripts,ctx,Config.SCRIPT)) {
@@ -728,7 +734,7 @@ public class Template implements ITemplate {
         if (ancestors != null) {
             Iterator<String> it = ancestors.iterator();
             while (it.hasNext()) {
-                ITemplate p = config.getTemplate(it.next());
+                ITemplate p = config.getTemplate( it.next() ,ctx );
                 if (p != null) {
                     List<ResourceURI>pstyles = p.getAllStyles(ctx);
                     if (checkListForUATests(pstyles, ctx,Config.STYLE)) {
@@ -744,15 +750,15 @@ public class Template implements ITemplate {
         this.uriNamespace = namespace;
     }
 
-    public String getURINamespace() {
+    public String getURINamespace( IContext ctx ) {
         if (uriNamespace == null) {
             if (ancestors != null) {
                 Iterator<String> it = ancestors.iterator();
                 while (it.hasNext()) {
-                    ITemplate p = config.getTemplate(it.next());
+                    ITemplate p = config.getTemplate( it.next(), ctx );
                     if (p != null) {
-                        if (p.gzipTemplate() != null) {
-                            uriNamespace = p.getURINamespace();
+                        if (p.gzipTemplate( ctx ) != null) {
+                            uriNamespace = p.getURINamespace( ctx );
                             break;
                         }
                     }
@@ -778,14 +784,14 @@ public class Template implements ITemplate {
         this.uniqueURL  = uniqueURL;
     }
 
-    public Boolean getUniqueURL() {
+    public Boolean getUniqueURL( IContext ctx ) {
         if (uniqueURL == null && ancestors != null) {
             Iterator<String> it = ancestors.iterator();
             while (it.hasNext()) {
                 String tid = it.next();
-                ITemplate t = config.getTemplate(tid);
+                ITemplate t = config.getTemplate( tid, ctx );
                 if (t != null) {
-                    Boolean u = t.getUniqueURL();
+                    Boolean u = t.getUniqueURL( ctx );
                     if (t != null) {
                         uniqueURL = u;
                     }
@@ -804,4 +810,27 @@ public class Template implements ITemplate {
     public void incrementAccessCount() {
         accessCount++;
     }
+
+    public List<TemplateOverride> getTemplateOverrides() {
+        return overrides;
+    }
+
+    public void setTemplateOverrides(List<TemplateOverride> overrides) {
+        this.overrides = overrides;
+    }
+
+    public void setAttributes (Map<String,Object> attributes) {
+        this.attributes = attributes;
+    }
+
+    public void destroy() {
+        properties.clear();
+        attributes.clear();
+        properties = null;
+        attributes = null;
+        scripts.clear();
+        styles.clear();
+        templateResource = null;
+    }
+
 }

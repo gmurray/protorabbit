@@ -1,0 +1,16 @@
+    {
+     "combineResources" : true,
+     "extends" : "blueprints-css",
+     "timeout" : 0,
+     "gzip" : false,
+     "uniqueURL" : true,
+     "scripts" : {
+         "libs" : [
+           { "url" : "/resources/js/test2.js" }
+         ]
+     },
+     "properties" : {
+           "title" : {"type" : "string", "value" : "Welcome another ProtoRabbit"},
+           "body" : { "type" : "include", "value" : "/main.html"}
+       }
+    }

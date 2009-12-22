@@ -78,7 +78,7 @@ public class IncludeCommand extends BaseCommand {
         String baseDir = null;
         IProperty property = null;
 
-        ITemplate template = cfg.getTemplate(tid);
+        ITemplate template = ctx.getTemplate();
         if (template != null) {
 
             property = template.getProperty( id, ctx );
@@ -133,7 +133,7 @@ public class IncludeCommand extends BaseCommand {
                 DeferredResource dr = new DeferredResource(baseDir, resourceName, ctx, timeout );
                 crm.putResource( ctx.getTemplateId() + "_" + resourceId, dr );
             } else {
-                IncludeFile inc = cfg.getIncludeFileContent( ctx.getTemplateId(), id,ctx );
+                IncludeFile inc = cfg.getIncludeFileContent( id,ctx );
                 buff = inc.getContent();
                 String hash  = IOUtil.generateHash(buff.toString());
                 if (property.getId() != null) {
@@ -157,7 +157,7 @@ public class IncludeCommand extends BaseCommand {
             deferredScripts.add(script);
             ctx.setAttribute(COUNTER, new Integer(counter + 1));
         } else {
-            IncludeFile inc = cfg.getIncludeFileContent(ctx.getTemplateId(), id,ctx);
+            IncludeFile inc = cfg.getIncludeFileContent( id,ctx);
             if (inc != null) {
                 buff = inc.getContent();
             } else {

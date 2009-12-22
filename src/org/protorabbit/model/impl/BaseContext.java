@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.protorabbit.model.IContext;
+import org.protorabbit.model.ITemplate;
 
 public  abstract class BaseContext implements IContext {
 
@@ -26,6 +27,7 @@ public  abstract class BaseContext implements IContext {
     private Map<String, ByteArrayOutputStream> buffers;
     private String templateId;
     private static Logger logger = null;
+    private ITemplate template = null;
 
     protected static Logger getLogger() {
         if (logger == null) {
@@ -50,6 +52,15 @@ public  abstract class BaseContext implements IContext {
     public synchronized void setAttribute(String key, Object value) {
         attributes.put(key, value);
 
+    }
+    
+    public void setTemplate(ITemplate template) {
+        this.template = template;
+
+    }
+
+    public ITemplate getTemplate() {
+        return template;
     }
 
     public void setTemplateId(String templateId) {

@@ -80,7 +80,7 @@ public class ResourceManager {
            StringBuffer buff = IOUtil.getClasspathResource(ctx.getConfig(), Config.PROTORABBIT_CLIENT);
            if (buff != null) {
                String hash = IOUtil.generateHash(buff.toString());
-               ICacheable cr = new CacheableResource("text/javascript", t.getTimeout(), hash);
+               ICacheable cr = new CacheableResource("text/javascript", t.getTimeout( ctx ), hash);
                ctx.getConfig().getCombinedResourceManager().putResource("protorabbit", cr);
                cr.setContent(buff);
                String uri = "<script src=\"" + 
@@ -212,12 +212,12 @@ public class ResourceManager {
 
 
        List<String> deferredScripts = (List<String>)ctx.getAttribute(IncludeCommand.DEFERRED_SCRIPTS);
-       ITemplate t = ctx.getConfig().getTemplate(ctx.getTemplateId());
+       ITemplate t = ctx.getTemplate();
        Iterator<ResourceURI> it = scriptResources.iterator();
        while (it.hasNext()) {
            ResourceURI ri = it.next();
            if (ri.isWritten()) continue;
-           String resource = ri.getURI(t.getUniqueURL());
+           String resource = ri.getURI(t.getUniqueURL( ctx ));
            String baseURI =  ctx.getContextRoot();
 
            if (!ri.isExternal()){
@@ -281,12 +281,12 @@ public class ResourceManager {
        }
        List<String> deferredScripts = (List<String>)ctx.getAttribute(IncludeCommand.DEFERRED_SCRIPTS);
        Iterator<ResourceURI> it = styleResources.iterator();
-       ITemplate t = ctx.getConfig().getTemplate(ctx.getTemplateId());
+       ITemplate t = ctx.getTemplate();
        while (it.hasNext()) {
            ResourceURI ri = it.next();
            if (ri.isWritten()) continue;
            String mediaType = ri.getMediaType();
-           String resource = ri.getURI(t.getUniqueURL());
+           String resource = ri.getURI(t.getUniqueURL( ctx ));
            String baseURI =  ctx.getContextRoot();
 
            if (!ri.isExternal()){
@@ -345,7 +345,7 @@ public class ResourceManager {
    public ICacheable getResource(String key, IContext ctx) {
 
        String ua = null;
-       ITemplate t = ctx.getConfig().getTemplate(ctx.getTemplateId());
+       ITemplate t = ctx.getTemplate();
        ICacheable csr = combinedResources.get(key);
 
        boolean hasUATest = false;
@@ -427,7 +427,7 @@ public class ResourceManager {
        if (uriResources.size() == 0 ) {
            return null;
        }
-       ITemplate t = ctx.getConfig().getTemplate(ctx.getTemplateId());
+       ITemplate t = ctx.getTemplate();
        ICacheable csr = null;
        if (t == null) {
            return null;
@@ -441,10 +441,10 @@ public class ResourceManager {
        if (Config.SCRIPT == type) {
            resourceId = "scripts";
 
-           if (t.gzipScripts() == null) {
+           if (t.gzipScripts( ctx ) == null) {
                gzip = ctx.getConfig().getGzip();
            } else {
-               gzip = t.gzipScripts();
+               gzip = t.gzipScripts( ctx );
            }
            if (ctx.getUAScriptTests() != null && ctx.getUAScriptTests().size() == 1 ) {
                String testt = ctx.getUAScriptTests().get(0);
@@ -455,8 +455,8 @@ public class ResourceManager {
        } else if (Config.STYLE == type) {
            resourceId = "styles";
 
-           if (t.gzipStyles() != null) {
-               gzip = t.gzipStyles();
+           if (t.gzipStyles( ctx ) != null) {
+               gzip = t.gzipStyles( ctx );
            } else {
                gzip = ctx.getConfig().getGzip();
            }

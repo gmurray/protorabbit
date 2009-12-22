@@ -60,7 +60,6 @@ import org.protorabbit.stats.IClientIdGenerator;
 import org.protorabbit.stats.IStat;
 import org.protorabbit.stats.impl.StatsItem;
 import org.protorabbit.stats.impl.StatsManager;
-import org.protorabbit.stats.impl.StatsManager.Resolution;
 import org.protorabbit.util.IOUtil;
 import java.util.Properties;
 
@@ -308,7 +307,7 @@ public class ProtoRabbitServlet extends HttpServlet {
         boolean shouldGzip = false;
         ITemplate t = null;
         if (templateId != null) {
-             t = jcfg.getTemplate(templateId);
+             t = jcfg.getTemplate(templateId, wc );
              wc.setTemplateId(templateId);
         }
 
@@ -399,14 +398,14 @@ public class ProtoRabbitServlet extends HttpServlet {
             // now before we do the work set the cache header
             if ( canGzip ) {
                 if ("scripts".equals(id) &&
-                     t.gzipScripts() != null && t.gzipScripts() == true) {
+                     t.gzipScripts( wc) != null && t.gzipScripts( wc ) == true) {
                     shouldGzip = true;
                     resp.setHeader("Content-Type", "text/javascript");
                 } else if ("styles".equals(id) && 
-                        t.gzipStyles() != null && t.gzipStyles() == true) {
+                        t.gzipStyles( wc ) != null && t.gzipStyles( wc ) == true) {
                     shouldGzip = true;
                     resp.setHeader("Content-Type", "text/css");
-                } else if (property != null && t.gzipTemplate() != null && t.gzipTemplate() == true) {
+                } else if (property != null && t.gzipTemplate( wc ) != null && t.gzipTemplate( wc ) == true) {
                     shouldGzip = true;
                     resp.setHeader("Content-Type", "text/html");
                 }
@@ -420,7 +419,7 @@ public class ProtoRabbitServlet extends HttpServlet {
             if (property != null ) {
                 StringBuffer buff = null;
 
-                IncludeFile inc = jcfg.getIncludeFileContent(templateId, property.getKey(),wc);
+                IncludeFile inc = jcfg.getIncludeFileContent( property.getKey(),wc);
                 if (inc != null) {
                     buff = inc.getContent();
                     String hash  = IOUtil.generateHash(buff.toString());
@@ -495,8 +494,8 @@ public class ProtoRabbitServlet extends HttpServlet {
                 resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
             }
             long timeout = 0;
-            if (t != null && t.getTimeout() != null) {
-                timeout = t.getTimeout();
+            if (t != null && t.getTimeout( wc ) != null) {
+                timeout = t.getTimeout( wc );
             }
             if (etag != null && t != null && timeout > 0 && !jcfg.profile()) {
                 resp.setHeader("ETag", etag);
@@ -718,7 +717,7 @@ public class ProtoRabbitServlet extends HttpServlet {
         ITemplate t = null;
 
         if (id != null) {
-            t = jcfg.getTemplate(id);
+            t = jcfg.getTemplate(id, wc);
 
             if (jcfg.profile()) {
                 long timestamp = (new Date()).getTime();
@@ -736,10 +735,10 @@ public class ProtoRabbitServlet extends HttpServlet {
         // make sure that if a namespace is required that is is used to access the template. Also account for "" which can 
         // result from the namespace.
         boolean namespaceOk = true;
-        if (t != null && t.getURINamespace() != null ) {
-            if (namespace == null || (namespace != null && "".equals(namespace))|| !t.getURINamespace().startsWith(namespace)) {
+        if (t != null && t.getURINamespace( wc ) != null ) {
+            if (namespace == null || (namespace != null && "".equals(namespace))|| !t.getURINamespace( wc ).startsWith(namespace)) {
                 namespaceOk = false;
-                getLogger().warning("request for template " + id + " without matching namespace " + t.getURINamespace());
+                getLogger().warning("request for template " + id + " without matching namespace " + t.getURINamespace( wc ));
             }
         }
 
@@ -760,13 +759,13 @@ public class ProtoRabbitServlet extends HttpServlet {
         }
 
         // get the initial content or get the content if it is expired
-        if ( (t.getTimeout() != null && (t.getTimeout() > 0) &&
+        if ( (t.getTimeout( wc ) != null && (t.getTimeout( wc ) > 0) &&
                 ((tr == null || tr.getCacheContext().isExpired() ) ||
                 t.requiresRefresh(wc) ||
                 jcfg.profile() ||
                 t.hasUserAgentPropertyDependencies(wc) ))
             ) {
-            if (canGzip && t.gzipTemplate() != null && t.gzipTemplate() == true) {
+            if (canGzip && t.gzipTemplate( wc ) != null && t.gzipTemplate( wc ) == true) {
                 resp.setHeader("Vary", "Accept-Encoding");
                 resp.setHeader("Content-Encoding", "gzip");
             }
@@ -776,7 +775,7 @@ public class ProtoRabbitServlet extends HttpServlet {
 
             String content = bos.toString(jcfg.getEncoding());
             String hash = IOUtil.generateHash(content);
-            ICacheable cr = new CacheableResource("text/html", t.getTimeout(), hash);
+            ICacheable cr = new CacheableResource("text/html", t.getTimeout( wc ), hash);
 
             if (!jcfg.profile()) {
                 resp.setHeader("ETag", cr.getContentHash());
@@ -784,7 +783,7 @@ public class ProtoRabbitServlet extends HttpServlet {
             cr.setContent(new StringBuffer(content));
             t.setTemplateResource(cr);
 
-            if ( canGzip  && t.gzipTemplate() != null && t.gzipTemplate() == true ) {
+            if ( canGzip  && t.gzipTemplate( wc ) != null && t.gzipTemplate( wc ) == true ) {
                 byte[] bytes = cr.getGZippedContent();
                 cr.incrementGzipAccessCount();
                 resp.setContentLength(bytes.length);
@@ -807,7 +806,7 @@ public class ProtoRabbitServlet extends HttpServlet {
             }
 
             // write out content / gzip or otherwise from the cache
-        } else if (t.getTimeout() != null && t.getTimeout() > 0 && tr != null) {
+        } else if (t.getTimeout( wc ) != null && t.getTimeout( wc ) > 0 && tr != null) {
 
             // if the client has the same resource as the one on the server return a 304
             // get the If-None-Match header
@@ -830,7 +829,7 @@ public class ProtoRabbitServlet extends HttpServlet {
                 resp.setHeader("Cache-Control", "public,max-age=" + tr.getCacheContext().getMaxAge());
             }
 
-            if (canGzip &&  t.gzipTemplate() != null && t.gzipTemplate() == true) {
+            if (canGzip &&  t.gzipTemplate( wc ) != null && t.gzipTemplate( wc ) == true) {
 
                 OutputStream out = resp.getOutputStream();
                 resp.setHeader("Content-Encoding", "gzip");

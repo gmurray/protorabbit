@@ -59,8 +59,9 @@ public class DefaultEngine implements IEngine {
     public synchronized void renderTemplate( String tid, IContext ctx, OutputStream out ) {
 
         Config cfg = ctx.getConfig();
-        ctx.setTemplateId(tid);
-        ITemplate template = cfg.getTemplate( tid );
+
+        ITemplate template = cfg.getTemplate( tid, ctx );
+        ctx.setTemplate( template );
         if (template != null) {
             DocumentContext dc = null;
             try {
@@ -111,7 +112,7 @@ public class DefaultEngine implements IEngine {
             dc = new DocumentContext();
             StringBuffer buff = template.getContent( ctx );
             dc.setDocument( buff );
-            dc.setURI( template.getTemplateURI() );
+            dc.setURI( template.getTemplateURI( ctx ) );
             gatherCommands( buff,ctx,dc );
             template.setDocumentContext(dc);
             if (ctx.getConfig().profile()) {

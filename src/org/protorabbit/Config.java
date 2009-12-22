@@ -31,10 +31,12 @@ import org.protorabbit.model.IContext;
 import org.protorabbit.model.IEngine;
 import org.protorabbit.model.IProperty;
 import org.protorabbit.model.ITemplate;
+import org.protorabbit.model.impl.ExtendedTemplate;
 import org.protorabbit.model.impl.IncludeFile;
 import org.protorabbit.model.impl.Property;
 import org.protorabbit.model.impl.ResourceURI;
 import org.protorabbit.model.impl.Template;
+import org.protorabbit.model.impl.TemplateOverride;
 import org.protorabbit.profile.EpisodeManager;
 import org.protorabbit.util.IOUtil;
 
@@ -228,7 +230,7 @@ public class Config {
    }
 
    public boolean hasTemplate(String id, IContext ctx) {
-       ITemplate t = getTemplate(id);
+       ITemplate t = getTemplate(id, ctx);
        return (t != null);
    }
 
@@ -253,14 +255,17 @@ public class Config {
        return includeFiles.get(rid);
    }
 
-   public IncludeFile getIncludeFileContent(String tid, String id, IContext ctx) {
+   public IncludeFile getIncludeFileContent( String id, IContext ctx) {
+       ITemplate template = null;
+       String tid = null;
        try {
-           ITemplate template = getTemplate(tid);
-           if (template != null && template.getJSON() != null) {
+           template = ctx.getTemplate();
 
+           if (template != null && template.getJSON() != null) {
+               tid = template.getId();
                IProperty prop = template.getProperty(id,ctx);
                if (prop == null) {
-                   getLogger().log(Level.SEVERE, "Unable to find Include file for " + id + " in template " + tid);
+                   getLogger().log(Level.SEVERE, "Unable to find Include file for " + id + " in template " + template.getId() );
                    return null;
                }
                if (prop.getUATest() != null) {
@@ -322,10 +327,14 @@ public class Config {
            }
        } catch (Exception e) {
            getLogger().log(Level.SEVERE, "Error getting include file content for template " +
-                           tid + " resource " + id + ".", e);
+                           template.getId() + " resource " + id + ".", e);
        }
 
        return null;
+   }
+
+   static void extendTemplate(int type, JSONObject bsjo, ITemplate temp, String baseURI) {
+
    }
 
    static void processURIResources(int type, JSONObject bsjo, ITemplate temp,
@@ -388,16 +397,31 @@ public class Config {
        }
    }
 
-   @SuppressWarnings("unchecked")
-   public void registerTemplates(JSONArray templates, String baseURI) {
+   private void overrideTemplate( ITemplate parent,JSONArray templates, String baseURI ) {
+       ITemplate temp = new ExtendedTemplate(this, parent, baseURI);
+   }
+
+   public void registerTemplates( JSONArray templates, String baseURI ) {
 
        for (int i=0; i < templates.length(); i++) {
-           JSONObject t;
            try {
-               t = templates.getJSONObject(i);
+               JSONObject t = templates.getJSONObject(i);
                String id = t.getString("id");
+               ITemplate temp = new Template(id, baseURI, t, this);
+               registerTemplates( temp, t, baseURI );
+               tmap.put( id, temp);
+               getLogger().info("Added template definition : " + temp.getId());
 
-                  ITemplate temp = new Template(id, baseURI, t, this);
+           } catch (JSONException e) {
+               getLogger().log(Level.SEVERE, "Error parsing configuration.", e);
+           }
+       }
+   }
+
+   @SuppressWarnings("unchecked")
+   private void registerTemplates( ITemplate temp, JSONObject t, String baseURI) {
+
+           try {
 
                   if (t.has("timeout")) {
                       long templateTimeout = t.getLong("timeout");
@@ -460,6 +484,28 @@ public class Config {
 
                    temp.setAncestors(ancestors);
                }
+               
+               if ( t.has( "overrides") ) {
+                   System.out.println("We have overriders!");
+                   List<TemplateOverride> overrides = new ArrayList<TemplateOverride>();
+                   JSONArray joa = t.getJSONArray( "overrides" );
+                   for (int z=0; z < joa.length(); z++) {
+                       TemplateOverride tor = new TemplateOverride();
+                       JSONObject toro = joa.getJSONObject( z );
+                       if  ( toro.has("test") ) {
+                           tor.setTest( toro.getString( "test") );
+                       }
+                       if ( toro.has( "uaTest") ) {
+                           tor.setUATest( toro.getString( "uaTest" ));
+                       }
+                       if ( toro.has( "import") ) {
+                           tor.setImportURI( toro.getString( "import") );
+                       }
+                       overrides.add( tor );
+                       System.out.println("****** added " + tor );
+                   }
+                   temp.setTemplateOverrides( overrides );
+               }
 
                if (t.has("scripts")) {
 
@@ -505,8 +551,8 @@ public class Config {
                            }
                        }
 
-                       IProperty pi= new Property(name, value, type, baseURI, id);
- 
+                       IProperty pi= new Property(name, value, type, baseURI, temp.getId() );
+
                        if (so.has("timeout")) {
                            long timeout = so.getLong("timeout");
                            pi.setTimeout(timeout);
@@ -531,24 +577,19 @@ public class Config {
                    temp.setProperties(properties);
                }
 
-               // force combineResources if under the /WEB-INF
-               if (baseURI.startsWith("/WEB-INF") && temp.combineResources() == null) {
-                   getLogger().warning("Template " + temp.getId() + " is loated in a private directory " + baseURI + " without " +
-                                       "combineResouces being set. It is recommended that you enable combineResouces.");
-               }
-              tmap.put(id, temp);
-
-              getLogger().info("Added template definition : " + id);
-
-           } catch (JSONException e) {
+            } catch (JSONException e) {
                getLogger().log(Level.SEVERE, "Error parsing configuration.", e);
            }
-       }
+
    }
 
-   public ITemplate getTemplate(String id) {
+   public ITemplate getTemplate(String id, IContext ctx) {
        if (tmap.containsKey(id)) {
-           return tmap.get(id);
+           ITemplate t = tmap.get(id);
+           if ( t.getTemplateOverrides() != null) {
+               System.out.println("@@@@@@@@@request for an overridden template");
+           }
+           return t;
        }
        return null;
    }
@@ -580,7 +621,7 @@ public class Config {
    }
 
    public IProperty getProperty(String tid, String id, IContext ctx) {
-       ITemplate template = getTemplate(tid);
+       ITemplate template = ctx.getTemplate();
        IProperty p = null;
        if (template != null) {
             p = template.getProperty(id, ctx);

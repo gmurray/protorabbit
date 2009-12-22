@@ -63,7 +63,7 @@ public class IncludeResourcesCommand extends BaseCommand {
             return;
         }
         target = target.toLowerCase();
-        ITemplate t = cfg.getTemplate( ctx.getTemplateId() );
+        ITemplate t = ctx.getTemplate();
         ResourceManager crm = cfg.getCombinedResourceManager();
 
         boolean deferredWritten = ( ctx.getAttribute(ResourceManager.DEFERRED_WRITTEN ) != null &&
@@ -83,8 +83,8 @@ public class IncludeResourcesCommand extends BaseCommand {
                         linkURIs.add(ri);
                     }
                 } else {
-                    if ( t.getCombineScripts() != null &&
-                         t.getCombineScripts().booleanValue() == true) {
+                    if ( t.getCombineScripts( ctx ) != null &&
+                         t.getCombineScripts( ctx ).booleanValue() == true) {
                         combineURIs.add(ri);
                     } else {
                         linkURIs.add(ri);
@@ -123,7 +123,7 @@ public class IncludeResourcesCommand extends BaseCommand {
                          getBuffer(ctx).write(measure.getBytes());
                     }
                     String uuid = "";
-                    if (t.getUniqueURL() != null && t.getUniqueURL() == Boolean.TRUE) {
+                    if (t.getUniqueURL( ctx ) != null && t.getUniqueURL( ctx ) == Boolean.TRUE) {
                         uuid = "&puuid" + t.getCreateTime();
                     }
                     String uri = "<script src=\"" + 
@@ -175,8 +175,8 @@ public class IncludeResourcesCommand extends BaseCommand {
                         linkURIs.add(ri);
                     }
                 } else {
-                    if ( t.getCombineStyles() != null &&
-                         t.getCombineStyles().booleanValue() == true) {
+                    if ( t.getCombineStyles( ctx ) != null &&
+                         t.getCombineStyles( ctx ).booleanValue() == true) {
                         combineURIs.add(ri);
                     } else {
                         linkURIs.add(ri);
@@ -199,7 +199,7 @@ public class IncludeResourcesCommand extends BaseCommand {
                          getBuffer(ctx).write(measure.getBytes());
                      }
                      String uuid = "";
-                     if (t.getUniqueURL() != null && t.getUniqueURL() == Boolean.TRUE) {
+                     if (t.getUniqueURL( ctx ) != null && t.getUniqueURL( ctx ) == Boolean.TRUE) {
                          uuid = "&puuid=" + t.getCreateTime();
                      }
                     String uri = "<link rel=\"stylesheet\" type=\"text/css\" href=\"" +
