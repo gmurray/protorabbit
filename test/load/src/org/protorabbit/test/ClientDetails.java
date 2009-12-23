@@ -7,6 +7,8 @@ public class ClientDetails {
     private boolean useRandomTimeout = true;
     private int runCount = 1;
     private String id = null;
+    private long expectedMaxContentLength = 0;
+    private long expectedMinContentLength = -1;
 
     public ClientDetails() {}
 
@@ -49,4 +51,20 @@ public class ClientDetails {
     public int getRuncount() {
         return runCount;
     }
+
+    public long getExpectedMinContentLength() {
+        return expectedMinContentLength;
+    }
+
+    public void setExpectedMinContentLength( long expectedMinContentLength) {
+        this.expectedMinContentLength = expectedMinContentLength;
+    }
+    public long getExpectedMaxContentLength() {
+        return expectedMaxContentLength;
+    }
+
+    public void setExpectedMaxContentLength( long expectedMaxContentLength) {
+        this.expectedMaxContentLength = expectedMaxContentLength;
+    }
+
 }

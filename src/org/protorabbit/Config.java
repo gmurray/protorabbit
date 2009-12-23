@@ -27,7 +27,6 @@ import org.json.JSONObject;
 
 import org.protorabbit.accelerator.IHttpClient;
 import org.protorabbit.accelerator.ResourceManager;
-import org.protorabbit.json.JSONUtil;
 import org.protorabbit.model.ICommand;
 import org.protorabbit.model.IContext;
 import org.protorabbit.model.IEngine;

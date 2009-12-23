@@ -62,6 +62,8 @@ public class DefaultEngine implements IEngine {
 
         ITemplate template = cfg.getTemplate( tid, ctx );
         ctx.setTemplate( template );
+        ctx.setTemplateId( tid );
+
         if (template != null) {
             DocumentContext dc = null;
             try {

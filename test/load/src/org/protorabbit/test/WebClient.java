@@ -21,6 +21,8 @@ public class WebClient extends Thread {
     boolean randomRange = false;
     Random rand = null;
     private String url = null;
+    private long expectedMaxContentLength = 0;
+    private long expectedMinContentLength = -1;
 
     public WebClient( String url, String runnerId, int runcount, long timeout ) {
         this.runcount = runcount;
@@ -66,10 +68,11 @@ public class WebClient extends Thread {
             //System.out.println(bos.toString());
             bytesRead = bos.size();
             totalRead += bytesRead;
-        //    if (bytesRead != 4627) {
-        //     System.out.println(bos);
-        //    }
-            //System.out.println("Getting headers...");
+            if (expectedMinContentLength != -1 &&
+                    !(bytesRead >= expectedMinContentLength &&
+                    bytesRead <= expectedMaxContentLength) ) {
+                System.err.println( "Error with test " + runnerId + " run " + count + "\n" + bos );
+            }
             // get the headers
             List<IHeader> rh = c.getResponseHeaders();
 
@@ -91,9 +94,12 @@ public class WebClient extends Thread {
             st = timeout;
         }
         System.out.println( runnerId + " run " + count + " elapsed time : " + (stop - start) + "ms" + " bytesRead : " + bytesRead + " total bytes read : " + totalRead + " sleeping for : " + st);
-//        if (bytesRead != 4627) {
-//            System.exit(0);
-//           }
+        if (expectedMinContentLength != -1 &&
+                !(bytesRead >= expectedMinContentLength &&
+                bytesRead <= expectedMaxContentLength) ) {
+            System.err.println( "Error with test " + runnerId + " run " + count + " expected length is : " + expectedMinContentLength + " -> " + expectedMaxContentLength + " but got " + bytesRead );
+            System.exit( 0 );
+        }
         try {
             sleep( st );
         } catch (InterruptedException e) {
@@ -103,5 +109,12 @@ public class WebClient extends Thread {
         }
     }
 
-    
+    public void setExpectedMinContentLength( long expectedMinContentLength) {
+        this.expectedMinContentLength = expectedMinContentLength;
+    }
+
+    public void setExpectedMaxContentLength( long expectedMaxContentLength) {
+        this.expectedMaxContentLength = expectedMaxContentLength;
+    }
+
 }

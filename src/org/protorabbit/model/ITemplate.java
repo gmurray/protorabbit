@@ -14,7 +14,6 @@ package org.protorabbit.model;
 import java.util.Map;
 import java.util.List;
 
-import org.json.JSONObject;
 import org.protorabbit.accelerator.ICacheable;
 import org.protorabbit.model.impl.DocumentContext;
 import org.protorabbit.model.impl.ResourceURI;
