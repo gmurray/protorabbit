@@ -191,6 +191,7 @@ public class HandlerFactory {
                     if (thandler != null ) {
                         thandler.addActionError( e.getLocalizedMessage() );
                     }
+                    getLogger().log(Level.SEVERE, "Error processing function: ", e);
                 }
         }
         int bytesServed = 0;
