@@ -24,6 +24,7 @@ import java.util.logging.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.protorabbit.util.IOUtil;
 
 public class JSONUtil {
 
@@ -122,37 +123,9 @@ public class JSONUtil {
         try {
             File f = new File(fileName);
             FileOutputStream out = new FileOutputStream(f);
-            saveToInputStream(new ByteArrayInputStream(jo.toString().getBytes()), out);
+            IOUtil.saveToInputStream(new ByteArrayInputStream(jo.toString().getBytes()), out);
         } catch (Exception e) {
             System.out.println("JSONUtil: error writing in json " + e);
-        }
-    }
-   
-   public static void saveToInputStream(ByteArrayInputStream in, OutputStream out) {
-        try {
-
-            byte[] buffer = new byte[1024];
-            int read = 0;
-            while (true) {
-                read = in.read(buffer);
-                if (read <= 0)
-                    break;
-                out.write(buffer, 0, read);
-            }
-        } catch (Exception e) {
-            System.out.println("JSONUtil: error reading in json " + e);
-            e.printStackTrace();
-        } finally {
-            try {
-                if (in != null) {
-                    in.close();
-                }
-                if (out != null) {
-                    out.flush();
-                    out.close();
-                }
-            } catch (Exception e) {
-            }
         }
     }
 

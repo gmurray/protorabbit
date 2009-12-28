@@ -1,5 +1,6 @@
 package org.protorabbit.stats.impl;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -19,6 +20,7 @@ import org.protorabbit.stats.IClient;
 import org.protorabbit.stats.IClientIdGenerator;
 import org.protorabbit.stats.IStat;
 import org.protorabbit.stats.IResourceStat;
+import org.protorabbit.stats.IStatRecorder;
 
 public class StatsManager  implements ServletContextListener {
 
@@ -34,7 +36,7 @@ public class StatsManager  implements ServletContextListener {
     private static TimeMonitor tm = null;
 
     private PollManager pollManager = null;
-
+    private IStatRecorder sr = null;
     private ServletContext ctx = null;
 
     public enum Resolution {
@@ -87,6 +89,7 @@ public class StatsManager  implements ServletContextListener {
 
         synchronized(stats) {
             stats.add( s );
+            sr.recordStatItem( s );
         }
     }
 
@@ -111,12 +114,12 @@ public class StatsManager  implements ServletContextListener {
         return cStats;
     }
 
-    public Long getRoundTime( long resolution, long timestamp) {
+    public static Long getRoundTime( long resolution, long timestamp) {
         long mod = timestamp % resolution;
         return new Long( (timestamp - mod) );
     }
 
-    public class TimeChartItem {
+    public static class TimeChartItem {
 
         private long timestamp = 0;
         private double value = 0;
@@ -179,8 +182,12 @@ public class StatsManager  implements ServletContextListener {
     }
 
     public Map<String, Object> getLatest( long duration, Resolution r ) {
-
         List<IStat> baseList = getStats();
+        return getStats( duration, r, baseList );
+    }
+
+    public static Map<String, Object> getStats( Long duration, Resolution r, List<IStat> baseList ) {
+
         if ( baseList == null ) {
             return null;
         }
@@ -192,14 +199,17 @@ public class StatsManager  implements ServletContextListener {
         Map<String, Map<String,IResourceStat>> pageStats = new Hashtable<String, Map<String,IResourceStat>>();
 
         List<IStat> errors = new ArrayList<IStat>();
-        long threshold = System.currentTimeMillis() - duration;
+        long threshold = -1;
+        if (duration != null) {
+            threshold = System.currentTimeMillis() - duration;
+        }
         int totalCount = 0;
         // iterate the list backwards because it is LIFO and we can stop iterating early if we 
         // find a stat outside the threshold
         for ( int i= baseList.size() -1; i >= 0; i--) {
             IStat stat = baseList.get( i );
 
-            if ( stat.getTimestamp() > threshold ) {
+            if ( (threshold == -1) || ((threshold != -1) && stat.getTimestamp() > threshold) ) {
                 totalCount +=1;
                 String key = stat.getPath();
                 String cid = stat.getRemoteClient();
@@ -300,8 +310,36 @@ public class StatsManager  implements ServletContextListener {
         
         return envelope;
     }
-    
-    private  void addPayloadsAndProcessingTime( Map<Long,TimeChartItem> jBuckets, Map<String, Object> envelope, String label, String type ) {
+
+    public  Map<String, Object> getStatsForDate( long timestamp) {
+        if ( sr != null ) {
+            return sr.loadStatsForDate( timestamp );
+        }
+        return null;
+    }
+
+    public  Object getSummaryForDate( long timestamp) {
+        if ( sr != null ) {
+            return sr.loadSummaryForDate( timestamp );
+        }
+        return null;
+    }
+
+    public List<Long> getArchiveTimestamps() {
+        if ( sr != null ) {
+            return sr.getArchiveTimestamps( );
+        }
+        return null;
+    }
+
+    public List<Long> getSummaryTimestamps() {
+        if ( sr != null ) {
+            return sr.getSummaryTimestamps();
+        }
+        return null;
+    }
+
+    private static  void addPayloadsAndProcessingTime( Map<Long,TimeChartItem> jBuckets, Map<String, Object> envelope, String label, String type ) {
         List<TimeChartItem> averageJsonProcessingTimes = new ArrayList<TimeChartItem>();
         List<TimeChartItem> averageJsonPayloads = new ArrayList<TimeChartItem>();
         Iterator<Long> it = jBuckets.keySet().iterator();
@@ -357,10 +395,13 @@ public class StatsManager  implements ServletContextListener {
     }
 
     public void pruneHistory( long threshold ) {
-
+        // cleanup 
+        if (sr != null) {
+            sr.cleanup();
+        }
         int pruneCount = 0;
-        synchronized (stats) {
-            for ( int i= stats.size() -1; i >= 0; i--) {
+        synchronized ( stats ) {
+            for ( int i= stats.size() -1; i >= 0; i-- ) {
                 IStat stat = stats.get( i );
                 if ( stat.getTimestamp() < threshold ) {
                     stats.remove( i );
@@ -369,12 +410,16 @@ public class StatsManager  implements ServletContextListener {
             }
         }
         if ( pruneCount > 0) {
-            getLogger().log(Level.INFO, "StatsManager pruned " + pruneCount + " items.");
+            getLogger().log( Level.INFO, "StatsManager pruned " + pruneCount + " items." );
         }
     }
 
-    public void contextInitialized(ServletContextEvent e ) {
+    public void contextInitialized( ServletContextEvent e ) {
         ctx  = e.getServletContext();
         ctx.setAttribute( STATS_MANAGER, this );
+        sr = new DefaultStatRecorder( );
+        sr.init( ctx );
+        sr.cleanup();
     }
+
 }

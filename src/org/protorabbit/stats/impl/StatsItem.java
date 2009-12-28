@@ -7,7 +7,7 @@ import java.util.Collection;
 public class StatsItem implements IStat {
 
     private long timestamp = 0;
-    private Enum<?> type = null;
+    private IStat.types type = null;
     private String remoteClient;
     private Long processTime = null;
     private String path = null;
@@ -19,11 +19,6 @@ public class StatsItem implements IStat {
     private boolean hasErrors = false;
     private Collection<String> errors = null;
     private boolean isPollStat = false;
-
-    public static enum types {
-        VIEW,
-        JSON
-    };
 
     public Long getContentLength() {
         return contentLength;
@@ -93,7 +88,7 @@ public class StatsItem implements IStat {
         this.timestamp = timestamp;
     }
 
-    public void setType( Enum<?> type ) {
+    public void setType( IStat.types type ) {
         this.type = type;
     }
 
@@ -124,9 +119,12 @@ public class StatsItem implements IStat {
     public void setIsPoller(boolean pollerstat) {
         this.isPollStat = pollerstat;
     }
-    
+
     public boolean isPoller() {
         return isPollStat;
     }
 
+    public String toString() {
+        return "StatsItem { path : " + path + ", contentType" + contentType + ", timestamp : " + timestamp + ", type : " + type + " }";
+    }
 }

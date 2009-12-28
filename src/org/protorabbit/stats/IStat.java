@@ -3,10 +3,15 @@ package org.protorabbit.stats;
 import java.util.Collection;
 
 public interface IStat {
+    public static enum types {
+        VIEW,
+        JSON
+    };
+
     public long getTimestamp();
     public void setTimestamp( long timestamp );
     public Enum<?> getType();
-    public void setType( Enum<?> type );
+    public void setType( IStat.types type );
     public String getRemoteClient();
     public void setRemoteClient( String remoteClient );
     public String getHost();

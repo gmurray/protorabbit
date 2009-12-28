@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.protorabbit.json.Serialize;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -384,14 +383,47 @@ public class DefaultSerializer implements JSONSerializer {
     }
 
     public Object deSerialize(String jsonText, Class<?> targetClass) {
-        try {
-            Object o = targetClass.newInstance();
-            deSerialize(jsonText, o);
-            return o;
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
+
+        // check for array
+        jsonText = jsonText.trim();
+        if (jsonText.startsWith("[")) {
+           try {
+               JSONArray ja = new JSONArray(jsonText);
+
+               List<Object> jal = new ArrayList<Object>();
+
+               for (int i=0; i < ja.length(); i++) {
+                    try {
+                        Object jao = ja.get(i);
+                        Object targetObject = targetClass.newInstance();
+                        deSerialize( jao, targetObject );
+                        jal.add( targetObject );
+                    } catch (InstantiationException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    } catch (IllegalAccessException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+
+               }
+               return jal;
+           } catch (JSONException jex) {
+               throw new RuntimeException("Error Parsing JSON:" + jex); 
+           }
+           // check for object
+        } else if (jsonText.startsWith("{")) {
+            try {
+                Object o = targetClass.newInstance();
+                deSerialize(jsonText, o);
+                return o;
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        } else {
+            throw new RuntimeException("Error : Can only deserialize JSON objects or JSON arrays"); 
         }
         return null;
     }
