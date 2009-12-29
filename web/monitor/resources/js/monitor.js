@@ -581,16 +581,16 @@ jmaki.subscribe("/jmaki/charting/line/zoomOut", function(args) {
     if ( args.widgetId === "realtimeStats") {
         jmaki.getWidget("responseTimeChart").zoomOut();
     } else if ( args.widgetId === "responseTimeChart" ) {
-        jmaki.getWidget("realtimeStats").zoom( args.ranges );
+        jmaki.getWidget("realtimeStats").zoomOut( );
     }
 });
 
 jmaki.subscribe("/jmaki/charting/line/zoomIn", function(args) {
 
     if (args.widgetId === "realtimeStats") {
-        jmaki.getWidget("responseTimeChart").zoom( args.ranges );
+        jmaki.getWidget("responseTimeChart").zoom( args.ranges, args.zoomHistory );
     } else if ( args.widgetId === "responseTimeChart" ) {
-        jmaki.getWidget("realtimeStats").zoom( args.ranges );
+        jmaki.getWidget("realtimeStats").zoom( args.ranges, args.zoomHistory );
     }
     if (window.polling === true) { 
         toggleRunning();

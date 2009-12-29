@@ -816,7 +816,7 @@ jmaki.widgets.jmaki.charting.base = function() {
                         $.extend(true, {}, _widget.model.options, _lranges));
                 _widget.zoomMarkers( ranges );
                 addZoomer();
-                jmaki.publish(_widget.publish + "/zoomIn", { widgetId : _widget.wargs.uuid, ranges : _lranges } );
+                jmaki.publish(_widget.publish + "/zoomIn", { widgetId : _widget.wargs.uuid, ranges : _lranges , zoomHistory : _widget.ctx.zoomHistory} );
             }
         });
     };
@@ -845,10 +845,11 @@ jmaki.widgets.jmaki.charting.base = function() {
         }
     }
 
-    this.zoom = function( ranges ) {
+    this.zoom = function( ranges, zhistory ) {
         if (_widget.ctx.zoom === true && ranges) {
-
-            if (_widget.ctx.zoomHistory.length !== 0) {
+           if (zhistory ) {
+               _widget.ctx.zoomHistory = zhistory;
+           } else if (_widget.ctx.zoomHistory.length !== 0) {
                 _widget.ctx.zoomHistory.push( {xaxis: { min: ranges.xaxis.min, max: ranges.xaxis.max } } );
            } else {
                var xaxis = _widget.plot.getAxes().xaxis;
@@ -889,7 +890,7 @@ jmaki.widgets.jmaki.charting.base = function() {
                                 xaxis: ranges.xaxis
                             }));
             _widget.zoomMarkers(ranges);
-            jmaki.publish(_widget.publish + "/zoomOut", { widgetId : _widget.wargs.uuid, ranges : ranges } );
+            jmaki.publish(_widget.publish + "/zoomOut", { widgetId : _widget.wargs.uuid, ranges : ranges, zoomHistory : _widget.ctx.zoomHistory } );
             }
 
         }
