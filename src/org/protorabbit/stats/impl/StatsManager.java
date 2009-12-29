@@ -1,6 +1,10 @@
 package org.protorabbit.stats.impl;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -37,6 +41,7 @@ public class StatsManager  implements ServletContextListener {
     private PollManager pollManager = null;
     private IStatRecorder sr = null;
     private ServletContext ctx = null;
+    private String host = null;
 
     public enum Resolution {
         SECOND ( 1000),
@@ -408,6 +413,8 @@ public class StatsManager  implements ServletContextListener {
     public void pruneHistory( long threshold ) {
         // cleanup 
         if (sr != null) {
+            // update the daily summary
+            sr.updateDailySummary();
             sr.cleanup();
         }
         int pruneCount = 0;
@@ -430,7 +437,13 @@ public class StatsManager  implements ServletContextListener {
         ctx.setAttribute( STATS_MANAGER, this );
         sr = new DefaultStatRecorder( );
         sr.init( ctx );
-        sr.cleanup();
+        try {
+            InetAddress ia = null;
+            ia = InetAddress.getLocalHost();
+            host = ia.getHostName();
+        } catch (UnknownHostException ex) {
+            getLogger().log( Level.WARNING, "Could not resolve host name. Defaulting to localhost." );
+        }
     }
 
 }

@@ -14,6 +14,9 @@ package org.protorabbit.json;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.lang.reflect.ParameterizedType;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -230,7 +233,30 @@ public class DefaultSerializer implements JSONSerializer {
                          } else if (jo.isNull(key)) {
                              param = null;
                              allowNull = true;
-                         } else {
+                         } else if (Collection.class.isAssignableFrom( tparam ) ) {
+
+                             if ( m.getGenericParameterTypes().length > 0) {
+                                 Type t = m.getGenericParameterTypes()[0];
+                                 if ( t instanceof ParameterizedType) {
+                                     ParameterizedType tv = (ParameterizedType)t;
+                                     if ( tv.getActualTypeArguments().length > 0 &&
+                                             tv.getActualTypeArguments()[0] == String.class ) {
+
+                                         List<String> ls = new ArrayList<String>();
+                                         JSONArray ja = jo.optJSONArray( key );
+
+                                         if ( ja != null) {
+                                             for (int j=0; j < ja.length(); j++) {
+                                                 ls.add( ja.getString(j) );
+                                             }
+                                         }
+                                         param = ls;
+                                     } else {// TODO : Add general object processing
+                                         getLogger().warning("Don't know how to handle Collection of type : " + tv.getActualTypeArguments()[0] );
+                                     }
+                                 }
+                             }
+                          } else {
                              getLogger().warning("Unable to serialize " + key + " :  Don't know how to handle " + tparam );
                          }
                     } catch (JSONException e) {

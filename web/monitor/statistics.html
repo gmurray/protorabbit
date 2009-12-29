@@ -12,7 +12,7 @@ jmaki.config =  {
 
 jmaki.subscribe("/jmaki/extensions/widgetFactory/loadComplete", function() {
     toggleRunning();
-    getWeekSummary();
+    updateSummary();
 });
 </script>
 
@@ -79,7 +79,16 @@ a  {
   <div id="body" style="padding:15px">
   
      <!--  Start week summary -->
-     <div class="subTitle">This Week</div>
+     <fieldset>
+     <legend class="subTitle">
+       <span>
+        Summary :
+        <select id="summaryResolution" onchange="updateSummary()">
+         <option value="ONE_DAY" selected="selected">Last Day</option>
+         <option value="ONE_WEEK">Last Week</option>
+        </select>
+        </span>
+     </legend>
        <div style="height:120px">
          <div jmakiName="jmaki.charting.line" jmakiId="weekSummary" style="overflow:hidden;height:100%"
               jmakiArgs="{
@@ -88,7 +97,7 @@ a  {
                     leftMargin : 35,
                     hoverFormatter : function(m){
                         if (m.value.x) {
-                            return 'Volume ' + m.value.y + ' ' + new Date(m.value.x);
+                            return formatTimestamp(m.value.x) + ' ' + m.value.y;
                         } else {
                             return m.value;
                         }
@@ -111,15 +120,15 @@ a  {
 
                    }"
                ></div>
-       </div> 
+    </div>
+    </fieldset>
   <!--  end week summary -->
     <div style="height:10px"></div>
-    <div class="subTitle">Today</div>
-    <div style="height:10px"></div>
-      <!-- start controls -->
-    <div style="text-align:center">
-    <span>
-    Duration :
+    <!--  start current --> 
+    <fieldset>
+    <legend class="subTitle">Current
+        <span>
+     :
      <select id="timespan" onchange="loadPageViews(true)">
        <option value="60">Last Minute</option>
        <option value="300">Last 5 Minutes</option>
@@ -129,8 +138,13 @@ a  {
        <option value="3600">Last Hour</option>
      </select>
     </span>
+    </legend>
+    <div style="height:10px"></div>
+      <!-- start controls -->
+    <div style="text-align:center">
+
     <span>
-    &nbsp;&nbsp;
+
     Resolution :
      <select id="resolution" onchange="updateResolution()">
        <option value="SECOND">Second</option>
@@ -202,7 +216,7 @@ a  {
                     leftMargin : 35,
                     hoverFormatter : function(m){
                         if (m.value.x) {
-                            return 'Volume ' + m.value.y + ' ' + new Date(m.value.x);
+                            return formatTimestamp(m.value.x) + ' ' + m.value.y;
                         } else {
                             return m.value;
                         }
@@ -237,7 +251,7 @@ a  {
                     leftMargin : 35,
                     hoverFormatter : function(m){
                         if (m.value.x) {
-                            return 'Volume ' + m.value.y + ' ' + new Date(m.value.x);
+                            return formatTimestamp(m.value.x) + ' ' + m.value.y.toFixed(1) + 'ms';
                         } else {
                             return m.value;
                         }
@@ -274,7 +288,7 @@ a  {
       <div id="errorsPanel" style="height:285px; overflow-y:auto;border: 1px solid #eee;padding:5px;margin:1px;"></div>
    </div>
   </div><!-- end mid poller / error panel -->
-
+</fieldset><!--  end current -->
  </div>
  </body>
 </html>

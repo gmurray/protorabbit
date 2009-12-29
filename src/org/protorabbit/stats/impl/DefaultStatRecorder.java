@@ -29,13 +29,13 @@ import org.protorabbit.json.JSONSerializer;
 import org.protorabbit.json.SerializationFactory;
 import org.protorabbit.stats.IStat;
 import org.protorabbit.stats.IStatRecorder;
-import org.protorabbit.stats.impl.StatsManager.TimeChartItem;
 import org.protorabbit.util.IOUtil;
 
 public class DefaultStatRecorder implements IStatRecorder {
 
-    private static final long ONE_DAY = 1000 * 60 * 60 * 24;
-    private static final long FIVE_DAYS = ONE_DAY * 7;
+    private static final long ONE_HOUR = 1000 * 60 * 60 * 24;
+    private static final long ONE_DAY = ONE_HOUR * 24;
+    private static final long SEVEN_DAYS = ONE_DAY * 7;
     private boolean canRecordStats = true;
     private static Logger logger = null;
     private File statsDirectory = null;
@@ -127,13 +127,7 @@ public class DefaultStatRecorder implements IStatRecorder {
 
     private File getCurrentStatsFile() {
 
-        Date d = new Date();
-        Calendar c = Calendar.getInstance();
-        c.setTime( d );
-        String hName = host + "." +
-                       c.get( Calendar.YEAR) + "-" +
-                       (c.get( Calendar.MONTH ) + 1) + "-" +
-                       c.get( Calendar.DAY_OF_MONTH ) + ".json";
+        String hName = getBaseFileName() + ".json";
         File currentStatsFile = new File( statsDirectory, hName );
         if ( !currentStatsFile.exists() ) {
             try {
@@ -176,6 +170,27 @@ public class DefaultStatRecorder implements IStatRecorder {
 
     public List<IStat> loadStats( Date d ) {
         return null;
+    }
+
+    private String getBaseFileName() {
+        Date d = new Date();
+        Calendar c = Calendar.getInstance();
+        c.setTime( d );
+        String fName = host + "." +
+                       c.get( Calendar.YEAR) + "-" +
+                       (c.get( Calendar.MONTH ) + 1) + "-" +
+                       c.get( Calendar.DAY_OF_MONTH );
+        return fName;
+    }
+
+    public void updateDailySummary() {
+        long start = System.currentTimeMillis();
+        System.out.println("Updating daily summary.");
+        String fileName = getBaseFileName() + "-summary.json";
+        Map<String, Object> stats = loadStats( getCurrentStatsFile() );
+        archiveStats(fileName, stats);
+        long end = System.currentTimeMillis();
+        System.out.println("Daily summary complete. Time : " + ( end - start ) + "ms" );
     }
 
     public Object loadSummary( File f ) {
@@ -238,7 +253,7 @@ public class DefaultStatRecorder implements IStatRecorder {
         }
         return null;
     }
-    
+
     @SuppressWarnings("unchecked")
     private void combineLists(  Map<String, Object> src, Map<String, Object> target, String key ) {
         Map<String,Object> sViews = (Map<String,Object>)src.get(key);
@@ -398,7 +413,6 @@ public class DefaultStatRecorder implements IStatRecorder {
 
     public static Long getSummaryFileTimestamp( String host, String filename) {
         try {
-
             if ( filename.startsWith( host ) &&
                  filename.endsWith("-summary.json") ) {
                 int start = host.length() + 1;
@@ -466,15 +480,28 @@ public class DefaultStatRecorder implements IStatRecorder {
         return fileNames;
     }
 
+    public void archiveStats( String fName, Map<String, Object> stats ) {
+        try {
+            File condensed = new File( statsDirectory, fName );
+            OutputStream fos = new FileOutputStream(condensed);
+            // serialize
+            Object serialized = json.serialize( stats );
+            ByteArrayInputStream bis = new ByteArrayInputStream(serialized.toString().getBytes("UTF-8"));
+            IOUtil.saveToInputStream( bis , fos);
+        } catch (java.lang.OutOfMemoryError e) {
+            getLogger().log( Level.SEVERE, "Out of Memory Error archiving stats file " + fName + ". Increase the heapspace to prevent future errors." );
+        } catch (Exception e) {
+            getLogger().log( Level.INFO, "Error archiving  stats file " + fName );
+        }
+    }
+
     public void cleanup() {
-        getArchiveTimestamps();
-        getSummaryTimestamps();
+
         if ( statsDirectory != null ) {
 
             File[] files = statsDirectory.listFiles();
-            long removeCutoff = System.currentTimeMillis() - FIVE_DAYS;
-            //long cutoff = System.currentTimeMillis() - ONE_DAY;
-            long cutoff = System.currentTimeMillis() - 1000;
+            long removeCutoff = System.currentTimeMillis() - SEVEN_DAYS;
+            long cutoff = System.currentTimeMillis() - ONE_DAY;
             if ( files != null && files.length > 0 ) {
 
                 for ( File f : files ) {
@@ -487,25 +514,13 @@ public class DefaultStatRecorder implements IStatRecorder {
                             if ( filename.startsWith( host ) &&
                                     filename.endsWith(".json") &&
                                  !filename.endsWith("summary.json") ) {
-                                try {
-                                    
+
                                     String fName = "";
                                     int last = filename.lastIndexOf(".json");
                                     fName = filename.substring(0, last) + "-summary.json";
-                                    File condensed = new File( statsDirectory, fName );
-                                    getLogger().info("Condensing log " + filename + " to " + fName );
                                     Map<String, Object> stats = loadStats( f );
-  
-                                    OutputStream fos = new FileOutputStream(condensed);
-                                    // serialize
-                                    Object serialized = json.serialize( stats );
-                                    ByteArrayInputStream bis = new ByteArrayInputStream(serialized.toString().getBytes("UTF-8"));
-                                    IOUtil.saveToInputStream( bis , fos);
-                                } catch (java.lang.OutOfMemoryError e) {
-                                    getLogger().log( Level.SEVERE, "Out of Memory Error archiving stats file " + filename + ". Increase the heapspace to prevent future errors." );
-                                } catch (Exception e) {
-                                    getLogger().log( Level.INFO, "Error archiving  stats file " + filename );
-                                }
+                                    archiveStats( fName, stats );
+
                             } else {
                                 if ( ts.longValue() < removeCutoff ) {
                                     getLogger().log( Level.INFO, "Removing stats file ." + filename );

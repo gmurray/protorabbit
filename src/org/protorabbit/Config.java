@@ -608,7 +608,6 @@ public class Config {
        String baseURI = getTemplateDefDir( importURI );
        try {
            registerTemplates( teo, base, baseURI );
-           getLogger().info("Loaded extended " + importURI);
        } catch (Exception ex){
            getLogger().log(Level.SEVERE, "Error  loading" + importURI, ex);
        }

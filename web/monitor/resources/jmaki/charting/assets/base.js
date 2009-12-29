@@ -816,7 +816,7 @@ jmaki.widgets.jmaki.charting.base = function() {
                         $.extend(true, {}, _widget.model.options, _lranges));
                 _widget.zoomMarkers( ranges );
                 addZoomer();
-                jmaki.publish(_widget.publish + "/zoom", { widgetId : _widget.wargs.uuid, ranges : _lranges } );
+                jmaki.publish(_widget.publish + "/zoomIn", { widgetId : _widget.wargs.uuid, ranges : _lranges } );
             }
         });
     };
@@ -825,6 +825,7 @@ jmaki.widgets.jmaki.charting.base = function() {
         _widget.zoomer = document.getElementById(_widget.wargs.uuid + "_zoomer" );
         if (_widget.zoomer === null) {
             _widget.zoomer = document.createElement("div");
+            _widget.zoomer.style.background = "#fff";
             _widget.zoomer.style.right = 2 + "px";
             _widget.zoomer.id = _widget.wargs.uuid + "_zoomer";
             _widget.zoomer.style.bottom = 0 + "px";
@@ -844,16 +845,43 @@ jmaki.widgets.jmaki.charting.base = function() {
         }
     }
 
-    this.zoomOut = function() {
+    this.zoom = function( ranges ) {
+        if (_widget.ctx.zoom === true && ranges) {
 
+            if (_widget.ctx.zoomHistory.length !== 0) {
+                _widget.ctx.zoomHistory.push( {xaxis: { min: ranges.xaxis.min, max: ranges.xaxis.max } } );
+           } else {
+               var xaxis = _widget.plot.getAxes().xaxis;
+               _widget.ctx.zoomHistory.push( {xaxis:{from: xaxis.datamin, to: xaxis.datamax } } );
+               _widget.ctx.zoomHistory.push( {xaxis: { min: ranges.xaxis.min, max: ranges.xaxis.max } } );
+           }
+
+            var _target = $("#" + _widget.wargs.uuid + "_content");
+            var _lranges = {
+                xaxis: { min: ranges.xaxis.from, max: ranges.xaxis.to }
+            };
+            _widget.ctx.currentZoom = _lranges;
+
+            _widget.plot = $.plot(_target, _widget.model.data,
+                    $.extend(true, {}, _widget.model.options, ranges));
+
+            addZoomer();
+        }
+    };
+
+    this.zoomOut = function() {
+        var _atTop = false;
         if (_widget.ctx.zoomHistory.length > 0 && _widget.ctx.zoom === true) {
 
             var ranges = _widget.ctx.zoomHistory[_widget.ctx.zoomHistory.length - 1];
+
+            if ( ranges ) {
             _widget.ctx.zoomHistory.splice((_widget.ctx.zoomHistory.length - 1), 1);
             var _target = $("#" + _widget.wargs.uuid + "_content");
             if (_widget.ctx.currentZoom.xaxis.max === ranges.xaxis.max && _widget.ctx.currentZoom.xaxis.min === ranges.xaxis.min) {
                 ranges = _widget.ctx.zoomHistory[_widget.ctx.zoomHistory.length - 1];
                 _widget.ctx.zoomHistory.splice((_widget.ctx.zoomHistory.length - 1), 1);
+                _atTop = true;
             }
             _widget.ctx.currentZoom = ranges;
             _widget.plot = $.plot(_target, _widget.model.data,
@@ -861,13 +889,16 @@ jmaki.widgets.jmaki.charting.base = function() {
                                 xaxis: ranges.xaxis
                             }));
             _widget.zoomMarkers(ranges);
+            jmaki.publish(_widget.publish + "/zoomOut", { widgetId : _widget.wargs.uuid, ranges : ranges } );
+            }
 
         }
-        if (_widget.ctx.zoomHistory.length > 0) {
+        if (_widget.ctx.zoomHistory.length > 0 && _atTop === false ) {
             addZoomer(); 
         } else {
             removeZoomer();
         }
+
     };
 
     this.selectSlice = function(_targetId) {
@@ -922,7 +953,7 @@ jmaki.widgets.jmaki.charting.base = function() {
         }
         if (_widget.model.y2Axis.labels[_val]) return _widget.model.y2Axis.labels[_val];
         else return '';
-    }   
+    }
 
     function getXLabel(_val) {
         if (!_widget.model.xAxis) return;
