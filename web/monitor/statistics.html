@@ -13,6 +13,8 @@ jmaki.config =  {
 jmaki.subscribe("/jmaki/extensions/widgetFactory/loadComplete", function() {
     toggleRunning();
     updateSummary();
+    // update the summary ever 2.5 minutes
+    var updater = setInterval( updateSummary, 150000 );
 });
 </script>
 
