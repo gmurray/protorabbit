@@ -1,11 +1,13 @@
 package org.protorabbit.stats.impl;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.OutputStream;
 import java.io.IOException;
@@ -17,7 +19,9 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -27,8 +31,12 @@ import javax.servlet.ServletContext;
 
 import org.protorabbit.json.JSONSerializer;
 import org.protorabbit.json.SerializationFactory;
+import org.protorabbit.stats.IClient;
+import org.protorabbit.stats.IResourceStat;
 import org.protorabbit.stats.IStat;
 import org.protorabbit.stats.IStatRecorder;
+import org.protorabbit.stats.impl.StatsManager.Resolution;
+import org.protorabbit.stats.impl.StatsManager.TimeChartItem;
 import org.protorabbit.util.IOUtil;
 
 public class DefaultStatRecorder implements IStatRecorder {
@@ -150,7 +158,7 @@ public class DefaultStatRecorder implements IStatRecorder {
 
             BufferedWriter out = getWriter();
             if ( writer != null) {
-                out.write( json.serialize(stat).toString() + "," );
+                out.write( json.serialize(stat).toString() + ",\n" );
                 out.flush();
             } else {
                 getLogger().log( Level.SEVERE, "Could not write to stats file. The writer was null." );
@@ -185,12 +193,12 @@ public class DefaultStatRecorder implements IStatRecorder {
 
     public void updateDailySummary() {
         long start = System.currentTimeMillis();
-        System.out.println("Updating daily summary.");
+        getLogger().info("Updating daily summary.");
         String fileName = getBaseFileName() + "-summary.json";
         Map<String, Object> stats = loadStats( getCurrentStatsFile() );
         archiveStats(fileName, stats);
         long end = System.currentTimeMillis();
-        System.out.println("Daily summary complete. Time : " + ( end - start ) + "ms" );
+        getLogger().info("Daily summary complete. Time : " + ( end - start ) + "ms" );
     }
 
     public Object loadSummary( File f ) {
@@ -207,31 +215,6 @@ public class DefaultStatRecorder implements IStatRecorder {
         }
 
         return stats;
-    }
-
-    @SuppressWarnings("unchecked")
-    public Map<String, Object> loadStats( File f ) {
-        FileInputStream fis;
-        Map<String, Object> stats = null;
-        try {
-            fis = new FileInputStream(f);
-            StringBuffer buff = IOUtil.loadStringFromInputStream(fis, "UTF-8");
-            // turn the buffer into an array
-            buff.insert(0, "[");
-            // remove the last comma
-            buff.replace(buff.length() -1, buff.length(), "" );
-            buff.append("]");
-            List<IStat> items = (List<IStat>) json.deSerialize( buff.toString(), StatsItem.class );
-            stats = StatsManager.getStats( null, StatsManager.Resolution.MINUTE, items );
-
-        } catch (FileNotFoundException e) {
-            getLogger().log( Level.SEVERE, "Could deserialize file.", e );
-        } catch (IOException e) {
-            getLogger().log( Level.SEVERE, "Could deserialize file.", e );
-        }
-
-        return stats;
-
     }
 
     public Map<String, Object> loadStatsForDate( long timestamp ) {
@@ -279,50 +262,88 @@ public class DefaultStatRecorder implements IStatRecorder {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void  processpageStats( Map<String,Object>sjson, Map<String,Object>tjson ) {
 
         Iterator<String> i = null;
-            if (sjson != null) {
-                i = sjson.keySet().iterator();
-            }
-            while ( i != null && i.hasNext() ) {
-                String key = i.next();
-                Map<String,Object>pstats = (Map<String,Object>)sjson.get(key);
-                Map<String,Object>targetItemStats = (Map<String,Object>)tjson.get(key);
-                Double averageContentLength = getDouble(pstats.get( "averageContentLength" ));
+        if (sjson != null) {
+            i = sjson.keySet().iterator();
+        }
+        while ( i != null && i.hasNext() ) {
+            String key = i.next();
+            Map<String,Object>pstats = (Map<String,Object>)sjson.get(key);
+            Map<String,Object>targetItemStats = (Map<String,Object>)tjson.get(key);
+            Double averageContentLength = getDouble(pstats.get( "averageContentLength" ));
 
-                Double combinedContentLength = averageContentLength;
-                Double averageProcessingTime = getDouble( pstats.get( "averageProcessingTime") );
-                Double combinedProcessingTime = averageProcessingTime;
-                Integer accessCount = (Integer)pstats.get( "accessCount" );
-                Integer combinedAccessCount = accessCount;
-                Integer totalProcessingTime = (Integer)pstats.get( "totalProcessingTime" );
-                Integer combinedTotalProcessingTime = totalProcessingTime;
-                Integer totalContentLength = (Integer)pstats.get( "totalContentLength" );
-                Integer combinedTotalContentLength = totalContentLength;
-                // only combine if the target has the stats
-                if (targetItemStats != null) {
-                    Double targetAverageContentLength = getDouble( targetItemStats.get( "averageContentLength" ));
-                    combinedContentLength = (averageContentLength + targetAverageContentLength) / 2;
-                    Double targetAverageProcessingTime = getDouble( targetItemStats.get( "averageProcessingTime" ) );
-                    combinedProcessingTime = (averageProcessingTime + targetAverageProcessingTime) / 2;
-                    Integer targetAccessCount = (Integer)targetItemStats.get( "accessCount" );
-                    combinedAccessCount += targetAccessCount;
-                    Integer targetTotalProcessingTime = (Integer)targetItemStats.get( "totalProcessingTime" );
-                    combinedTotalProcessingTime += targetTotalProcessingTime;
-                    Integer targetTotalContentLength = (Integer)targetItemStats.get( "totalContentLength" );
-                    combinedTotalContentLength += targetTotalContentLength;
-                } else {
-                    targetItemStats = new HashMap<String,Object>();
-                }
-                targetItemStats.remove( "averageContentLength" );
-                targetItemStats.put( "averageContentLength", combinedContentLength );
-                targetItemStats.put( "averageProcessingTime", combinedProcessingTime );
-                targetItemStats.put( "accessCount", combinedAccessCount );
-                targetItemStats.put( "totalProcessingTime", combinedTotalProcessingTime );
-                targetItemStats.put( "totalContentLength", combinedTotalContentLength );
-                
+            Double combinedContentLength = averageContentLength;
+            Double averageProcessingTime = getDouble( pstats.get( "averageProcessingTime") );
+            Double combinedProcessingTime = averageProcessingTime;
+            Integer accessCount = (Integer)pstats.get( "accessCount" );
+            Integer combinedAccessCount = accessCount;
+            Integer totalProcessingTime = (Integer)pstats.get( "totalProcessingTime" );
+            Integer combinedTotalProcessingTime = totalProcessingTime;
+            Integer totalContentLength = (Integer)pstats.get( "totalContentLength" );
+            Integer combinedTotalContentLength = totalContentLength;
+            // only combine if the target has the stats
+            if (targetItemStats != null) {
+                Double targetAverageContentLength = getDouble( targetItemStats.get( "averageContentLength" ));
+                combinedContentLength = (averageContentLength + targetAverageContentLength) / 2;
+                Double targetAverageProcessingTime = getDouble( targetItemStats.get( "averageProcessingTime" ) );
+                combinedProcessingTime = (averageProcessingTime + targetAverageProcessingTime) / 2;
+                Integer targetAccessCount = (Integer)targetItemStats.get( "accessCount" );
+                combinedAccessCount += targetAccessCount;
+                Integer targetTotalProcessingTime = (Integer)targetItemStats.get( "totalProcessingTime" );
+                combinedTotalProcessingTime += targetTotalProcessingTime;
+                Integer targetTotalContentLength = (Integer)targetItemStats.get( "totalContentLength" );
+                combinedTotalContentLength += targetTotalContentLength;
+            } else {
+                targetItemStats = new HashMap<String,Object>();
             }
+            targetItemStats.remove( "averageContentLength" );
+            targetItemStats.put( "averageContentLength", combinedContentLength );
+            targetItemStats.put( "averageProcessingTime", combinedProcessingTime );
+            targetItemStats.put( "accessCount", combinedAccessCount );
+            targetItemStats.put( "totalProcessingTime", combinedTotalProcessingTime );
+            targetItemStats.put( "totalContentLength", combinedTotalContentLength );
+        }
+        // add clients
+        Map<String,Object>sclients = (Map<String,Object>)sjson.get("clients");
+        Map<String,Object>tclients = (Map<String,Object>)tjson.get("clients");
+        if ( sclients != null ) {
+            Iterator<String> ci = sclients.keySet().iterator();
+            while ( ci.hasNext() ) {
+                String key = ci.next();
+                // combine if in both sets
+                if ( tclients.containsKey(key) ) {
+                    // "pollInterval":5000,"errorCount":0,"jSONRequestCount":0,"totalRequestCount":1,"clientId":"10.2.237.6","lastAccess":1262109919385,"viewRequestCount":1}
+                    // average the pollInterval
+                    Integer spi = (Integer) sclients.get( "pollInterval");
+                    Integer tpi = (Integer) tclients.get( "pollInterval");
+                    tclients.put( "pollInterval", ( (spi + tpi) / 2) );
+                    // errorCount
+                    combineValues( sclients, tclients, "errorCount" );
+                    // jSONRequestCount
+                    combineValues( sclients, tclients, "jSONRequestCount" );
+                    // totalRequestCount
+                    combineValues( sclients, tclients, "totalRequestCount" );
+                    // viewRequestCount
+                    combineValues( sclients, tclients, "viewRequestCount" );
+                    // get the greater of the two for the last access
+                    Long sLastAccess = (Long) sclients.get( "lastAccess" );
+                    Long tLastAccess = (Long) tclients.get( "lastAccess" );
+                    // replace the lastAccesss only if the source is greater
+                    if ( sLastAccess > tLastAccess ) {
+                        tclients.put( "lastAccess", sLastAccess );
+                    }
+                }
+            }
+        }
+    }
+ 
+    private void combineValues( Map<String,Object>sclients, Map<String,Object>tclients, String key ) {
+        Integer sTotal = (Integer) sclients.get( key );
+        Integer tTotal = (Integer) tclients.get( key );
+        tclients.put( key , (sTotal + tTotal) );
     }
 
     // pageStats->text/html pageStats->application/json 
@@ -366,6 +387,7 @@ public class DefaultStatRecorder implements IStatRecorder {
         combinePageStats( src, target );
     }
 
+    @SuppressWarnings("unchecked")
     public Object loadSummarySinceDate( long timestamp ) {
         Map<String, Object> summaries = null;
         if (statsDirectory != null) {
@@ -388,6 +410,78 @@ public class DefaultStatRecorder implements IStatRecorder {
         return summaries;
     }
 
+    @SuppressWarnings({ "unchecked" })
+    private List<IStat> processBuffer( StringBuffer buff ) {
+        buff.insert(0, "[");
+        // remove the last comma
+        buff.replace(buff.length() -1, buff.length(), "" );
+        buff.append("]");
+        List<IStat> items = (List<IStat>) json.deSerialize( buff.toString(), StatsItem.class );
+       return items;
+    }
+    
+
+    public Map<String, Object> loadStats( File f ) {
+        Long duration = null;
+        long resolution = Resolution.MINUTE.modValue();
+        Map<Long,TimeChartItem> vBuckets = new LinkedHashMap<Long,TimeChartItem>();
+        Map<Long,TimeChartItem> jBuckets = new LinkedHashMap<Long,TimeChartItem>();
+
+        Map<String,IClient> lclients = new HashMap<String,IClient>();
+        Map<String, Map<String,IResourceStat>> pageStats = new Hashtable<String, Map<String,IResourceStat>>();
+
+        List<IStat> errors = new ArrayList<IStat>();
+        long threshold = -1;
+        if (duration != null) {
+            threshold = System.currentTimeMillis() - duration;
+        }
+        Integer totalCount = 0;
+        FileReader fis;
+
+        try {
+            fis = new FileReader(f);
+            // read 1000 lines and process
+
+                BufferedReader in = new BufferedReader( fis );
+                StringBuffer buff = new StringBuffer();
+                String line = null;
+                int lineCount = 0;
+                while ((line = in.readLine()) != null) {
+                    buff.append( line );
+                    lineCount++;
+                    if ( lineCount % 1000 == 0) {
+                        List<IStat> items = processBuffer( buff );
+                        totalCount += items.size();
+                        StatsManager.addStats( duration, resolution, items, vBuckets, jBuckets,
+                                lclients, pageStats,  errors,
+                                threshold,  totalCount ) ;
+                        buff = new StringBuffer();
+                    }
+                }
+                // cleanup the rest of the buffer
+                if ( buff.length() > 0 ) {
+                    List<IStat> items = processBuffer( buff );
+                    totalCount += items.size();
+                    StatsManager.addStats( duration, resolution, items, vBuckets, jBuckets,
+                            lclients, pageStats,  errors,
+                            threshold,  totalCount ) ;
+                }
+                getLogger().info("Read in " + f.getName() + " lines : " + lineCount + " total stat count : " + totalCount );
+                in.close();
+
+                return StatsManager.createStatsEnvelope( vBuckets, jBuckets,
+                        lclients, pageStats,  errors,
+                        threshold,  totalCount );
+        } catch (FileNotFoundException e) {
+            getLogger().log( Level.SEVERE, "Could deserialize file.", e );
+        } catch (IOException e) {
+            getLogger().log( Level.SEVERE, "Could deserialize file.", e );
+        }
+
+        return null;
+
+    }
+
     public Object loadSummaryForDate( long timestamp ) {
         if (statsDirectory != null) {
 
@@ -400,10 +494,8 @@ public class DefaultStatRecorder implements IStatRecorder {
                     String filename = f.getName();
                     Long ts = getSummaryFileTimestamp(host, filename);
                     if (ts != null && ts.longValue() == timestamp) {
-                        System.out.println("adding " + filename );
+                        getLogger().info("Summary adding : " + filename );
                         return loadSummary(f);
-                    } else {
-                  //      System.out.println("skipping " + filename + " ts=" + ts );
                     }
                 }
             }
@@ -443,8 +535,6 @@ public class DefaultStatRecorder implements IStatRecorder {
         }
         return null;
     }
-
-
 
     public List<Long> getSummaryTimestamps() {
         List<Long> fileNames = new ArrayList<Long>();

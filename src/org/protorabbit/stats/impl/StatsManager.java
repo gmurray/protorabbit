@@ -206,7 +206,49 @@ public class StatsManager  implements ServletContextListener {
         if (duration != null) {
             threshold = System.currentTimeMillis() - duration;
         }
-        int totalCount = 0;
+        Integer totalCount = 0;
+
+        // do the processing
+        addStats( duration, resolution, baseList,vBuckets, jBuckets,
+                 lclients, pageStats,  errors,
+                 threshold,  totalCount ) ;
+
+        return createStatsEnvelope( vBuckets, jBuckets,
+                lclients, pageStats,  errors,
+                threshold,  totalCount ) ;
+      }
+
+    public static Map<String, Object> createStatsEnvelope(   Map<Long,TimeChartItem> vBuckets, Map<Long,TimeChartItem> jBuckets,
+                                                Map<String,IClient> lclients, Map<String, Map<String,IResourceStat>> pageStats, List<IStat> errors,
+                                                long threshold, Integer totalCount  ) {
+        Map<String, Object>jds = new HashMap<String,Object>();
+        jds.put("label", "application/json");
+        jds.put("yaxis", new Long(1) );
+        jds.put("values", jBuckets.values() );
+        // views
+        Map<String, Object>vds = new HashMap<String,Object>();
+        vds.put("label", "text/html");
+        vds.put("yaxis", new Long(1) );
+        vds.put("values", vBuckets.values() );
+        Map<String, Object> envelope = new HashMap<String, Object>();
+        envelope.put("json", jds );
+        envelope.put("view", vds );
+        envelope.put("errors", errors );
+        envelope.put("clients", lclients );
+        envelope.put("pageStats",  pageStats );
+        envelope.put("total", new Long( totalCount ) );
+        // create average times
+        addPayloadsAndProcessingTime( jBuckets, envelope, "application/json", "JSON" );
+        addPayloadsAndProcessingTime( vBuckets, envelope, "text/html", "View" );
+
+        return envelope;
+    }
+
+    public static void addStats( Long duration, long resolution, List<IStat> baseList,
+            Map<Long,TimeChartItem> vBuckets, Map<Long,TimeChartItem> jBuckets,
+                                                Map<String,IClient> lclients, Map<String, Map<String,IResourceStat>> pageStats, List<IStat> errors,
+                                                long threshold, Integer totalCount  ) {
+
         // iterate the list backwards because it is LIFO and we can stop iterating early if we 
         // find a stat outside the threshold
         for ( int i= baseList.size() -1; i >= 0; i--) {
@@ -293,28 +335,7 @@ public class StatsManager  implements ServletContextListener {
                 }
             }
         }
-        //
-        Map<String, Object>jds = new HashMap<String,Object>();
-        jds.put("label", "application/json");
-        jds.put("yaxis", new Long(1) );
-        jds.put("values", jBuckets.values() );
-        // views
-        Map<String, Object>vds = new HashMap<String,Object>();
-        vds.put("label", "text/html");
-        vds.put("yaxis", new Long(1) );
-        vds.put("values", vBuckets.values() );
-        Map<String, Object> envelope = new HashMap<String, Object>();
-        envelope.put("json", jds );
-        envelope.put("view", vds );
-        envelope.put("errors", errors );
-        envelope.put("clients", lclients );
-        envelope.put("pageStats",  pageStats );
-        envelope.put("total", new Long( totalCount ) );
-        // create average times
-        addPayloadsAndProcessingTime( jBuckets, envelope, "application/json", "JSON" );
-        addPayloadsAndProcessingTime( vBuckets, envelope, "text/html", "View" );
-        
-        return envelope;
+
     }
 
     public  Map<String, Object> getStatsForDate( long timestamp) {
