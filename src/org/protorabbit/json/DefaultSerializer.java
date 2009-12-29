@@ -215,11 +215,11 @@ public class DefaultSerializer implements JSONSerializer {
                      Class<?> tparam =  paramTypes[0];
                      boolean allowNull = false;
                      try {
-                         if (Long.class.isAssignableFrom(tparam)) {
+                         if (Long.class.isAssignableFrom(tparam) || tparam == long.class ) {
                              param = new Long(jo.getLong(key));
-                         } else if (Double.class.isAssignableFrom(tparam)) {
+                         } else if (Double.class.isAssignableFrom(tparam) || tparam == double.class ) {
                              param = new Double(jo.getDouble(key));
-                         } else if (Integer.class.isAssignableFrom(tparam)) {
+                         } else if (Integer.class.isAssignableFrom(tparam) || tparam == int.class ) {
                              param = new Integer(jo.getInt(key));
                          } else if (String.class.isAssignableFrom(tparam)) {
                              param = jo.getString(key);
@@ -230,6 +230,8 @@ public class DefaultSerializer implements JSONSerializer {
                          } else if (jo.isNull(key)) {
                              param = null;
                              allowNull = true;
+                         } else {
+                             getLogger().warning("Unable to serialize " + key + " :  Don't know how to handle " + tparam );
                          }
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -362,7 +364,7 @@ public class DefaultSerializer implements JSONSerializer {
 
             // only add if we are not top level
             if (targetObject != null) {
-                addValue(targetObject, jal, null);
+                addValue(targetObject, jal, key);
             }
             for (int i=0; i < ja.length(); i++) {
                  Object jao = ja.get(i);

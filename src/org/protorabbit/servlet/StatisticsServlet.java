@@ -132,10 +132,7 @@ public class StatisticsServlet extends HttpServlet {
             response.getWriter().write( jo.toString() );
             return;
        } else if ( "/summaryTimestamps".equals( command ) ) {
-                if (json == null) {
-                    SerializationFactory factory = new SerializationFactory();
-                    json = factory.getInstance();
-                }
+
                 Object data = null;
                 data = statsManager.getSummaryTimestamps();
                 response.setHeader( "pragma", "NO-CACHE");
@@ -143,7 +140,25 @@ public class StatisticsServlet extends HttpServlet {
                 Object jo = json.serialize( data );
                 response.getWriter().write( jo.toString() );
                 return;
-            }  else {
+       } else if ( command.startsWith("/summariesSinceDate") ) {
+           String dateString = getLastPathItem( command );
+
+           long d = -1;
+           if ( dateString != null ) {
+               try {
+                   d = Long.parseLong( dateString );
+               } catch ( NumberFormatException nfe ) {
+                   getLogger().warning( "Error with timestamp parameter : " + nfe.getMessage() );
+               }
+           }
+           Object data = null;
+           data = statsManager.loadSummarySinceDate( d );
+           response.setHeader( "pragma", "NO-CACHE");
+           response.setHeader( "Cache-Control", "no-cache" );
+           Object jo = json.serialize( data );
+           response.getWriter().write( jo.toString() );
+           return;
+      }  else {
                 String commands = "Commands are : all, " +
                 "summary/[timestamp]," +
                 "stats/[timestamp], " + 

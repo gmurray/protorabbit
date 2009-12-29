@@ -12,6 +12,7 @@ jmaki.config =  {
 
 jmaki.subscribe("/jmaki/extensions/widgetFactory/loadComplete", function() {
     toggleRunning();
+    getWeekSummary();
 });
 </script>
 
@@ -77,6 +78,44 @@ a  {
   </div>
   <div id="body" style="padding:15px">
   
+     <!--  Start week summary -->
+     <div class="subTitle">This Week</div>
+       <div style="height:120px">
+         <div jmakiName="jmaki.charting.line" jmakiId="weekSummary" style="overflow:hidden;height:100%"
+              jmakiArgs="{
+                    colors : [ '#4da74d', '#EB5E66',  '#D41A1F', '#AF1E2D', '#9E0508','#E31230' ],
+                    showHoverLabels : true,
+                    leftMargin : 35,
+                    hoverFormatter : function(m){
+                        if (m.value.x) {
+                            return 'Volume ' + m.value.y + ' ' + new Date(m.value.x);
+                        } else {
+                            return m.value;
+                        }
+                    },
+                    xAxis : {
+                       mode : 'time',
+                       timeUnit : 'hour',
+                    },
+                    yAxis : {
+                     title : 'Requests' ,
+                     rotate : true,
+                     tickFormatter : function(val) {
+                         return val.toFixed(1);
+                       }
+                    },
+                    y2Axis : {
+                      rotate : true,
+                      min : 0,
+                    }
+
+                   }"
+               ></div>
+       </div> 
+  <!--  end week summary -->
+    <div style="height:10px"></div>
+    <div class="subTitle">Today</div>
+    <div style="height:10px"></div>
       <!-- start controls -->
     <div style="text-align:center">
     <span>
@@ -110,7 +149,8 @@ a  {
     <span>&nbsp;&nbsp;</span>
     <span id="status"></span></div>
    <!-- end controls -->
-  
+
+
   <div style="float:left;width:300px"> 
   <div style="padding-top:10px;text-align:center;font-size:1.2em">Pages (text/html)</div>
 

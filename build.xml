@@ -15,7 +15,7 @@
       <mkdir dir="${build.dir}/classes" />
       <javac srcdir="src"
           destdir="${build.classes}"
-          classpath="${build.classes}:lib/servlet-api-2.4.jar:web/WEB-INF/lib/org.json-0.0.2.jar"
+          classpath="${build.classes}:lib/servlet-api-2.4.jar:web/WEB-INF/lib/org.json-0.0.3.jar"
           source="1.5"
           target="1.5"
           debug="on">
@@ -50,7 +50,7 @@
   <target name="test-welcome" depends="compile">
       <java classname="org.protorabbit.model.impl.DefaultEngine"
           fork="true"
-          classpath="build/classes:lib/org.json-0.0.2.jar">
+          classpath="build/classes:lib/org.json-0.0.3.jar">
           <arg value="-template"/>
           <arg value="web/resources/blueprint/blueprint-templates.json" />
           <arg value="-documentRoot"/>

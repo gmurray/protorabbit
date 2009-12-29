@@ -373,7 +373,7 @@ function formatTimestamp( timestamp ) {
         return "N/A";
     }
     var _d = new Date( timestamp );
-    return zeroFill( _d.getMonth() ) + "/" +
+    return zeroFill( _d.getMonth() + 1 ) + "/" +
            zeroFill( _d.getDate() ) + "/" +
            _d.getFullYear() + " " +
            zeroFill( _d.getHours() ) + ":" +
@@ -417,6 +417,22 @@ function createChart( model ) {
    rchart.setValue(hdata);
 }
 
+function renderPageView( model ) {
+    formatPageViews( model );
+    formatPageStatCharts( model.pageStats );
+    var _count = formatActiveClients( model.clients );
+    var cTitle = document.getElementById("clientsTitle");
+    cTitle.innerHTML = "Clients&nbsp;(" + _count + ")";
+    formatErrors( model.errors );
+    var _count = 0;
+    if ( model !== null && model.errors.length > 0 ) {
+        _count = model.errors.length;
+    }
+    var eTitle = document.getElementById("errorsTitle");
+    eTitle.innerHTML = "Errors&nbsp;(" + _count + ")";
+
+}
+
 function loadPageViews(_runonce) {
     if (window.pageRequest === null &&
          (window.polling === true || _runonce === true) ) {
@@ -427,22 +443,11 @@ function loadPageViews(_runonce) {
             url : "../stats/all?duration=" + timespan + "&resolution=" + resolution,
             callback : function(req) {
                 var model = eval("(" + req.responseText + ")");
-                formatPageViews( model );
-                formatPageStatCharts( model.pageStats );
-                var _count = formatActiveClients( model.clients );
-                var cTitle = document.getElementById("clientsTitle");
-                cTitle.innerHTML = "Clients&nbsp;(" + _count + ")";
-                formatErrors( model.errors );
-                var _count = 0;
-                if ( model !== null && model.errors.length > 0 ) {
-                    _count = model.errors.length;
-                }
-                var eTitle = document.getElementById("errorsTitle");
-                eTitle.innerHTML = "Errors&nbsp;(" + _count + ")";
-                window.pageRequest = null;
+                renderPageView( model );
                 if (_runonce !== true) {
                     setTimeout(loadPageViews, 10000);
                 }
+                window.pageRequest = null;
             }
         });
     }
@@ -575,3 +580,29 @@ jmaki.subscribe("/jmaki/charting/line/zoom", function() {
         toggleRunning();
     }
 });
+
+window.ONE_WEEK = 1000 * 60 * 60 * 24;
+
+function getWeekSummary() {
+
+    var timespan = (new Date()).getTime() - ONE_WEEK;
+
+    window.pageRequest = new ajax({ 
+        url : "../stats/summariesSinceDate/" + timespan,
+        callback : function(req) {
+            var model = eval("(" + req.responseText + ")");
+            jmaki.getWidget("weekSummary").setValue(
+                    {"data":[
+                             model.json , model.view
+                             ]
+                    }
+             );
+            window.pageRequest = null;
+        }
+    });
+}
+
+function getDataForTimestamp() {
+    renderPageView (
+            {"view":{"yaxis":1,"label":"text/html","values":[{"time":1262026320000,"y":1},{"time":1262026260000,"y":1},{"time":1262025840000,"y":5},{"time":1262025000000,"y":156},{"time":1262024940000,"y":388},{"time":1262024880000,"y":395},{"time":1262024820000,"y":390},{"time":1262024760000,"y":377},{"time":1262024700000,"y":347},{"time":1262024640000,"y":245},{"time":1262024580000,"y":21}]},"total":22524,"averageViewProcessingTime":{"yaxis":1,"label":"text/html","values":[{"time":1262026320000,"y":6},{"time":1262026260000,"y":23},{"time":1262025840000,"y":13.4},{"time":1262025000000,"y":2699.3333333333335},{"time":1262024940000,"y":2.654639175257732},{"time":1262024880000,"y":2.4253164556962026},{"time":1262024820000,"y":2.628205128205128},{"time":1262024760000,"y":3.3421750663129974},{"time":1262024700000,"y":2.962536023054755},{"time":1262024640000,"y":618.861224489796},{"time":1262024580000,"y":76.19047619047619}]},"errors":[],"averageJSONProcessingTime":{"yaxis":1,"label":"application/json","values":[{"time":1262025060000,"y":5.714285714285714},{"time":1262025000000,"y":30.440999138673558},{"time":1262024940000,"y":5.404107762069885},{"time":1262024880000,"y":4.82602423542989},{"time":1262024820000,"y":4.682897862232779},{"time":1262024760000,"y":5.511448417802933},{"time":1262024700000,"y":4.7527220630372495},{"time":1262024640000,"y":10.412128712871286},{"time":1262024580000,"y":17.066176470588236}]},"averageJSONPayload":{"yaxis":1,"label":"application/json","values":[{"time":1262025060000,"y":89.26315789473684},{"time":1262025000000,"y":88.38587424633937},{"time":1262024940000,"y":87.95838890370766},{"time":1262024880000,"y":87.71177149451817},{"time":1262024820000,"y":87.78444180522565},{"time":1262024760000,"y":87.92693594031387},{"time":1262024700000,"y":87.82005730659026},{"time":1262024640000,"y":88.38737623762377},{"time":1262024580000,"y":89.17647058823529}]},"clients":{"127.0.0.1":{"pollInterval":5000,"errorCount":0,"jSONRequestCount":18835,"totalRequestCount":21153,"clientId":"127.0.0.1","lastAccess":1262027195409,"viewRequestCount":2318},"10.2.237.6":{"pollInterval":5000,"errorCount":0,"jSONRequestCount":1363,"totalRequestCount":1371,"clientId":"10.2.237.6","lastAccess":1262027195401,"viewRequestCount":8}},"json":{"yaxis":1,"label":"application/json","values":[{"time":1262025060000,"y":133},{"time":1262025000000,"y":1161},{"time":1262024940000,"y":3749},{"time":1262024880000,"y":3466},{"time":1262024820000,"y":3368},{"time":1262024760000,"y":3887},{"time":1262024700000,"y":3490},{"time":1262024640000,"y":808},{"time":1262024580000,"y":136}]},"pageStats":{"text/html":{"/about.prt":{"averageContentLength":3464,"averageProcessingTime":3464.1621287128714,"accessCount":808,"totalProcessingTime":2799043,"totalContentLength":2798912},"//welcome.prt":{"averageContentLength":4591,"averageProcessingTime":4591.4,"accessCount":5,"totalProcessingTime":22957,"totalContentLength":22955},"/welcome.prt":{"averageContentLength":4591,"averageProcessingTime":4591.156983930779,"accessCount":809,"totalProcessingTime":3714246,"totalContentLength":3714119},"/private.prt":{"averageContentLength":7758,"averageProcessingTime":7758.163584637269,"accessCount":703,"totalProcessingTime":5453989,"totalContentLength":5453874},"/blueprints-css-liquid.prt":{"averageContentLength":8179,"averageProcessingTime":12,"accessCount":1,"totalProcessingTime":12,"totalContentLength":8179}},"application/json":{"/secure/testPoller!doFoo.hop":{"averageContentLength":91.09464475079534,"averageProcessingTime":91.135737009544,"accessCount":3772,"totalProcessingTime":343764,"totalContentLength":343609},"/secure/testLongPoller!doFoo.hop":{"averageContentLength":91.09230340211936,"averageProcessingTime":91.12744004461796,"accessCount":3586,"totalProcessingTime":326783,"totalContentLength":326657},"/secure2/test!doFoo.hop":{"averageContentLength":83.0948587078302,"averageProcessingTime":83.0979708701606,"accessCount":8033,"totalProcessingTime":667526,"totalContentLength":667501},"/secure/testNamespace!doFoo.hop":{"averageContentLength":91.10734345745787,"averageProcessingTime":91.12960266278344,"accessCount":4807,"totalProcessingTime":438060,"totalContentLength":437953}}},"averageViewPayload":{"yaxis":1,"label":"text/html","values":[{"time":1262026320000,"y":4591},{"time":1262026260000,"y":4591},{"time":1262025840000,"y":5942},{"time":1262025000000,"y":5202.871794871795},{"time":1262024940000,"y":5037.943298969072},{"time":1262024880000,"y":5218.367088607595},{"time":1262024820000,"y":5093.592307692307},{"time":1262024760000,"y":5223.535809018567},{"time":1262024700000,"y":5089.190201729107},{"time":1262024640000,"y":5272.902040816327},{"time":1262024580000,"y":5616.0952380952385}]}}                   )
+}

@@ -1,6 +1,5 @@
 package org.protorabbit.stats.impl;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -145,7 +144,6 @@ public class StatsManager  implements ServletContextListener {
 
         public double averageProcessingTime() {
             if ( processingTime > 0 ) {
-               // System.out.println("getting average " + processingTime + " / " + value + " = " + ( (double)processingTime / value ));
                 return ( (double)processingTime / value );
             } else {
                 return 0;
@@ -213,6 +211,7 @@ public class StatsManager  implements ServletContextListener {
                 totalCount +=1;
                 String key = stat.getPath();
                 String cid = stat.getRemoteClient();
+
                 Long bucketId = getRoundTime( resolution, stat.getTimestamp() );
                 String contentKey = null;
                 if ( stat.isPoller() ) {
@@ -284,7 +283,9 @@ public class StatsManager  implements ServletContextListener {
                 }
                 // since we go backwards don't iterate if we have a stat already greater
             } else {
-                break;
+                if ( threshold != -1 ) {
+                    break;
+                }
             }
         }
         //
@@ -339,6 +340,13 @@ public class StatsManager  implements ServletContextListener {
         return null;
     }
 
+    public Object loadSummarySinceDate( long timestamp) {
+        if ( sr != null ) {
+            return sr.loadSummarySinceDate( timestamp );
+        }
+        return null;
+    }
+    
     private static  void addPayloadsAndProcessingTime( Map<Long,TimeChartItem> jBuckets, Map<String, Object> envelope, String label, String type ) {
         List<TimeChartItem> averageJsonProcessingTimes = new ArrayList<TimeChartItem>();
         List<TimeChartItem> averageJsonPayloads = new ArrayList<TimeChartItem>();
@@ -360,7 +368,7 @@ public class StatsManager  implements ServletContextListener {
         averageJsonPayloadDS.put("label", label );
         averageJsonPayloadDS.put("yaxis", new Long(1) );
         averageJsonPayloadDS.put("values",  averageJsonPayloads);
- 
+
         envelope.put("average" + type + "Payload", averageJsonPayloadDS );
     }
 
@@ -392,6 +400,9 @@ public class StatsManager  implements ServletContextListener {
     public void contextDestroyed(ServletContextEvent arg0) {
         getLogger().log(Level.INFO, "Shutting down stats monitor....");
         tm.shutdown();
+        if (sr != null) {
+            sr.cleanup();
+        }
     }
 
     public void pruneHistory( long threshold ) {
