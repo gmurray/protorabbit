@@ -5,6 +5,8 @@ import java.util.Map;
 
 import javax.servlet.ServletContext;
 
+import org.protorabbit.stats.impl.StatsManager.Resolution;
+
 
 public interface IStatRecorder {
     public void init( ServletContext ctx);
@@ -18,4 +20,5 @@ public interface IStatRecorder {
     public Object loadSummaryForDate(long timestamp);
     public Object loadSummarySinceDate( long timestamp );
     public void updateDailySummary();
+    public Object loadArchivedStatsForRange( long statTimestamp, long endTimestamp, Resolution r );
 }

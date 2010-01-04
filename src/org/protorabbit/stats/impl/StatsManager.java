@@ -1,10 +1,8 @@
 package org.protorabbit.stats.impl;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -18,11 +16,10 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
-import org.protorabbit.stats.impl.Client;
 import org.protorabbit.stats.IClient;
 import org.protorabbit.stats.IClientIdGenerator;
-import org.protorabbit.stats.IStat;
 import org.protorabbit.stats.IResourceStat;
+import org.protorabbit.stats.IStat;
 import org.protorabbit.stats.IStatRecorder;
 
 public class StatsManager  implements ServletContextListener {
@@ -41,12 +38,12 @@ public class StatsManager  implements ServletContextListener {
     private PollManager pollManager = null;
     private IStatRecorder sr = null;
     private ServletContext ctx = null;
-    private String host = null;
 
     public enum Resolution {
         SECOND ( 1000),
         MINUTE ( 60000),
-        HOUR  (360000);
+        HOUR  (360000),
+        DAY  (8640000);
 
         private final long modValue;
         private Resolution( long time ) {
@@ -206,12 +203,11 @@ public class StatsManager  implements ServletContextListener {
         if (duration != null) {
             threshold = System.currentTimeMillis() - duration;
         }
-        Integer totalCount = 0;
-
+        long totalCount = 0;
         // do the processing
-        addStats( duration, resolution, baseList,vBuckets, jBuckets,
+        totalCount = addStats( duration, resolution, baseList,vBuckets, jBuckets,
                  lclients, pageStats,  errors,
-                 threshold,  totalCount ) ;
+                 threshold  ) ;
 
         return createStatsEnvelope( vBuckets, jBuckets,
                 lclients, pageStats,  errors,
@@ -220,23 +216,33 @@ public class StatsManager  implements ServletContextListener {
 
     public static Map<String, Object> createStatsEnvelope(   Map<Long,TimeChartItem> vBuckets, Map<Long,TimeChartItem> jBuckets,
                                                 Map<String,IClient> lclients, Map<String, Map<String,IResourceStat>> pageStats, List<IStat> errors,
-                                                long threshold, Integer totalCount  ) {
+                                                long threshold, long long1  ) {
         Map<String, Object>jds = new HashMap<String,Object>();
         jds.put("label", "application/json");
         jds.put("yaxis", new Long(1) );
-        jds.put("values", jBuckets.values() );
+        // sort the buckets
+        List<TimeChartItem> sorted = new ArrayList<TimeChartItem>();
+        sorted.addAll( jBuckets.values() );
+        Collections.sort( sorted, new ResourceStatComparator() );
+        jds.put("values", sorted );
+
         // views
         Map<String, Object>vds = new HashMap<String,Object>();
         vds.put("label", "text/html");
         vds.put("yaxis", new Long(1) );
-        vds.put("values", vBuckets.values() );
+        //sort
+        List<TimeChartItem> vsorted = new ArrayList<TimeChartItem>();
+        vsorted.addAll( vBuckets.values() );
+        Collections.sort( vsorted, new ResourceStatComparator() );
+        vds.put("values", vsorted );
+
         Map<String, Object> envelope = new HashMap<String, Object>();
         envelope.put("json", jds );
         envelope.put("view", vds );
         envelope.put("errors", errors );
         envelope.put("clients", lclients );
         envelope.put("pageStats",  pageStats );
-        envelope.put("total", new Long( totalCount ) );
+        envelope.put("total", new Long( long1 ) );
         // create average times
         addPayloadsAndProcessingTime( jBuckets, envelope, "application/json", "JSON" );
         addPayloadsAndProcessingTime( vBuckets, envelope, "text/html", "View" );
@@ -244,18 +250,40 @@ public class StatsManager  implements ServletContextListener {
         return envelope;
     }
 
-    public static void addStats( Long duration, long resolution, List<IStat> baseList,
+    static class ResourceStatComparator implements Comparator<TimeChartItem> {
+
+        public int compare(TimeChartItem o1, TimeChartItem o2) {
+            if (  o1.getTime() > o2.getTime() ) {
+                return 1;
+            } else if (  o1.getTime() < o2.getTime() ) {
+                return -1;
+            } else {
+                return 0;
+            }
+        }
+        
+    }
+
+    public Object loadArchivedStatsForRange( long statTimestamp, long endTimestamp, Resolution r ) {
+        if ( sr != null) {
+            return sr.loadArchivedStatsForRange( statTimestamp, endTimestamp, r );
+        } else {
+            return null;
+        }
+    }
+
+    public static long addStats( Long duration, long resolution, List<IStat> baseList,
             Map<Long,TimeChartItem> vBuckets, Map<Long,TimeChartItem> jBuckets,
                                                 Map<String,IClient> lclients, Map<String, Map<String,IResourceStat>> pageStats, List<IStat> errors,
-                                                long threshold, Integer totalCount  ) {
-
+                                                long threshold  ) {
+        long counter = 0;
         // iterate the list backwards because it is LIFO and we can stop iterating early if we 
         // find a stat outside the threshold
         for ( int i= baseList.size() -1; i >= 0; i--) {
             IStat stat = baseList.get( i );
 
             if ( (threshold == -1) || ((threshold != -1) && stat.getTimestamp() > threshold) ) {
-                totalCount +=1;
+                counter++;
                 String key = stat.getPath();
                 String cid = stat.getRemoteClient();
 
@@ -335,7 +363,7 @@ public class StatsManager  implements ServletContextListener {
                 }
             }
         }
-
+        return counter;
     }
 
     public  Map<String, Object> getStatsForDate( long timestamp) {
@@ -458,13 +486,6 @@ public class StatsManager  implements ServletContextListener {
         ctx.setAttribute( STATS_MANAGER, this );
         sr = new DefaultStatRecorder( );
         sr.init( ctx );
-        try {
-            InetAddress ia = null;
-            ia = InetAddress.getLocalHost();
-            host = ia.getHostName();
-        } catch (UnknownHostException ex) {
-            getLogger().log( Level.WARNING, "Could not resolve host name. Defaulting to localhost." );
-        }
     }
 
 }

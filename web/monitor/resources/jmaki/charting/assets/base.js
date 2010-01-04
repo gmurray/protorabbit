@@ -816,7 +816,13 @@ jmaki.widgets.jmaki.charting.base = function() {
                         $.extend(true, {}, _widget.model.options, _lranges));
                 _widget.zoomMarkers( ranges );
                 addZoomer();
-                jmaki.publish(_widget.publish + "/zoomIn", { widgetId : _widget.wargs.uuid, ranges : _lranges , zoomHistory : _widget.ctx.zoomHistory} );
+                jmaki.publish(_widget.publish + "/zoomIn", { widgetId : _widget.wargs.uuid, ranges : _lranges , zoomHistory : _widget.ctx.zoomHistory } );
+            } else {
+                var _target = $("#" + _widget.wargs.uuid + "_content");
+                var _lranges = {
+                    xaxis: { min: ranges.xaxis.from, max: ranges.xaxis.to }
+                };
+                jmaki.publish(_widget.publish + "/selectRange", { widgetId : _widget.wargs.uuid, ranges : _lranges} );
             }
         });
     };

@@ -1,0 +1,87 @@
+.jmk-lightbox-titlebar {
+  height : 18px;
+  color : #FFF;
+  padding-top: 2px;
+}
+
+
+.jmk-lightbox-titlebar-blue {
+  background: #4199DA url(images/bg-webtop-blue.png);
+  background-repeat: repeat-x;
+}
+
+.jmk-lightbox-titlebar-green {
+  background: #11d516 url(images/bg-webtop-green.png);
+  background-repeat: repeat-x;
+}
+
+.jmk-lightbox-title {
+  float : left;
+  font-size : 12px;
+}
+
+.jmk-lightbox-icons {
+  float : right;
+  margin-top: 0px;
+  padding-right: 5px;
+  height : 18px;  
+  width : 15px;  
+}
+
+.jmk-lightbox-icons img {
+  padding: 1px;
+  height : 15px;
+  width : 15px;
+  cursor : pointer;
+}
+.jmk-lightbox-close {
+  cursor : pointer;
+}
+
+.jmk-lightbox-icons div {
+  padding: 1px;
+  height : 15px;
+  width : 15px;
+  cursor : pointer;
+}
+
+.jmk-lightbox {
+  z-index : 10003;
+  border : 1px solid #000;
+  background : #FFF;
+  margin-top: 2px;
+  position : absolute;
+}
+
+.jmk-lightbox-shadow {
+  z-index : 10002;
+  background : #000;
+  position : absolute;
+}
+
+.jmk-lightbox-status {
+  position : absolute;
+  text-align : left;
+  overflow : hidden;
+  left : 0px;
+  bottom : 2px;
+  height: 20px;
+  padding : 2px;
+}
+
+.jmk-lightbox-close-buttons {
+  right:15px;
+  bottom:15px;  
+  padding : 5px;
+  position:absolute;
+}
+
+.jmk-lightbox-dragger {
+  z-index:9999;
+  overflow:hidden;
+  position:absolute;
+  right:0px;
+  width:20px;
+  bottom:0px;
+  height:20px;
+}

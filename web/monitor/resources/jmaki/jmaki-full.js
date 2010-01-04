@@ -1,3 +1,11 @@
+
+/**
+ * jMaki JavaScript Client 1.9.3
+ * 
+ *  Find license at :
+ *  http://developer.sun.com/berkeley_license.html
+ *
+ */
 if (typeof jmaki == "undefined") {
     var _globalScope = window;
 
@@ -67,7 +75,7 @@ if (typeof jmaki == "undefined") {
    };
 
     var ctx = {
-            version :"1.9",
+            version :"1.9.2",
             debugGlue :false,
             verboseDebug :false,
             debug :false,
@@ -132,7 +140,7 @@ if (typeof jmaki == "undefined") {
          if (typeof _obj == "undefined") {
              window[paths[0]] = _obj = {};
          }
-         for ( var ii = 1; ii < paths.length; ii++) {
+         for ( var ii = 1; ii < paths.length; ii+=1) {
              if (typeof _obj[paths[ii]] != "undefined") {
                  _obj = _obj[paths[ii]];
              } else {
@@ -150,7 +158,7 @@ if (typeof jmaki == "undefined") {
 
     var messageFormat = function(_message, _args) {
         if (typeof _message != "undefined" &&  typeof _args != "undefined") {
-            for (var i=0; i < _args.length; i++) {
+            for (var i=0; i < _args.length; i+=1) {
                 var rex = new RegExp("\\{" + i + "\\}", "g");
                 _message =  _message.replace(rex, _args[i]);
             }
@@ -197,7 +205,7 @@ if (typeof jmaki == "undefined") {
     };
 
      var genId = function() {
-         return "jmk" + ctx.counter++;
+         return "jmk" + (ctx.counter+=1);
      };
 
     var createElement = function(type) {
@@ -314,14 +322,14 @@ if (typeof jmaki == "undefined") {
             if (patpos+i<patlen) {
                 switch (pattern.charAt(patpos + i)) {
                 case "?":
-                    i++;
+                    i+=1;
                     continue;
                 case '*':
                     star = true;
                     strpos += i;
                     patpos += i;
                     do {
-                        ++patpos;
+                        patpos+=1;
                         if (patpos == patlen) {return true;}
                     } while (pattern.charAt(patpos) == '*');
                     i=0;
@@ -329,20 +337,20 @@ if (typeof jmaki == "undefined") {
                 }
                 if (topic.charAt(strpos + i) != pattern.charAt(patpos + i)) {
                     if (!star) {return false;}
-                    strpos++;
+                    strpos+=1;
                     i=0;
                     continue;
                 }
-                i++;
+                i+=1;
             } else {
                 if (!star) {return false;}
-                strpos++;
+                strpos+=1;
                 i=0;
             }
         }
         do {
             if (patpos + i == patlen) {return true;}
-        } while(pattern.charAt(patpos + i++)=='*');
+        } while(pattern.charAt(patpos + (i+=1))=='*');
         return false;
     };
 
@@ -351,7 +359,7 @@ if (typeof jmaki == "undefined") {
      *  @param _lis
      */
     function unsubscribe(_lis) {
-        for (var _l=0; _l < ctx.subs.length;_l++ ) {
+        for (var _l=0; _l < ctx.subs.length;_l+=1) {
             if (ctx.subs[_l].id  == _lis.id) {
                 ctx.subs.splice(_l,1);
                 break;
@@ -370,7 +378,7 @@ if (typeof jmaki == "undefined") {
         var _obj;
         if (t instanceof Array) {
             _obj = [];
-            for (var _j=0;_j< t.length;_j++) {
+            for (var _j=0;_j< t.length;_j+=1) {
                 if (typeof t[_j] != "function") {
                     _obj.push(clone(t[_j]));
                 }
@@ -405,7 +413,7 @@ if (typeof jmaki == "undefined") {
                return _o;
            }
         } else  {
-            _cd++;
+            _cd+=1;
         }
 
         var _rs = [];
@@ -413,7 +421,7 @@ if (typeof jmaki == "undefined") {
             return 'undefined';
         }
         if (_o instanceof Array) {
-            for (var i=0; i < _o.length; i++) {
+            for (var i=0; i < _o.length; i+=1) {
                 _rs.push(inspect(_o[i],_ind,_cd));
             }
             return "[" +  _rs.join(" , ") + "]";
@@ -446,7 +454,7 @@ if (typeof jmaki == "undefined") {
             found = true;
         }
         if (typeof _obj != "undefined"){
-            for (var ii =1; ii < paths.length; ii++) {
+            for (var ii =1; ii < paths.length; ii+=1) {
                 var _lp = paths[ii];
                 if (_lp.indexOf('()') != -1){
                   var _ns = _lp.split('()');
@@ -507,7 +515,7 @@ if (typeof jmaki == "undefined") {
 
         // check the glue for listeners
         if (ctx.subs){
-            for (var _l=0; _l < ctx.subs.length;_l++ ) {
+            for (var _l=0; _l < ctx.subs.length;_l+=1 ) {
                 var _listener = ctx.subs[_l];
                      if ((_listener.topic instanceof RegExp &&
                           _listener.topic.test(name))  ||
@@ -554,7 +562,7 @@ if (typeof jmaki == "undefined") {
                 } else if (ctx.subs[_l].action == 'forward') {
                     var _topics = ctx.subs[_l].topics;
                     // now multiplex the event
-                    for (var ti = 0; ti < _topics.length; ti++){
+                    for (var ti = 0; ti < _topics.length; ti+=1){
                         // don't cause a recursive loop if the topic is this one
                         if (_topics[ti] != name) {
                             publish(_topics[ti], args);
@@ -572,7 +580,7 @@ if (typeof jmaki == "undefined") {
             window.frames !== null &&
             window.frames.length > 0) {
             var _frames = ctx.dcontainers.keys();
-            for (var i=0; i < _frames.length; i++){
+            for (var i=0; i < _frames.length; i+=1){
               var _dc = ctx.dcontainers.get(_frames[i]);
               if (_dc.iframe && !_dc.externalDomain && window.frames[_dc.uuid + "_iframe"] && window.frames[_dc.uuid + "_iframe"].jmaki){
                   window.frames[_dc.uuid + "_iframe"].jmaki.publish("/global" + name, args, true, false);
@@ -669,7 +677,7 @@ if (typeof jmaki == "undefined") {
         var _target;
 
         this.processTopic = function() {
-            for (var ti = 0; ti < args.topics.length; ti++){
+            for (var ti = 0; ti < args.topics.length; ti+=1){
                 publish(args.topics[ti], {topic: args.topics[ti],
                 type:'timer',
                 src:_src,
@@ -702,7 +710,6 @@ if (typeof jmaki == "undefined") {
             window.setTimeout(_src.run,args.to);
         };
     };
-
 
     /**
      *  Get the XMLHttpRequest object
@@ -849,7 +856,6 @@ if (typeof jmaki == "undefined") {
         }
     };
 
-
     /**
      * Generalized XMLHttpRequest which can be used from evaluated code. Evaluated code is not allowed to make calls.
      * @param args is an object literal containing configuration parameters including method[get| post, get is default], body[bodycontent for a post], asynchronous[true is default]
@@ -875,16 +881,18 @@ if (typeof jmaki == "undefined") {
         var callback;
         var _c = false;
         if (args.timeout) {
-            setTimeout(function(){
-              if (_c === false) {
+            _req.timer = setTimeout(function() {
                 _c = true;
                 if (_req.abort) {
                     _req.abort();
                 }
-                handleAjaxError(getMessage("request_timeout", [args.url]), _req, args);
+                if (typeof args.ontimeout === "function") {
+                    args.ontimeout.apply({}, [_req, args]);
+                } else {
+                    handleAjaxError(getMessage("request_timeout", [args.url]), _req, args);
+                }
                 updateAjaxQueue();
                 return;
-               }
             }, args.timeout);
         }
 
@@ -912,9 +920,13 @@ if (typeof jmaki == "undefined") {
             _req.onreadystatechange = function() {
                 if (_req.readyState == 4 && _c === false) {
                     _c = true;
-                    if ((_req.status == 200 || _req.status === 0) &&
+                    if ((_req.status == 200 /* removing for prod || _req.status === 0 */) &&
                             callback) {
+                        if (_req.timer) {
+                            clearTimeout(_req.timer);
+                        }
                         callback(_req);
+
                     } else if (_req.status != 200) {
                         _c = true;
                         handleAjaxError(getMessage("ajax_server_error",
@@ -926,7 +938,7 @@ if (typeof jmaki == "undefined") {
             };
         }
         try {
-           if (!_c) {
+           if (_c === false) {
                _req.open(method, args.url, async);
            }
         } catch(e) {
@@ -937,7 +949,7 @@ if (typeof jmaki == "undefined") {
         }
         // add headers
         if (args.headers && args.headers.length > 0) {
-            for (var _h=0;_h < args.headers.length; _h++) {
+            for (var _h=0;_h < args.headers.length; _h+=1) {
                 _req.setRequestHeader(args.headers[_h].name, args.headers[_h].value);
             }
         }
@@ -955,7 +967,7 @@ if (typeof jmaki == "undefined") {
         }
         try {
           if (_c === false) {
-              _req.send(_body);
+             _req.send(_body);
           }
         } catch(er) {
           _c = true;
@@ -967,7 +979,12 @@ if (typeof jmaki == "undefined") {
             _c = true;
             if (_req.status === 200 || _req.status === 0) {
                  if (callback) {
+                     if (_req.timer) {
+                         clearTimeout(_req.timer);
+                     }
                      callback(_req);
+                 } else {
+                     jmaki.log("no callback")
                  }
             } else {
                 _c = true;
@@ -975,6 +992,7 @@ if (typeof jmaki == "undefined") {
             }
             updateAjaxQueue();
         }
+        return _req;
      };
 
      /**
@@ -1003,7 +1021,7 @@ if (typeof jmaki == "undefined") {
       */
      var getAllChildren = function(target, children) {
          var _nc = target.childNodes;
-         for (var l=0; _nc && l <  _nc.length; l++) {
+         for (var l=0; _nc && l <  _nc.length; l+=1) {
              if (_nc[l].nodeType == 1) {
                  children.push(_nc[l]);
                  if (_nc[l].childNodes.length > 0) {
@@ -1057,7 +1075,7 @@ if (typeof jmaki == "undefined") {
       */
      var replaceStyleClass = function (root, oldStyle, targetStyle) {
          var elements = getElementsByStyle(oldStyle,root);
-         for (var i=0; i < elements.length; i++) {
+         for (var i=0; i < elements.length; i+=1) {
              // Handle cases where there are multiple classnames
              if (elements[i].className.indexOf(' ') != -1) {
                  var classNames = elements[i].className.split(' ');
@@ -1079,12 +1097,11 @@ if (typeof jmaki == "undefined") {
       * @param _ext Object representing widget to load
       */
      this.loadExtension = function(_ext) {
-	 
          if (ctx.extensions.get(_ext)){
-             return;
+             return null;
          }
          var targetName ="jmaki.extensions." + _ext.name + ".Extension";
-         var Con = findObject(targetName);       
+         var Con = findObject(targetName);
          if (typeof Con != "function") {
              log(getMessage("extension_constructor_not_found", [targetName]));
          } else {
@@ -1093,8 +1110,9 @@ if (typeof jmaki == "undefined") {
                ex.postLoad.call(window);
            }
            ctx.extensions.put(_ext.name, ex);
+           return ex;
          }
-
+         return null;
      };
 
      function logError(message, div) {
@@ -1116,13 +1134,14 @@ if (typeof jmaki == "undefined") {
          logError(message, div);
      }
 
-
      /**
       * Load a widget
       * @param _jmw Object representing widget to load
       */
      var loadWidget = function(_jmw) {
-
+         if (window.postMessage) {
+             window.postMessage("EPISODES:mark:jmaki.loadWidget(" + _jmw.name + "#" + _jmw.uuid +  ")", "*");
+         }
          // see if the widget has been defined.
          if (ctx.attributes.get(_jmw.uuid) != null) {
              return null;
@@ -1138,6 +1157,10 @@ if (typeof jmaki == "undefined") {
          if ((typeof _jmw.value == 'string') && _jmw.value.indexOf("@{") === 0) {
              var _vw = /[^@{].*[^}]/.exec(_jmw.value);
              _jmw.value = findObject(_vw + "");
+         }      
+         if ((typeof _jmw.args == 'string') && _jmw.args.indexOf("@{") === 0) {
+             var _va = /[^@{].*[^}]/.exec(_jmw.args);
+             _jmw.args = findObject(_va + "");
          }
          // do not wrap IE with exception handler
          // because we can't get the right line number
@@ -1183,7 +1206,7 @@ if (typeof jmaki == "undefined") {
              }
              // map in any subscribe handlers.
              if (_jmw.subscribe && _jmw.subscribe.push) { //string also have length property
-                 for (var _wi = 0; _wi < _jmw.subscribe.length; _wi++) {
+                 for (var _wi = 0; _wi < _jmw.subscribe.length; _wi+=1) {
                      var _t = _jmw.subscribe[_wi].topic;
                      var _m = _jmw.subscribe[_wi].handler;
                      var _h = null;
@@ -1199,16 +1222,15 @@ if (typeof jmaki == "undefined") {
                  }
              }
              publish("/jmaki/runtime/widget/loaded", { id : _jmw.uuid});
+             if (window.postMessage) {
+                 window.postMessage("EPISODES:measure:jmaki.loadWidget(" + _jmw.name + "#" + _jmw.uuid +  ")", "*");
+             }
              return wimpl;
          } else {
              logError(getMessage("widget_instantiation_error",[targetName]), getElement(_jmw.uuid ));
          }
          return null;
      };
-
-
-
-
 
      /**
       * An easy way to get a instance of a widget.
@@ -1236,7 +1258,7 @@ if (typeof jmaki == "undefined") {
       * destroy all registered widgets under the target node
       * @param _root - The _root to start at. All widgets will be removed if not specified.
       */
-     this.clearWidgets = function(_root) {
+     var clearWidgets = function(_root) {
 
          if (!isDefined(_root)) {
              var _k = ctx.attributes.keys();
@@ -1247,7 +1269,7 @@ if (typeof jmaki == "undefined") {
              ctx.widgets = [];
          } else {
             var _ws = getAllChildren(_root,[]);
-            for (var ll=0; ll < _ws.length; ll++) {
+            for (var ll=0; ll < _ws.length; ll+=1) {
                  if (_ws[ll].id) {
                      removeWidget(_ws[ll].id);
                  }
@@ -1290,7 +1312,7 @@ if (typeof jmaki == "undefined") {
       * @param id The id of the extension
       */
      var getExtension = function(id) {
-         return ctx.extensions.get(id);
+         return ctx.extensions.get(id) || null;
      };
 
      /**
@@ -1480,8 +1502,6 @@ if (typeof jmaki == "undefined") {
          return {h : rn.clientHeight, w : rn.clientWidth};
      };
 
-
-
      var addTimers = function(_timers){
          if (isDefined(_timers)){
              for (var _l=0; _l <_timers.length;_l++ ) {
@@ -1511,7 +1531,9 @@ if (typeof jmaki == "undefined") {
      };
 
      var addTimer = function(_timer){
-         addTimers([_timer]);
+         var timers = [];
+         timers.push(_timer);
+         addTimers(timers);
      };
 
     var postInitialize = function() {
@@ -1787,10 +1809,16 @@ if (typeof jmaki == "undefined") {
                               if (wf !== null) {
                                   wf.findAndAdd(injectionPoint);
                               }
+                              if (typeof task.callback == 'function') {
+                                  task.callback.apply({}, [{status : 'success'}]);
+                              }
                               processNextTask();
                           });
                       } catch (e) {
                           injectionPoint.innerHTML = "<span style='color:red'>" + e.message + "</span>";
+                          if (typeof task.callback == 'function') {
+                              task.callback.apply({}, [{status : 'fail'}]);
+                          }
                       }
                   }
               }, 25);
@@ -1812,14 +1840,14 @@ if (typeof jmaki == "undefined") {
            *                    Content is injected by setting the innerHTML property
            *                    of an element to the template text.
            */
-          function inject(task) {     	  
+          function inject(task) {
               _processing = true;
 
               doAjax({
                     method:"GET",
                     url: task.url,
                     asynchronous: false,
-                    callback: function(req) {         	  
+                    callback: function(req) {
                        getContent(req.responseText, task);
                        //if no parent is given append to the document root
                        var injectionPoint;
@@ -1838,7 +1866,7 @@ if (typeof jmaki == "undefined") {
                            } else {
                                processTask(injectionPoint, task);
                            }
-                        } else {                    	
+                        } else {
                             processTask(task.injectionPoint, task);
                         }
                  },
@@ -1847,7 +1875,7 @@ if (typeof jmaki == "undefined") {
                     if (typeof task.injectionPoint == 'string') {
                         ip = getElement(task.injectionPoint);
                     }
-                    clearWidgets(ip);                  
+                    clearWidgets(ip);
                     ip.innerHTML = getMessage("unable_to_load_url", [task.url]);
                     processNextTask();
                  }
@@ -1991,7 +2019,7 @@ if (typeof jmaki == "undefined") {
 
            var resize = function() {
                var _dim = getDimensions(_container);
-               if (autoSizeH || autoSizeW){
+               if (autoSizeH === true || autoSizeW === true){
                    if (!_container.parentNode){
                        return;
                    }
@@ -1999,7 +2027,7 @@ if (typeof jmaki == "undefined") {
                    if (_container.parentNode.nodeName == "BODY") {
                        if (window.innerHeight){
                            if (autoSizeH) {
-                               VIEWPORT_HEIGHT = window.innerHeight - pos.y ;
+                               VIEWPORT_HEIGHT = window.innerHeight - pos.y;
                            }
                            if (autoSizeW) {
                                VIEWPORT_WIDTH = window.innerWidth - 20;
@@ -2032,37 +2060,21 @@ if (typeof jmaki == "undefined") {
                            }
                        }
                    }
-                   if (autoSizeH) {
-                       if (VIEWPORT_HEIGHT < 0) {
-                           VIEWPORT_HEIGHT = 320;
-                       }
-                       _container.style.height = VIEWPORT_HEIGHT + "px";
-                   }
-                   if (autoSizeW) {
-                       _container.style.width = VIEWPORT_WIDTH + "px";
-                   }
-               } else {
-                   _container.style.width = VIEWPORT_WIDTH + "px";
-                   _container.style.height = VIEWPORT_HEIGHT + "px";
                }
-               if (VIEWPORT_HEIGHT < 0) {
-                   VIEWPORT_HEIGHT = 320;
+               _container.style.height = VIEWPORT_HEIGHT - 55 + "px";
+               if (_self.iframe) {
+                       _self.iframe.style.height = VIEWPORT_HEIGHT - 55 + "px";
                }
-               if (VIEWPORT_WIDTH < 0) {
-                   VIEWPORT_WIDTH = 500;
-               }
+               _container.style.width = VIEWPORT_WIDTH + "px";
+               if (_self.iframe) {
+                   _self.iframe.style.width = VIEWPORT_WIDTH -2 + "px";
+                }
 
-               if (args.useIframe) {
-                   if (_self.iframe) {
-                       _self.iframe.style.height = VIEWPORT_HEIGHT -2 + "px";
-                       _self.iframe.style.width = VIEWPORT_WIDTH -2 + "px";
-                   }
-               }
                // used for tracking with IE
                oldWidth = body.clientWidth;
            };
 
-           var loadURL = function(_url){
+           var loadURL = function(_url, _callback){
                // shut down all events published to iframe
                if (_self.iframe) {
                    _self.externalDomain = true;
@@ -2125,8 +2137,8 @@ if (typeof jmaki == "undefined") {
                      }
                      _self.iframe.src = _self.url;
                 }
-               } else {      	   
-                   ctx.injector.inject({url: _self.url, injectionPoint: _container});  
+               } else {
+                   ctx.injector.inject({url: _self.url, injectionPoint: _container, callback : _callback});
                }
            };
 
@@ -2152,9 +2164,9 @@ if (typeof jmaki == "undefined") {
        };
 
       var  initD = function() {
-               if (window.attachEvent) {
+               if (args.autosize === true && window.attachEvent) {
                    window.attachEvent('onresize', layout);
-               } else if (window.addEventListener) {
+               } else if (args.autosize === true && window.addEventListener) {
                    window.addEventListener('resize', layout, true);
                }
                var _ot = _container;
@@ -2171,25 +2183,26 @@ if (typeof jmaki == "undefined") {
                    _ot.style.overflowY = args.overflowY;
                }
                if (args.startWidth) {
-                   VIEWPORT_WIDTH = Number(args.startWidth);
+                   VIEWPORT_WIDTH = args.startWidth;
                    _container.style.width = VIEWPORT_WIDTH + "px";
                } else {
                    VIEWPORT_WIDTH = _container.clientWidth;
                    autoSizeW = true;
                }
                if (args.startHeight) {
-                   VIEWPORT_HEIGHT = Number(args.startHeight);
+                   VIEWPORT_HEIGHT = args.startHeight;
                } else {
                    VIEWPORT_HEIGHT = _container.clientHeight;
                    autoSizeH = true;
                }
-               if (VIEWPORT_HEIGHT <= 0) {
-                   VIEWPORT_HEIGHT = 320;
+             
+               if (args.startHeight || autoSizeH !== true) {
+                   _container.style.height = VIEWPORT_HEIGHT + "px";
+                   if (args.useIFrame &&  _self.iframe) {
+                       _self.iframe.style.height = VIEWPORT_HEIGHT + "px";
+                   }
                }
-               _container.style.height = VIEWPORT_HEIGHT + "px";
-               if (args.useIFrame &&  _self.iframe) {
-                   _self.iframe.style.height = VIEWPORT_HEIGHT + "px";
-               }
+
                resize();
                if (args.url && !args.useIframe) {
                    loadURL(args.url);
@@ -2493,15 +2506,31 @@ if (typeof jmaki == "undefined") {
      * override initial onload.
      */
     window.onload = function() {
-        if (!ctx.initialized) {
-            initialize();
-        } else {
-            bootstrapWidgets();
-            return;
-        }
-        
         if (typeof oldLoad  == 'function') {
             oldLoad();
+        }
+        if (!ctx.initialized) {
+            if (window.postMessage) {
+                window.postMessage("EPISODES:mark:jmaki.loadWidgets", "*");
+            }
+            initialize();
+            if (window.postMessage) {
+                window.postMessage("EPISODES:measure:jmaki.loadWidgets", "*");
+            }
+        } else {
+
+            if (window.postMessage) {
+                window.postMessage("EPISODES:mark:jmaki.loadWidgets", "*");
+            }
+            bootstrapWidgets();
+            if (window.postMessage) {
+                window.postMessage("EPISODES:measure:jmaki.loadWidgets", "*");
+            }
+            return;
+        }
+
+        if (window.postMessage) {
+            window.postMessage("EPISODES:done", "*");
         }
     };
 
@@ -2530,6 +2559,7 @@ if (typeof jmaki == "undefined") {
         replaceStyleClass : replaceStyleClass,
         getAllChildren : getAllChildren,
         getWidget : getWidget,
+        clearWidgets : clearWidgets,
         loadWidget : loadWidget,
         loadExtension : loadExtension,
         getExtension : getExtension,
@@ -2557,6 +2587,7 @@ if (typeof jmaki == "undefined") {
     return ctx;
 }();
 }
+
 
 /**
  * jMaki Widget Loader 1.8.1 for Plain HTML

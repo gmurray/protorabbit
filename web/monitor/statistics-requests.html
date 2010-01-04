@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <html>
  <head>
-  <title>Protorabbit Statistics</title>
+  <title>Protorabbit Monitor</title>
   <link rel="stylesheet" type="text/css" href="resources/css/statistics.css" />
   <script type="text/javascript" src="resources/jmaki/jmaki-full.js"></script>
   <script type="text/javascript" src="resources/jmaki/lightbox/extension.js"></script>
@@ -17,14 +17,17 @@
            widgetDir : 'resources/jmaki/lightbox/',
            args : { theme : 'gray'}
        });
+   
        toggleRunning();
+
     });
   </script>
-  </head>
+
+ </head>
  <body style="padding:5px">
 
   <div class="pmenu">
-   <div style="float:left">Protorabbit Resources</div>
+   <div style="float:left">Protorabbit Statistics</div>
     <div style="float:right">
     <a href="episodes.html">Episodes</a>
     <a href="components.html">Components</a>
@@ -33,9 +36,10 @@
     <a href="../"> Home</a>
    </div>
   </div>
+  <div>
   <div style="margin-top:5px"></div>
 
-   <!-- start controls -->
+  <!-- start controls -->
   <div style="float:left">
    <div style="padding-top:5px">
    <div class="title">Statistics</div>
@@ -53,12 +57,8 @@
       <div class="subTitle"><a href="statistics-errors.html">Errors</a></div>
      </div>
      <div class="titleItem">
-      <div class="titleArrow">&nbsp;</div>
-      <div class="subTitle"><a href="statistics-requests.html">Requests</a></div>
-     </div>
-     <div class="titleItem">
       <div class="titleArrow">&#8688;</div>
-      <div class="subTitle"><a href="statistics.html">Summary</a></div>
+      <div class="subTitle"><a href="statistics-requests.html">Requests</a></div>
      </div>
    </div>
    <div style="clear:both;height:10px"></div>
@@ -101,76 +101,45 @@
     </fieldset>
   </div><!-- end controls -->
 
-  <div style="margin-left:305px">
+<!--  start mid -->
+<div style="margin-left:305px">
+  <div class="pageTitle2" style="padding-top:10px;text-align:center;font-size:1.2em">Hops (application/json)</div>
+  <div style="height:300px">
+  <div jmakiId="actions" jmakiName="jmaki.charting.pie"
+       jmakiArgs="{ legend : { targetId : 'topResourcesLegend',
+                    labelFormatter : function(contents,value, x,y) {
+                    return contents + '&nbsp;' + value.percent.toFixed(1) + '%&nbsp;(' +  (value.data) + ')';
+                  }
+                  }, showHoverLabels : false }"
+       style="float:left;height:275px"></div>
+   <div id="topResourcesLegend" class="legend"></div>
+  </div>
+  <div style="clear:both"></div>
+  <div style="text-align:center;font-size:1.2em">Pollers (application/json)</div>
+  <div style="height:300px">
 
-    <div style="height:450px">
-         <div jmakiName="jmaki.charting.line" jmakiId="realtimeStats" style="overflow:hidden;height:100%"
-              jmakiArgs="{
-                    colors : [ '#4da74d', '#EB5E66',  '#D41A1F', '#AF1E2D', '#9E0508','#E31230' ],
-                    showHoverLabels : true,
-                    leftMargin : 35,
-                    hoverFormatter : function(m){
-                        if (m.value.x) {
-                            return formatTimestamp(m.value.x) + ' ' + m.value.y;
-                        } else {
-                            return m.value;
-                        }
-                    },
-                    xAxis : {
-                       mode : 'time',
-                       timeUnit : 'hour',
-                    },
-                    yAxis : {
-                     title : 'Requests' ,
-                     rotate : true,
-                     tickFormatter : function(val) {
-                         return val.toFixed(1);
-                       }
-                    },
-                    y2Axis : {
-                      rotate : true,
-                      min : 0,
-                    }
-                   }"
-               ></div>
-          </div> 
-
-       <div style="height:5px"></div>
-
-      <div style="height:125px">
-         <div jmakiName="jmaki.charting.line" jmakiId="responseTimeChart" style="overflow:hidden;height:100%"
-              jmakiArgs="{
-                    colors : [ '#4da74d', '#EB5E66',  '#D41A1F', '#AF1E2D', '#9E0508','#E31230' ],
-                    showHoverLabels : true,
-                    leftMargin : 35,
-                    hoverFormatter : function(m){
-                        if (m.value.x) {
-                            return formatTimestamp(m.value.x) + ' ' + m.value.y.toFixed(1) + 'ms';
-                        } else {
-                            return m.value;
-                        }
-                    },
-                    xAxis : {
-                       mode : 'time',
-                       timeUnit : 'hour'
-                    },
-                    yAxis : {
-                     title : 'Time (ms)' ,
-                     rotate : true,
-                     tickFormatter : function(val) {
-                         return val.toFixed(1);
-                       }
-                    },
-                    y2Axis : {
-                      rotate : true,
-                      min : 0,
-                    }
-                   }"
-               ></div>
-          </div>
-          <div id="status"></div>
-    </div>
-
- </div>
+     <div jmakiId="pollers" jmakiName="jmaki.charting.pie"
+       jmakiArgs="{ legend : { targetId : 'pollerLegend',
+                    labelFormatter : function(contents,value, x,y) {
+                    return contents + '&nbsp;' + value.percent.toFixed(1) + '%&nbsp;(' +  (value.data) + ')';
+                  }
+                  }, showHoverLabels : false }"
+       style="float:left;height:275px"></div>
+   <div id="pollerLegend" class="legend"></div>
+  </div>
+  <div style="clear:both"></div>
+  <div style="padding-top:10px;text-align:center;font-size:1.2em">Pages (text/html)</div>
+  <div style="height:300px">
+  <div jmakiId="views" jmakiName="jmaki.charting.pie"
+       jmakiArgs="{ legend : { targetId : 'dispoLegend',
+                    labelFormatter : function(contents,value, x,y) {
+                    return contents + '&nbsp;' + value.percent.toFixed(1) + '%&nbsp;(' +  (value.data) + ')';
+                  }
+                  }, showHoverLabels : false }"
+       style="float:left;height:275px"></div>
+   <div id="dispoLegend" class="legend"></div>
+  </div>
+ </div><!-- mid  -->
+ </div><!-- body -->
  </body>
 </html>

@@ -1,0 +1,76 @@
+
+  .jmk-lightbox-titlebar {
+    cursor : move;
+  }
+
+  .jmk-lightbox-titlebar-gray {
+    background : #333;
+    color : #FFF;
+    height : 2.1em;
+    font-size : 1em;
+    border-bottom : 1px solid #3C3B3B;
+    padding-left : 3px;
+  }
+  .jmk-lightbox-titlebar-gray a {
+    color : #FFF;
+  }
+  a  {
+    color : #333;
+  }
+  .pmenu {
+    padding:3px;
+    height:40px;
+    font-size:2em;
+    background:#333;
+    color:#fff
+  }
+  .pmenu a {
+    color : #fff;
+    font-size:0.4em;
+  }
+  
+  .pmenu a:visited {
+    color : #fff;
+  }
+  .titleItem {
+     clear:left;
+     padding : 3px;
+  }
+  .subTitle {
+    font-size : 1.0em;
+    font-weight : bold;
+    float:left;
+  }
+  .pageTitle {
+    font-size : 1.2em;
+    text-align : center;
+  }
+  .title {
+    font-size : 1.1em;
+    font-weight : bold;
+  }
+  .titleArrow {
+    font-size : 1.1em;
+    float:left;
+    width:25px;
+    height:1.1em;
+  }
+  .blockTable {
+    background : #eee;
+    border : 1px solid #333;
+    width : 100%;
+    font-size : .8em;
+    overflow : hidden;
+  }
+  .blockTable td {
+    background : #fff;
+  }
+  .legend {
+    float : left;
+    font-size : .9em;
+  }
+
+.status {
+  font-size: 1.4em;
+  height:30px;
+}

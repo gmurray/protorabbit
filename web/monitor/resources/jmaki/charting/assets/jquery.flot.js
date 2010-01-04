@@ -199,20 +199,17 @@
         setData(data_);
         constructCanvas();
         setupGrid();
-        
+
          // gmurray - scale time unit based stuff - default is an hour
         for (i = 0; i < series.length; ++i) {
 
             if (series[i].bars && series[i].xaxis.mode == "time") {
-                 
                 if (series[i].bars && typeof series[i].bars.barWidth == 'string') {
-               
                      var tu = series[i].bars.barWidth || 'hour';
-                      
                      series[i].bars.barWidth = timeUnitSize[tu] * series[i].xaxis.scale;
                 } else {
-                    series[i].bars.barWidth = timeUnitSize['hour'] * series[i].xaxis.scale;
-                }                        
+                      series[i].bars.barWidth = timeUnitSize['hour'] * series[i].xaxis.scale;
+                }
             // default to 1 if still a string and not in time mode
             } else if (series[i].bars && typeof series[i].bars.barWidth == 'string') {
                 series[i].bars.barWidth = 1;
@@ -227,7 +224,7 @@
             fillInSeriesOptions();
             processData();
         }
-        
+
         function parseData(d) {
             var res = [];
             for (var i = 0; i < d.length; ++i) {
@@ -236,16 +233,14 @@
                     s = {};
                     for (var v in d[i])
                         s[v] = d[i][v];
-                }
-                else {
+                } else {
                     s = { data: d[i] };
                 }
                 res.push(s);
             }
-
             return res;
         }
-        
+
         function parseOptions(o) {
             $.extend(true, options, o);
 
@@ -262,7 +257,6 @@
 
         function fillInSeriesOptions() {
             var i;
-            
             // collect what we already got of colors
             var neededColors = series.length,
                 usedColors = [],
@@ -277,7 +271,7 @@
                         usedColors.push(parseColor(series[i].color));
                 }
             }
-            
+
             // we might need to generate more colors if higher indices
             // are assigned
             for (i = 0; i < assignedColors.length; ++i) {
@@ -302,7 +296,7 @@
                 // FIXME: if we're getting to close to something else,
                 // we should probably skip this one
                 colors.push(c);
-                
+
                 ++i;
                 if (i >= options.colors.length) {
                     i = 0;
@@ -383,24 +377,28 @@
                 axes[axis].datamax = bottomSentry;
                 axes[axis].used = false;
             }
-            
+
             for (var i = 0; i < series.length; ++i) {
                 var data = series[i].data,
                     axisx = series[i].xaxis,
                     axisy = series[i].yaxis,
                     mindelta = 0, maxdelta = 0;
-                
+
                 // make sure we got room for the bar
                 if (series[i].bars.show) {
-                    mindelta = series[i].bars.align == "left" ? 0 : -series[i].bars.barWidth/2;
-                    maxdelta = mindelta + series[i].bars.barWidth;
+
+                    if ( !( series[i].bars && typeof series[i].bars.barWidth == 'string') ) {
+                        mindelta = series[i].bars.align == "left" ? 0 : -series[i].bars.barWidth/2;
+                        maxdelta = mindelta + series[i].bars.barWidth;
+                    }
+
                 }
-                
+
                 axisx.used = axisy.used = true;
                 for (var j = 0; j < data.length; ++j) {
                     if (data[j] == null)
                         continue;
-                    
+
                     var x = data[j][0], y = data[j][1];
 
                     // convert to number
@@ -436,7 +434,7 @@
                             }
                             axisx.barstack[x].data.push({ series : series[i].id ,  y : y} );
                         }
-                            
+
                     }
 
                     if (x == null || y == null || isNaN(x) || isNaN(y))
@@ -447,8 +445,9 @@
             for (axis in axes) {
                 if (axes[axis].datamin == topSentry)
                     axes[axis].datamin = 0;
-                if (axes[axis].datamax == bottomSentry)
+                if (axes[axis].datamax == bottomSentry) {
                     axes[axis].datamax = 1;
+                }
             }
         }
 
@@ -507,38 +506,38 @@
         }
 
         function setupGrid() {
-          
+
             //PIE: calculate radius and exit;
             if (options.pie.show) {
 
                 var explodeOffset = 0;
                 var hRadius = (canvasHeight - options.pie.centerOffsetTop - 5 ) / 2;
                 var wRadius = canvasWidth  - options.pie.centerOffsetLeft;
-                
+
                 pieChartRadius = options.pie.pieChartRadius || Math.min( wRadius,hRadius);
 
-
                 insertLegend();
-                
+
                 if (options.pie.centerOffsetLeft) {
-                            
+
                 } else if (pieChartRadius == hRadius) {
                     pieCenterLeft = canvasWidth / 2;
                 } else {
                     pieCenterLeft = options.pie.centerOffsetLeft == 'auto' ? options.legend.position.match('w') ? pieChartRadius+legendWidth:pieChartRadius:pieChartRadius+options.pie.centerOffsetLeft;
                 }
-                
+
                 pieChartRadius -= explodeRadius;
                 pieChartDiameter = pieChartRadius * 2;
-                pieCenterLeft += explodeOffset;    
+                pieCenterLeft += explodeOffset;
                 pieCenterTop = pieChartRadius + options.pie.centerOffsetTop + explodeRadius;
                 return;
             }
             //PIE Done;
-            
+
             function setupAxis(axis, options) {
-               
+
                 setRange(axis, options);
+
                 prepareTickGeneration(axis, options);
                 setTicks(axis, options);
                 // add transformation helpers
@@ -551,8 +550,7 @@
                     axis.p2c = function (p) {
                          return (axis.max - p) * axis.scale;
                     };
-                    
-                    
+
                     axis.c2p = function (p) { return axis.max - p / axis.scale; };
                 }
             }
@@ -564,8 +562,9 @@
             insertLabels();
             insertLegend();
         }
-        
+
         function setRange(axis, axisOptions) {
+
             var min = axisOptions.min != null ? axisOptions.min : axis.datamin;
             var max = axisOptions.max != null ? axisOptions.max : axis.datamax;
 
@@ -592,13 +591,18 @@
                     }
                     if (axisOptions.max == null) {
                         max += (max - min) * margin;
+
                         if (max > 0 && axis.datamax <= 0)
                             max = 0;
+
                     }
                 }
             }
-            axis.min = min;
+
+            axis.min =  min;
             axis.max = max;
+
+
         }
 
         function prepareTickGeneration(axis, axisOptions) {
@@ -913,8 +917,9 @@
                     axis.max = Math.min(axis.max, axis.ticks[axis.ticks.length - 1].v);
             }
         }
-        
+
         function setSpacing() {
+
             function measureXLabels(axis) {
                 // to avoid measuring the widths of the labels, we
                 // construct fixed-size boxes and put the labels inside
@@ -941,7 +946,7 @@
                     }
                 }
             }
-            
+
             function measureYLabels(axis) {
                 if (axis.labelWidth == null || axis.labelHeight == null) {
                     var i, labels = [], l;
@@ -968,7 +973,7 @@
                         axis.labelHeight = 0;
                 }
             }
-            
+
             measureXLabels(axes.xaxis);
             measureYLabels(axes.yaxis);
             measureXLabels(axes.x2axis);
@@ -1006,6 +1011,7 @@
             axes.yaxis.scale = plotHeight / (axes.yaxis.max - axes.yaxis.min);
             axes.x2axis.scale = plotWidth / (axes.x2axis.max - axes.x2axis.min);
             axes.y2axis.scale = plotHeight / (axes.y2axis.max - axes.y2axis.min);
+
         }
         function draw() {
             drawGrid();
@@ -1673,11 +1679,11 @@
         }
 
         var counter=0;
-        
+
         function drawBar(x, y, barLeft, barRight, offset, fill, axisx, axisy, c, series, index, _overlay) {
-         
+
             var overlay = _overlay || false;
-            
+
             var drawLeft = true, drawRight = true,
                 drawTop = true, drawBottom = false,
                 left = x + barLeft,
@@ -1704,7 +1710,7 @@
                            if (!series.voffsets) {
                             series.voffsets = {};
                         }
-                        series.voffsets[index] = _voffset;                  
+                        series.voffsets[index] = _voffset;
                     } else {
                         break;
                     }
@@ -1873,9 +1879,9 @@
                axisx.barstack[x].outlineDrawn = true;
 
            }
-            
+
         }
-        
+
         function drawSeriesBars(series) {
             function plotBars(data, barLeft, barRight, offset, fill, axisx, axisy, _series, i) {
                 for (var i = 0; i < data.length; i++) {
@@ -1914,7 +1920,7 @@
                 ctx.fillStyle = c.toString();
             }
         }
-  
+
         function insertLegend() {
             target.find(".legend").remove();
 

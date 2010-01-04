@@ -335,7 +335,7 @@ function ajax(args) {
                 if ( typeof args.onerror === "function" ) {
                     args.onerror.apply( {}, [ _req ]);
                 } else {
-                    alert("Error making request. Please try again later");
+                    alert( "Error making request. Please try again later" );
                 }
             }
         }
@@ -346,7 +346,7 @@ function ajax(args) {
         if (_req.status == 200 || _req.status === 0) {
             if ( args.callback) {
                 args.callback(_req);
-            } else if ( typeof args.onsuccess === "function") {
+            } else if ( typeof args.onsuccess === "function" ) {
                 var model = eval("(" + _req.responseText + ")");
                 args.onsuccess.apply( {}, [ model, _req ] );
             }
@@ -420,27 +420,38 @@ function createChart( model ) {
 function renderPageView( model ) {
     formatPageViews( model );
     formatPageStatCharts( model.pageStats );
+
     var _count = formatActiveClients( model.clients );
     var cTitle = document.getElementById("clientsTitle");
-    cTitle.innerHTML = "Clients&nbsp;(" + _count + ")";
+    if (cTitle) {
+        cTitle.innerHTML = "Clients&nbsp;(" + _count + ")";
+    }
+    var clientStatus = document.getElementById( "clientStatus" );
+    if ( clientStatus ) {
+        clientStatus.innerHTML = _count;
+    }
     formatErrors( model.errors );
     var _count = 0;
     if ( model !== null && model.errors.length > 0 ) {
         _count = model.errors.length;
     }
     var eTitle = document.getElementById("errorsTitle");
-    eTitle.innerHTML = "Errors&nbsp;(" + _count + ")";
-
+    if ( eTitle ){
+        eTitle.innerHTML = "Errors&nbsp;(" + _count + ")";
+    }
+    var errorStatus = document.getElementById( "errorStatus" );
+    if ( errorStatus ) {
+        errorStatus.innerHTML = _count;
+    }
 }
 
 function loadPageViews(_runonce) {
     if (window.pageRequest === null &&
          (window.polling === true || _runonce === true) ) {
         var timespan = document.getElementById("timespan").value;
-
-        resolution =  document.getElementById("resolution").value;
+        var resolution =  document.getElementById("resolution").value;
         window.pageRequest = new ajax({ 
-            url : "../stats/all?duration=" + timespan + "&resolution=" + resolution,
+            url : "../stats/current?duration=" + timespan + "&resolution=" + resolution,
             callback : function(req) {
                 var model = eval("(" + req.responseText + ")");
                 renderPageView( model );
@@ -459,29 +470,40 @@ function updateResolution() {
 }
 
 function formatPageViews(items) {
-
-    document.getElementById( "status" ).innerHTML = "Total request(s) : " + items.total;
-    /*, items.averageJSONPayload*/
-    jmaki.getWidget("realtimeStats").setValue(
-            {"data":[
-                     items.json , items.view
-                     ]
-            }
-     );
-    items.averageJSONProcessingTime["lines"] = { "fill" : true };
-    items.averageViewProcessingTime["lines"] = { "fill" : true };
-    //items.averageViewProcessingTime["bars"] = { "show" : true, barWidth : 'second' };
-    jmaki.getWidget("responseTimeChart").setValue(
-            {"data":[
-                     items.averageJSONProcessingTime, items.averageViewProcessingTime
-                     ]
-            }
-     );
-    
+    var requestStatus = document.getElementById( "requestStatus" );
+    if ( requestStatus ) {
+        requestStatus.innerHTML = items.total;
+    } else {
+        document.getElementById( "status" ).innerHTML = "Total request(s) : " + items.total;
+    }
+    var chart = jmaki.getWidget("realtimeStats");
+    if ( chart ) {
+        /*, items.averageJSONPayload*/
+        chart.setValue(
+                {"data":[
+                         items.json , items.view
+                         ]
+                }
+         );
+        items.averageJSONProcessingTime["lines"] = { "fill" : true };
+        items.averageViewProcessingTime["lines"] = { "fill" : true };
+       // items.averageJSONProcessingTime["bars"] = { "show" : true, barWidth : 'second' };
+       // items.averageViewProcessingTime["bars"] = { "show" : true, barWidth : 'second' };
+        jmaki.getWidget("responseTimeChart").setValue(
+                {"data":[
+                         items.averageJSONProcessingTime,
+                         items.averageViewProcessingTime
+                         ]
+                }
+         );
+    }
 
 }
 
 function formatErrors(items) {
+    if ( document.getElementById("errorsPanel") === null ) {
+        return;
+    }
     if (items === null || (items !== null && items.length === 0)) {
         document.getElementById("errorsPanel").innerHTML = "N/A";
         return;
@@ -504,8 +526,17 @@ function formatErrors(items) {
  }
 
 function formatActiveClients(items) {
-    var tDiv = document.getElementById("clientsPanel");
     var _count = 0;
+    var tDiv = document.getElementById("clientsPanel");
+    if ( tDiv === null ) {
+        for ( var i in items ) {
+            if ( items.hasOwnProperty(i) ) {
+                _count++;
+            }
+        }
+        return _count;
+    }
+
     var s3table = new tablebuilder("blockTable");
     s3table.setHeader(["Client Id", "JSON Count", "View Count", "Error Count", "Last Access"]);
     // put everything in buckets
@@ -531,10 +562,14 @@ function formatActiveClients(items) {
 }
 
 function formatPageStatCharts( stats ) {
+    var chart = jmaki.getWidget("views");
+    if ( !chart ) { 
+        return;
+    }
     var textHTML = stats["text/html"];
     var applicationJson = stats["application/json"];
     var pollers = stats['pollers'];
-    var chart = jmaki.getWidget("views");
+
     var data = [];
     for (var i in textHTML) {
         data.push({ label : i, values : [ { value : textHTML[i].accessCount }] });
@@ -562,6 +597,9 @@ function toggleRunning() {
         window.polling = true;
         controlStatus.innerHTML = "Running";
         control.innerHTML = "Stop";
+        if ( document.getElementById("displayStatus") ) {
+            document.getElementById("displayStatus").innerHTML = "Current";
+        }
         loadPageViews();
     } else {
         window.polling = false;
@@ -578,10 +616,10 @@ function toggleRunning() {
 
 jmaki.subscribe("/jmaki/charting/line/zoomOut", function(args) {
 
-    if ( args.widgetId === "realtimeStats") {
-        jmaki.getWidget("responseTimeChart").zoomOut();
+    if ( args.widgetId === "realtimeStats" ) {
+        jmaki.getWidget( "responseTimeChart" ).zoomOut();
     } else if ( args.widgetId === "responseTimeChart" ) {
-        jmaki.getWidget("realtimeStats").zoomOut( );
+        jmaki.getWidget( "realtimeStats" ).zoomOut();
     }
 });
 
@@ -595,6 +633,46 @@ jmaki.subscribe("/jmaki/charting/line/zoomIn", function(args) {
     if (window.polling === true) { 
         toggleRunning();
     }
+});
+
+jmaki.subscribe("/jmaki/charting/line/selectRange", function(args) {
+
+    if (args.widgetId === "summaryChart") {
+        resolution =  document.getElementById("resolution").value;
+        var start = args.ranges.xaxis.min.toFixed(0);
+        var end = args.ranges.xaxis.max.toFixed(0);
+        window.lbm.addLightbox( {
+            id : "loadStatus",
+            label : "Loading",
+            content : "<div style='padding:15px'><img style='float:left;padding:5px' src='resources/images/wait-spinner.gif'/>" +
+                       "<div style='padding:10px'>Loading stats for " + formatTimestamp( new Number(start) ) +
+                      " - " + formatTimestamp( new Number(end) ) + "</div></div>",
+            startWidth : 500,
+            startHeight : 175
+        });
+        window.pageRequest = new ajax({ 
+            url : "../stats/archivedStats?start=" + start + "&end=" + end + "&resolution" + resolution,
+            callback : function(req) {
+                var model = eval("(" + req.responseText + ")");
+                if ( model != null) {
+                    renderPageView( model );
+                    if ( document.getElementById("displayStatus") ) {
+                        document.getElementById( "displayStatus" ).innerHTML = "Displaying " + formatTimestamp( new Number(start) ) + " - " + formatTimestamp( new Number(end) );
+                    }
+                } else {
+                    if ( document.getElementById("displayStatus") ) {
+                        document.getElementById( "displayStatus" ).innerHTML = "No details for range " + formatTimestamp( new Number(start) ) + " - " + formatTimestamp( new Number(end) );
+                    }
+                }
+                window.lbm.removeLightbox( { targetId : "loadStatus" });
+                window.pageRequest = null;
+                if (window.polling === true) { 
+                        toggleRunning();
+                }
+            }
+        });
+    }
+
 });
 
 var summaryResolutions = {
@@ -613,7 +691,7 @@ function updateSummary() {
         callback : function(req) {
             var model = eval("(" + req.responseText + ")");
             if ( model === null ) return;
-            jmaki.getWidget("weekSummary").setValue(
+            jmaki.getWidget("summaryChart").setValue(
                     {"data":[
                              model.json , model.view
                              ]

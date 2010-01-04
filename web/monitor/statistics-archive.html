@@ -17,30 +17,36 @@
            widgetDir : 'resources/jmaki/lightbox/',
            args : { theme : 'gray'}
        });
+   
        toggleRunning();
+       updateSummary();
+       //update the summary ever 2.5 minutes
+       var updater = setInterval( updateSummary, 150000 );
     });
   </script>
-  </head>
- <body style="padding:5px">
 
+
+ </head>
+
+ <body style="padding:5px">
   <div class="pmenu">
-   <div style="float:left">Protorabbit Resources</div>
+   <div style="float:left">Protorabbit Statistics</div>
     <div style="float:right">
     <a href="episodes.html">Episodes</a>
     <a href="components.html">Components</a>
     <a href="resources.html">Resources</a>
-    <a href="statistics.html">  Statistics</a>
+    <a href="statistics-archive.html">  Statistics</a>
     <a href="../"> Home</a>
    </div>
   </div>
   <div style="margin-top:5px"></div>
 
-   <!-- start controls -->
+    <!-- start controls -->
   <div style="float:left">
    <div style="padding-top:5px">
    <div class="title">Statistics</div>
      <div class="titleItem">
-      <div class="titleArrow">&nbsp;</div>
+      <div class="titleArrow">&#8688;</div>
       <div class="subTitle"><a href="statistics-archive.html">Archive</a></div>
      </div>
      <div class="titleItem">
@@ -55,10 +61,6 @@
      <div class="titleItem">
       <div class="titleArrow">&nbsp;</div>
       <div class="subTitle"><a href="statistics-requests.html">Requests</a></div>
-     </div>
-     <div class="titleItem">
-      <div class="titleArrow">&#8688;</div>
-      <div class="subTitle"><a href="statistics.html">Summary</a></div>
      </div>
    </div>
    <div style="clear:both;height:10px"></div>
@@ -101,9 +103,62 @@
     </fieldset>
   </div><!-- end controls -->
 
-  <div style="margin-left:305px">
+  <div style="margin-left:305px;margin-top:5px">
 
-    <div style="height:450px">
+     <!--  Start week summary -->
+     <fieldset>
+     <legend class="subTitle">
+       <span>
+        Summary :
+        <select id="summaryResolution" onchange="updateSummary()">
+         <option value="ONE_DAY" selected="selected">Last Day</option>
+         <option value="ONE_WEEK">Last Week</option>
+        </select>
+        </span>
+     </legend>
+       <div style="height:120px">
+         <div jmakiName="jmaki.charting.line" jmakiId="summaryChart" style="overflow:hidden;height:100%"
+              jmakiArgs="{
+                    colors : [ '#4da74d', '#EB5E66',  '#D41A1F', '#AF1E2D', '#9E0508','#E31230' ],
+                    showHoverLabels : true,
+                    leftMargin : 35,
+                    zoom : false,
+                    hoverFormatter : function(m){
+                        if (m.value.x) {
+                            return formatTimestamp(m.value.x) + ' ' + m.value.y;
+                        } else {
+                            return m.value;
+                        }
+                    },
+                    xAxis : {
+                       mode : 'time',
+                       timeUnit : 'hour',
+                    },
+                    yAxis : {
+                     title : 'Requests' ,
+                     rotate : true,
+                     tickFormatter : function(val) {
+                         return val.toFixed(1);
+                       }
+                    },
+                    y2Axis : {
+                      rotate : true,
+                      min : 0,
+                    }
+
+                   }"
+               ></div>
+    </div>
+    </fieldset>
+  <!--  end week summary -->
+    <div style="height:10px"></div>
+    <!--  start current --> 
+    <fieldset>
+    <legend id="displayStatus" class="subTitle">Current</legend>
+
+  <div style="margin-top:5px">
+
+    <div style="height:250px">
          <div jmakiName="jmaki.charting.line" jmakiId="realtimeStats" style="overflow:hidden;height:100%"
               jmakiArgs="{
                     colors : [ '#4da74d', '#EB5E66',  '#D41A1F', '#AF1E2D', '#9E0508','#E31230' ],
@@ -131,13 +186,14 @@
                       rotate : true,
                       min : 0,
                     }
+
                    }"
                ></div>
           </div> 
 
        <div style="height:5px"></div>
 
-      <div style="height:125px">
+      <div style="height:100px">
          <div jmakiName="jmaki.charting.line" jmakiId="responseTimeChart" style="overflow:hidden;height:100%"
               jmakiArgs="{
                     colors : [ '#4da74d', '#EB5E66',  '#D41A1F', '#AF1E2D', '#9E0508','#E31230' ],
@@ -168,9 +224,8 @@
                    }"
                ></div>
           </div>
-          <div id="status"></div>
     </div>
-
+    </fieldset><!--  end current -->
  </div>
  </body>
 </html>
