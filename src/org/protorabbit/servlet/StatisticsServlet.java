@@ -152,7 +152,7 @@ public class StatisticsServlet extends HttpServlet {
                     }
                 }
                 if ( resolution == null ) {
-                    resolution = Resolution.MINUTE;
+                    resolution = Resolution.FIVE_MINUTES;
                 }
                 Object data = null;
                 if ( startTimestamp != -1 && endTimestamp != -1) {

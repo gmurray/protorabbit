@@ -40,10 +40,11 @@ public class StatsManager  implements ServletContextListener {
     private ServletContext ctx = null;
 
     public enum Resolution {
-        SECOND ( 1000),
-        MINUTE ( 60000),
-        HOUR  (360000),
-        DAY  (8640000);
+        SECOND ( 1000 ),
+        MINUTE ( 60000 ),
+        FIVE_MINUTES ( 300000 ),
+        HOUR  ( 3600000 ),
+        DAY  ( 86400000 );
 
         private final long modValue;
         private Resolution( long time ) {

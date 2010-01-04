@@ -101,9 +101,10 @@ public class DefaultStatRecorder implements IStatRecorder {
     private BufferedWriter getWriter() {
 
         long now = getTime( System.currentTimeMillis(), ONE_DAY );
-        if ( now != today) {
+        if ( now != today || writer == null) {
             // if we already have an open writer close it
-            if ( writer != null ) {
+            if ( now != today && writer != null ) {
+                updateDailySummary();
                 close();
             }
             File currentStatsFile = getCurrentStatsFile();
@@ -114,6 +115,7 @@ public class DefaultStatRecorder implements IStatRecorder {
             }
             try {
                 writer = new BufferedWriter( new FileWriter( currentStatsFile, true ) );
+                today = now;
                 return writer;
             } catch (IOException e) {
                 getLogger().log( Level.SEVERE, "Could not create protorabbit directory to record stats." );
@@ -121,7 +123,7 @@ public class DefaultStatRecorder implements IStatRecorder {
                 return null; 
             }
         }
-        return null;
+        return writer;
     }
 
     private void close() {
@@ -158,7 +160,7 @@ public class DefaultStatRecorder implements IStatRecorder {
         try {
 
             BufferedWriter out = getWriter();
-            if ( writer != null) {
+            if ( out != null) {
                 out.write( json.serialize(stat).toString() + ",\n" );
                 out.flush();
             } else {
@@ -438,7 +440,7 @@ public class DefaultStatRecorder implements IStatRecorder {
         rc.set( Calendar.MILLISECOND, 0 );
         return rc.getTimeInMillis();
     }
-    
+
     /*
      * Find a range of detailed stats (Resolution.SECOND)
      */
@@ -466,13 +468,13 @@ public class DefaultStatRecorder implements IStatRecorder {
 
         Collections.sort( times );
         List<IStat> items = new ArrayList<IStat>();
-        System.out.println( "Loading stats for date range " + statTimestamp + " to " + endTimestamp + " file count is " + times.size() + " files are " + times );
+        getLogger().info( "Loading stats for date range " + statTimestamp + " to " + endTimestamp + " file count is " + times.size() + " files are " + times );
         if ( times.size() > 0) {
 
             for (Long l : times) {
                 long startDay =getDay( statTimestamp );
                 long endDay = getDay( endTimestamp );
-                System.out.println( "Start day=" + startDay + " endDay=" + endDay );
+                getLogger().info( "Start day=" + startDay + " endDay=" + endDay );
 
                 // look at stats file and add a day to make sure partials get picked up
                 if ( (startDay == l.longValue()) || (l.longValue() == endDay) ) {
@@ -480,7 +482,7 @@ public class DefaultStatRecorder implements IStatRecorder {
                     try { 
                         FileReader fis = null;
                         File f = getStatsFileForDate( l.longValue() );
-                        System.out.println( "*** Loading starts from " + f.getName() );
+                        getLogger().info( "Loading starts from " + f.getName() );
                         fis = new FileReader(f);
                         // read 1000 lines and process
 
