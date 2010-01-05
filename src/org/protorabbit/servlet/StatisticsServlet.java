@@ -193,8 +193,20 @@ public class StatisticsServlet extends HttpServlet {
                    getLogger().warning( "Error with timestamp parameter : " + nfe.getMessage() );
                }
            }
+           String r = request.getParameter( "resolution" );
+           Resolution resolution = null;
+           if ( r != null ) {
+               try {
+                   resolution = Resolution.valueOf( r );
+               } catch ( Exception e) {
+                   getLogger().warning( "Bad resolution " + r + ". Will use default." );
+               }
+           }
+           if ( resolution == null ) {
+               resolution = Resolution.FIVE_MINUTES;
+           }
            Object data = null;
-           data = statsManager.loadSummarySinceDate( d );
+           data = statsManager.loadSummarySinceDate( d, resolution );
            response.setHeader( "pragma", "NO-CACHE");
            response.setHeader( "Cache-Control", "no-cache" );
            Object jo = json.serialize( data );

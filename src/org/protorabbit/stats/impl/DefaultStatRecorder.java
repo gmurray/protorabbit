@@ -17,6 +17,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -249,21 +250,6 @@ public class DefaultStatRecorder implements IStatRecorder {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private void combineLists(  Map<String, Object> src, Map<String, Object> target, String key ) {
-        Map<String,Object> sViews = (Map<String,Object>)src.get(key);
-        List<Object> sItems = (List<Object>) sViews.get("values");
-        Map<String,Object> tViews = (Map<String,Object>)target.get(key);
-        List<Object> tItems = (List<Object>) tViews.get("values");
-        if ( tItems == null ) {
-            tItems = new ArrayList<Object>();
-            target.put(key, tItems );
-        }
-        if ( sItems != null ) {
-            tItems.addAll( sItems );
-        }
-    }
-
     public Double getDouble( Object v ) {
         if ( v instanceof Integer) {
            return new Double((Integer)v);
@@ -384,25 +370,70 @@ public class DefaultStatRecorder implements IStatRecorder {
         }
     }
 
-    private void combineSummaries( Map<String, Object> src, Map<String, Object> target ) {
+    @SuppressWarnings("unchecked")
+    private void combineLists(  Map<String, Object> src, Map<String, Object> target, String key, Resolution r ) {
+        List<Object> tItems = null;
+        Map<String,Object> tViews = null;
+        try {
+            Map<String,Object> sViews = (Map<String,Object>)src.get(key);
+            List<Object> sItems = (List<Object>) sViews.get("values");
+            tViews = (Map<String,Object>)target.get(key);
+            if (tViews != null ) {
+                tItems = (List<Object>) tViews.get("values");
+            }
+            if ( tItems == null ) {
+                tItems = new ArrayList<Object>();
+                target.put(key, tItems );
+            }
+            if ( sItems != null ) {
+                tItems.addAll( sItems );
+            }
+            tItems = condenseList( tItems, r.modValue() );
+            tViews.put( "values", tItems );
+        } catch ( Exception e ) {
+            getLogger().log( Level.SEVERE, "Error combining lists.", e );
+         }
+    }
+    
+    @SuppressWarnings("unchecked")
+    public List<Object> condenseList( List<Object> tItems, long r ) {
+        LinkedHashMap<Long,Object> jBuckets = new LinkedHashMap<Long,Object>();
+        for ( Object m : tItems ) {
+            Map ti = (Map)m;
+            Long timestamp = ( (Long)ti.get("time")).longValue();
+            Long bucketId = StatsManager.getRoundTime( r, timestamp );
+            // if we have the bucket item combine the value, otherwise the item becomes the first.
+            if ( jBuckets.containsKey( bucketId ) ) {
+                Map bti = (Map)jBuckets.get( bucketId );
+                bti.put( bucketId, getDouble(bti.get("y")) + getDouble(ti.get("y")) );
+            } else {
+                jBuckets.put( bucketId, ti );
+            }
+        }
+        List<Object> rvals = new ArrayList();
+        rvals.addAll(jBuckets.values());
+        return rvals;
+    }
+    
+    private void combineSummaries( Map<String, Object> src, Map<String, Object> target, Resolution r ) {
         // append views->values
-        combineLists(src,target, "view");
+        combineLists(src,target, "view", r);
         // append json->values
-        combineLists(src,target, "json");
+        combineLists(src,target, "json", r);
         // averageJSONProcessingTime->values
-        combineLists(src,target, "averageViewProcessingTime");
+        combineLists(src,target, "averageViewProcessingTime", r);
         // averageJSONPayload->values
-        combineLists(src,target, "averageViewPayload");
+        combineLists(src,target, "averageViewPayload", r);
         // averageJSONProcessingTime->values
-        combineLists(src,target, "averageJSONProcessingTime");
+        combineLists(src,target, "averageJSONProcessingTime", r);
         // averageJSONPayload->values
-        combineLists(src,target, "averageJSONPayload");
+        combineLists(src,target, "averageJSONPayload", r);
         // pageStats->text/html pageStats->application/json (in each get key work out averageContentLength, averageProcessingTime, accessCount, totalProcessingTime, totalContentLength
         combinePageStats( src, target );
     }
 
     @SuppressWarnings("unchecked")
-    public Object loadSummarySinceDate( long timestamp ) {
+    public Object loadSummarySinceDate( long timestamp, Resolution r ) {
         Map<String, Object> summaries = null;
         if (statsDirectory != null) {
 
@@ -417,7 +448,7 @@ public class DefaultStatRecorder implements IStatRecorder {
                         if (summaries == null) {
                             summaries = (Map<String, Object>) loadSummaryForDate( l );
                         } else {
-                            combineSummaries( (Map<String, Object>)loadSummaryForDate( l ), summaries );
+                            combineSummaries( (Map<String, Object>)loadSummaryForDate( l ), summaries, r );
                         }
                     }
                 }
@@ -525,9 +556,6 @@ public class DefaultStatRecorder implements IStatRecorder {
                     } catch (IOException e) {
                         getLogger().log( Level.SEVERE, "Could deserialize file.", e );
                     }
-                    
-
-                    
                 }
             }
         }
@@ -646,7 +674,7 @@ public class DefaultStatRecorder implements IStatRecorder {
         }
         return null;
     }
-    
+
     public static Long getFileTimestamp( String host, String filename) {
         try {
 
@@ -734,13 +762,6 @@ public class DefaultStatRecorder implements IStatRecorder {
                                     filename.endsWith(".json") &&
                                  !filename.endsWith("summary.json") ) {
 
-                                    String fName = "";
-                                    int last = filename.lastIndexOf(".json");
-                                    fName = filename.substring(0, last) + "-summary.json";
-                                    Map<String, Object> stats = loadStats( f );
-                                    archiveStats( fName, stats );
-
-                            } else {
                                 if ( ts.longValue() < removeCutoff ) {
                                     getLogger().log( Level.INFO, "Removing stats file ." + filename );
                                     f.delete();

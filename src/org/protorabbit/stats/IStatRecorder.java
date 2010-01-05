@@ -18,7 +18,7 @@ public interface IStatRecorder {
     public List<Long> getSummaryTimestamps();
     public Map<String, Object> loadStatsForDate(long timestamp);
     public Object loadSummaryForDate(long timestamp);
-    public Object loadSummarySinceDate( long timestamp );
+    public Object loadSummarySinceDate( long timestamp, Resolution r );
     public void updateDailySummary();
     public Object loadArchivedStatsForRange( long statTimestamp, long endTimestamp, Resolution r );
 }

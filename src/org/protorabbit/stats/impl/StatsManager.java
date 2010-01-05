@@ -177,6 +177,10 @@ public class StatsManager  implements ServletContextListener {
         public long getTime() {
             return timestamp;
         }
+        public void setY( double nValue) {
+            this.value = nValue;
+        }
+
         public double getY() {
             return value;
         }
@@ -287,7 +291,6 @@ public class StatsManager  implements ServletContextListener {
                 counter++;
                 String key = stat.getPath();
                 String cid = stat.getRemoteClient();
-
                 Long bucketId = getRoundTime( resolution, stat.getTimestamp() );
                 String contentKey = null;
                 if ( stat.isPoller() ) {
@@ -322,7 +325,7 @@ public class StatsManager  implements ServletContextListener {
                     c.setTotalProcessingTime( totalProcessTime );
                     cstats.put( key, c );
                 }
-                 IClient client = lclients.get( cid );
+                IClient client = lclients.get( cid );
                 if ( client == null ) {
                     client = new Client( cid );
                     lclients.put( cid, client );
@@ -395,13 +398,13 @@ public class StatsManager  implements ServletContextListener {
         return null;
     }
 
-    public Object loadSummarySinceDate( long timestamp) {
+    public Object loadSummarySinceDate( long timestamp, Resolution r) {
         if ( sr != null ) {
-            return sr.loadSummarySinceDate( timestamp );
+            return sr.loadSummarySinceDate( timestamp, r );
         }
         return null;
     }
-    
+
     private static  void addPayloadsAndProcessingTime( Map<Long,TimeChartItem> jBuckets, Map<String, Object> envelope, String label, String type ) {
         List<TimeChartItem> averageJsonProcessingTimes = new ArrayList<TimeChartItem>();
         List<TimeChartItem> averageJsonPayloads = new ArrayList<TimeChartItem>();
