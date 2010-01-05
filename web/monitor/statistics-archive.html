@@ -1,4 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+   "http://www.w3.org/TR/html4/strict.dtd">
+
 <html>
  <head>
   <title>Protorabbit Statistics</title>
@@ -24,8 +26,6 @@
        var updater = setInterval( updateSummary, 150000 );
     });
   </script>
-
-
  </head>
 
  <body style="padding:5px">
@@ -90,6 +90,7 @@
      <select id="resolution" onchange="updateResolution()">
        <option value="SECOND">Second</option>
        <option value="MINUTE">Minute</option>
+       <option value="FIVE_MINUTES">Five Minutes</option>
        <option value="HOUR">Hour</option>
      </select>
     </div>
@@ -104,10 +105,9 @@
   </div><!-- end controls -->
 
   <div style="margin-left:305px;margin-top:5px">
-
      <!--  Start week summary -->
-     <fieldset>
-     <legend class="subTitle">
+     <fieldset class="pane">
+     <legend>
        <span>
         Summary :
         <select id="summaryResolution" onchange="updateSummary()">
@@ -153,11 +153,9 @@
   <!--  end week summary -->
     <div style="height:10px"></div>
     <!--  start current --> 
-    <fieldset>
-    <legend id="displayStatus" class="subTitle">Current</legend>
 
-  <div style="margin-top:5px">
-
+  <fieldset  class="pane">
+    <legend id="displayStatus">Current</legend>
     <div style="height:250px">
          <div jmakiName="jmaki.charting.line" jmakiId="realtimeStats" style="overflow:hidden;height:100%"
               jmakiArgs="{
@@ -224,8 +222,8 @@
                    }"
                ></div>
           </div>
-    </div>
-    </fieldset><!--  end current -->
+   </fieldset>
+<!--  end current -->
  </div>
  </body>
 </html>

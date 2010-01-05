@@ -651,7 +651,7 @@ jmaki.subscribe("/jmaki/charting/line/selectRange", function(args) {
             startHeight : 175
         });
         window.pageRequest = new ajax({ 
-            url : "../stats/archivedStats?start=" + start + "&end=" + end + "&resolution" + resolution,
+            url : "../stats/archivedStats?start=" + start + "&end=" + end + "&resolution=" + resolution,
             callback : function(req) {
                 var model = eval("(" + req.responseText + ")");
                 if ( model != null) {

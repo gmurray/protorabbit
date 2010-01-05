@@ -28,13 +28,21 @@
     color : #fff;
     font-size:0.4em;
   }
-  
+.pane {
+  border : 1px solid #EEE;
+  padding : 1em;
+}
   .pmenu a:visited {
     color : #fff;
   }
   .titleItem {
      clear:left;
      padding : 3px;
+  }
+
+  legend {
+    font-size : 1.0em;
+    font-weight : bold;
   }
   .subTitle {
     font-size : 1.0em;
