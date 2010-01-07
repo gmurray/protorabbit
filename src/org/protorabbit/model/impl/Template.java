@@ -106,11 +106,13 @@ public class Template implements ITemplate {
                 return new StringBuffer(message);
             } else {
                 if (requiresRefresh(ctx)) {
+
                     try {
-                        contents = ctx.getResource(tri.getBaseURI(), tri.getURI(false));
+
+                        contents = ctx.getResource( tri.getBaseURI(),  tri.getURI(false) );
                         lastUpdate = (new Date()).getTime();
-                    } catch (IOException e) {
-                        getLogger().log(Level.SEVERE, "Error retrieving template with baseURI of " + tri.getBaseURI() + " and name " + tri.getURI(null), e);
+                    } catch ( IOException e ) {
+                        getLogger().log(Level.SEVERE, "Error retrieving template for resource " + tri.getURI(false), e);
                         String message = "Error retriving template " + id + " please see log files for more details.";
                         contents = new StringBuffer(message);
                     }

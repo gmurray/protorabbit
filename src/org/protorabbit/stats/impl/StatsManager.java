@@ -200,9 +200,8 @@ public class StatsManager  implements ServletContextListener {
         Map<Long,TimeChartItem> vBuckets = new LinkedHashMap<Long,TimeChartItem>();
         Map<Long,TimeChartItem> jBuckets = new LinkedHashMap<Long,TimeChartItem>();
 
-        Map<String,IClient> lclients = new HashMap<String,IClient>();
         Map<String, Map<String,IResourceStat>> pageStats = new Hashtable<String, Map<String,IResourceStat>>();
-
+        Map<String,IClient> clients = new HashMap<String, IClient>();
         List<IStat> errors = new ArrayList<IStat>();
         long threshold = -1;
         if (duration != null) {
@@ -211,11 +210,11 @@ public class StatsManager  implements ServletContextListener {
         long totalCount = 0;
         // do the processing
         totalCount = addStats( duration, resolution, baseList,vBuckets, jBuckets,
-                 lclients, pageStats,  errors,
+                 clients, pageStats,  errors,
                  threshold  ) ;
 
         return createStatsEnvelope( vBuckets, jBuckets,
-                lclients, pageStats,  errors,
+                clients, pageStats,  errors,
                 threshold,  totalCount ) ;
       }
 
@@ -266,7 +265,6 @@ public class StatsManager  implements ServletContextListener {
                 return 0;
             }
         }
-        
     }
 
     public Object loadArchivedStatsForRange( long statTimestamp, long endTimestamp, Resolution r ) {
@@ -280,7 +278,7 @@ public class StatsManager  implements ServletContextListener {
     public static long addStats( Long duration, long resolution, List<IStat> baseList,
             Map<Long,TimeChartItem> vBuckets, Map<Long,TimeChartItem> jBuckets,
                                                 Map<String,IClient> lclients, Map<String, Map<String,IResourceStat>> pageStats, List<IStat> errors,
-                                                long threshold  ) {
+                                                long threshold ) {
         long counter = 0;
         // iterate the list backwards because it is LIFO and we can stop iterating early if we 
         // find a stat outside the threshold
@@ -329,6 +327,9 @@ public class StatsManager  implements ServletContextListener {
                 if ( client == null ) {
                     client = new Client( cid );
                     lclients.put( cid, client );
+                }
+                if ( stat.getTimestamp() > client.getLastAccess() ) {
+                    client.setLastAccess( stat.getTimestamp() );
                 }
                 if ( stat.getContentType().equals( APPLICATION_JSON ) ) {
                     client.incrementJSONCount();

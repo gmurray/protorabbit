@@ -151,7 +151,7 @@ public class WebContext extends BaseContext {
                    return new StringBuffer(contents);
             } else {
                 // don't throw out the resource name to end user
-                getLogger().log(Level.SEVERE, "Error loading " + resourceName);
+                getLogger().log(Level.SEVERE, "Resource " + resourceName + " not found.");
                 throw new IOException("Error loading resource. Please notify the administrator that there was an issue.");
             }
         }

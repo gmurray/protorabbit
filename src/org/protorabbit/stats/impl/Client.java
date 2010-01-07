@@ -15,7 +15,6 @@ public class Client implements IClient {
 
     public Client(String id) {
             this.id = id;
-            this.lastAccess = (new Date()).getTime();
     }
 
     public Long getPollInterval() {
@@ -35,12 +34,10 @@ public class Client implements IClient {
     }
 
     public void incrementJSONCount() {
-        this.lastAccess = (new Date()).getTime();
         jsonRequestCount += 1;
     }
 
     public void incrementViewCount() {
-        this.lastAccess = (new Date()).getTime();
         viewRequestCount += 1;
     }
 

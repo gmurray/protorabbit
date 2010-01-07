@@ -578,6 +578,9 @@ public class DefaultStatRecorder implements IStatRecorder {
     }
 
     public Map<String, Object> loadStats( File f ) {
+        if ( f == null) {
+            return null;
+        }
         Long duration = null;
         long resolution = Resolution.MINUTE.modValue();
         Map<Long,TimeChartItem> vBuckets = new LinkedHashMap<Long,TimeChartItem>();

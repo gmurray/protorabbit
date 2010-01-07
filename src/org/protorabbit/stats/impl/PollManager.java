@@ -69,16 +69,16 @@ public class PollManager {
         }
         // handle the current client
         String clientId = request.getRemoteAddr();
-        IClient poller = pollers.get(clientId);
+        IClient poller = pollers.get( clientId );
         if (poller == null) {
             poller = new Client(clientId);
-            poller.setPollInterval(defaultPollInterval);
+            poller.setPollInterval( defaultPollInterval );
             pollers.put(clientId, poller);
         }
         poller.incrementPollCount();
         // do poller cleanup every 5 minutes
         if (lastCleanup == null) {
-            lastCleanup =  new Long(now);
+            lastCleanup =  new Long( now );
         } else {
             if (now - lastCleanup.longValue() > pollerCleanupTimeout) {
                 // cleanup
@@ -99,8 +99,7 @@ public class PollManager {
                         }
                     }
                     } catch (Exception e) {
-                        System.out.println("***** we caught " + e);
-                        e.printStackTrace();
+                        getLogger().severe( e.getLocalizedMessage() );
                     }
                     for (String key : keysToRemove) {
                         pollers.remove(key);
@@ -130,7 +129,7 @@ public class PollManager {
 
             }
         }
-
+        poller.setLastAccess( System.currentTimeMillis() );
         return poller.getPollInterval();
     }
 }
