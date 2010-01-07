@@ -77,7 +77,7 @@ public class ResourceManager {
            deferredWritten = ((Boolean)ctx.getAttribute(DEFERRED_WRITTEN)).booleanValue();
        }
        if (!deferredWritten) {
-           StringBuffer buff = IOUtil.getClasspathResource(ctx.getConfig(), Config.PROTORABBIT_CLIENT);
+           StringBuffer buff = IOUtil.getClasspathResource( ctx.getConfig(), Config.PROTORABBIT_CLIENT );
            if (buff != null) {
                String hash = IOUtil.generateHash(buff.toString());
                ICacheable cr = new CacheableResource("text/javascript", t.getTimeout( ctx ), hash);
@@ -85,10 +85,10 @@ public class ResourceManager {
                cr.setContent(buff);
                String uri = "<script src=\"" + 
                ctx.getConfig().getResourceService() + "?resourceid=protorabbit.js\"></script>";
-               out.write(uri.getBytes());
+               out.write( uri.getBytes() );
                ctx.setAttribute(DEFERRED_WRITTEN, Boolean.TRUE);
            } else {
-               getLogger().severe("Unable to find protorabbit client script " + Config.PROTORABBIT_CLIENT);
+               getLogger().severe(" Unable to find protorabbit client script " + Config.PROTORABBIT_CLIENT );
            }
        }
    }

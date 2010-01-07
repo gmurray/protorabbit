@@ -12,14 +12,11 @@
 package org.protorabbit.model.impl;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,15 +24,13 @@ import java.util.logging.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import org.protorabbit.Config;
-import org.protorabbit.json.JSONUtil;
 import org.protorabbit.model.ICommand;
 import org.protorabbit.model.IContext;
+import org.protorabbit.model.IDocumentContext;
 import org.protorabbit.model.IEngine;
 import org.protorabbit.model.IParameter;
 import org.protorabbit.model.ITemplate;
-import org.protorabbit.model.IDocumentContext;
 import org.protorabbit.profile.Episode;
 
 /*
@@ -71,11 +66,11 @@ public class DefaultEngine implements IEngine {
                 // go through all the commands and build up the buffers
                 // before
                 if (dc.getBeforeCommands() != null) {
-                    processCommands( ctx, dc.getBeforeCommands());
+                    processCommands( ctx, dc.getBeforeCommands() );
                 }
                 // default commands
                 if (dc.getDefaultCommands() != null) {
-                    processCommands( ctx, dc.getDefaultCommands());
+                    processCommands( ctx, dc.getDefaultCommands() );
                 }
                 // after commands
                 if (dc.getAfterCommands() != null) {
@@ -192,6 +187,7 @@ public class DefaultEngine implements IEngine {
          }
          try {
              int index = 0;
+
              for (ICommand c : cmds) {
                     // output everything before the first command
                     // include profiler episodes.js
@@ -236,16 +232,17 @@ public class DefaultEngine implements IEngine {
                                             out.write(dc.getDocument().toString().getBytes());
                                        }
                                 }
-                                renderCommands(dc.getAllCommands(), dc.getDocument(), ctx, out) ;
+                                renderCommands( dc.getAllCommands(), dc.getDocument(), ctx, out ) ;
                             }
 
-                        ByteArrayOutputStream bos = ctx.getBuffer(c.getUUId());
+                        ByteArrayOutputStream bos = ctx.getBuffer( c.getUUId() );
                         if (bos != null) {
-                            out.write(bos.toByteArray());
+                            out.write( bos.toByteArray() );
                         }
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        getLogger().log(Level.SEVERE, "Error rendering commands ", e);
                     }
+
              }
            // now write everything after the last command
            if (cmds.size() > 0) {
@@ -254,14 +251,7 @@ public class DefaultEngine implements IEngine {
            }
 
         } catch (Exception e) {
-            getLogger().log(Level.SEVERE, "* Error rendering ", e);
-        }
-
-        try {
-            out.flush();
-            out.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+            getLogger().log(Level.SEVERE, "Error rendering ", e);
         }
     }
 
@@ -284,71 +274,6 @@ public class DefaultEngine implements IEngine {
                 e.printStackTrace();
             }
         }
-    }
-
-    /**
-     * @param args
-     * @throws IOException 
-     */
-    public static void main(String[] args) throws IOException {
-        
-        if (args.length < 1) {
-            System.out.println("Usage: --template [template name] templateId");
-            System.exit(0);
-        }
-        
-        long startTime = (new Date()).getTime();
-
-        ArrayList<String> cTemplates = new ArrayList<String>();
-
-        String documentRoot = "";
-
-        for (int i=0; i <= args.length - 1; i++) {
-            System.out.println("Processing " + args[i]);
-            if ("-template".equals(args[i])) {
-                cTemplates.add(args[i + 1]);
-                i+=1;
-            } else if ("-documentRoot".equals(args[i])) {
-                documentRoot = args[i+1];
-                i+=1;
-            }
-        }
-        Config cfg = Config.getInstance();
-        FileSystemContext ctx = new FileSystemContext(cfg, documentRoot);
-
-        if (cTemplates.size() == 0) {
-            System.out.println("Error: You need to specify at least 1 template file.");
-            System.exit(0);
-        }
-        Iterator<String> it = cTemplates.iterator();
-        while (it.hasNext()) {
-            String ctemplate = it.next();
-            int lastSep = ctemplate.lastIndexOf(File.separator);
-            String cBase = "";
-            if (lastSep != -1) {
-                cBase = ctemplate.substring(0, lastSep + 1);
-            }
-            try {
-                JSONObject jo = JSONUtil.loadFromFile(ctemplate);
-                cfg.registerTemplates(jo.getJSONArray("templates"), cBase);
-                System.out.println("Registered template " + ctemplate + " with baseDir=" + cBase);
-            } catch (Exception e) {
-
-            }
-        }
-
-        long postConfigTime = (new Date()).getTime();
-
-        // last item is the target;
-        String targetTemplate = args[args.length -1];
-
-        getLogger().info("** Config Processing Time : " + (postConfigTime -  startTime) + "\n\n");
-        IEngine engine = new DefaultEngine();
-        engine.renderTemplate(targetTemplate, ctx, System.out);
-
-        long stopTime = (new Date()).getTime();
-
-        getLogger().info("\n\nRender time for 3 templates=" + (stopTime - postConfigTime) + "ms");
     }
 
     /*

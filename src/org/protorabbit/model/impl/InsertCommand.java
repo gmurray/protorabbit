@@ -40,24 +40,26 @@ public class InsertCommand extends BaseCommand {
         Config cfg = ctx.getConfig();
 
         String id = null;
+        IProperty p = null;
         if (params.length > 0 && params[0].getType() == IParameter.STRING) {
             id = params[0].getValue().toString();
         } else {
             getLogger().severe("Error processing property " + params[0].getValue().toString() + " Parameter is not of type String");
             return;
         }
-
-        IProperty p = cfg.getProperty(ctx.getTemplateId(), id, ctx);
-        if (p == null) {
-            return;
-        }
         String value = null;
-        if (p != null) {
-            value = p.getValue();
+        if ( ctx.getAttribute( id ) != null) {
+            value = (String)ctx.getAttribute( id );
         } else {
-            getLogger().warning("Non fatal error : null property " + id + " processing template " + ctx.getTemplateId());
-            return;
+            p = cfg.getProperty(ctx.getTemplateId(), id, ctx);
+            if (p != null) {
+                value = p.getValue();
+            } else {
+                getLogger().warning("Non fatal error : null property " + id + " processing template " + ctx.getTemplateId());
+                return;
+            }
         }
+
         int current = -1;
         if (value != null) {
             current = value.indexOf("${");
@@ -108,7 +110,7 @@ public class InsertCommand extends BaseCommand {
                 ((p.getDeferContent() != null) ? p.getDeferContent().toString() : "") + 
             "</span>"; 
             getBuffer(ctx).write(span.getBytes());
-        } else if (p != null) {
+        } else if (value != null) {
             getBuffer(ctx).write(value.getBytes());
         } else {
             String message = "InsertWarning: Unable find property " + params[0];

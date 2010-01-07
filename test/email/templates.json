@@ -1,0 +1,14 @@
+{
+  "templates" : [
+    {
+     "id" : "welcome",
+     "template" : "/templates/welcome.html",
+     "properties" : {
+           "header" : { "type" : "include", "value" : "/fragments/header.html" },
+           "body" : { "type" : "include", "value" : "/fragments/welcome-body.html" },
+           "footer" : { "type" : "include", "value" : "/fragments/footer.html" }
+       }
+    }
+
+  ]
+}
