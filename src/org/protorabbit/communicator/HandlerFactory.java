@@ -150,9 +150,8 @@ public class HandlerFactory {
                                     response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getLocalizedMessage());
                                     return;
                                 } catch (InvocationTargetException e) {
-                                    getLogger().log(Level.WARNING, "InvocationTargetException invoking Handler " + handlerMethod);
-                                    request.setAttribute("javax.servlet.error.message", e);
-                                    response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getLocalizedMessage());
+                                    getLogger().log( Level.SEVERE, "InvocationTargetException invoking Handler " + handlerMethod, e );
+                                    request.setAttribute( "javax.servlet.error.exception", e );
                                     return;
                                 }
                             } else {
