@@ -56,6 +56,9 @@ public class BaseJSONHandler implements Handler {
 
     public void setRequest(HttpServletRequest request) {
         this.request = request;
+        if ( request != null ) {
+            this.ctx = request.getSession().getServletContext();
+        }
     }
 
     public void setResponse(HttpServletResponse response) {
