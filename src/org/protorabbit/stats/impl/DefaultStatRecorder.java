@@ -46,6 +46,7 @@ public class DefaultStatRecorder implements IStatRecorder {
     private static final long ONE_DAY = ONE_HOUR * 24;
     private static final long SEVEN_DAYS = ONE_DAY * 7;
     private boolean canRecordStats = true;
+    private boolean recordStats = true;
     private static Logger logger = null;
     private File statsDirectory = null;
     private String host = "localhost";
@@ -66,9 +67,8 @@ public class DefaultStatRecorder implements IStatRecorder {
         return timestamp - mod;
     }
 
-    public void init( ServletContext ctx ) {
+    private void getStatsDirectory( ServletContext ctx ) {
         File temp = (File)ctx.getAttribute("javax.servlet.context.tempdir");
-
         if ( temp.isDirectory() ) {
             File pdir = new File ( temp, "protorabbit" );
             statsDirectory = new File ( pdir , "stats" );
@@ -80,6 +80,8 @@ public class DefaultStatRecorder implements IStatRecorder {
                     canRecordStats = false;
                     return;
                 }
+            } else {
+                canRecordStats = true;
             }
             getLogger().info( "Stats work area is : " + statsDirectory );
 
@@ -87,6 +89,10 @@ public class DefaultStatRecorder implements IStatRecorder {
             getLogger().info( "Could not access to work area." );
             canRecordStats = false;
         }
+    }
+
+    public void init( ServletContext ctx ) {
+        getStatsDirectory( ctx );
         try {
             InetAddress ia = null;
             ia = InetAddress.getLocalHost();
@@ -143,9 +149,10 @@ public class DefaultStatRecorder implements IStatRecorder {
         if ( !currentStatsFile.exists() ) {
             try {
                 currentStatsFile.createNewFile();
-
             } catch (IOException e) {
-                getLogger().log( Level.SEVERE, "Could not create protorabbit directory to record stats." );
+                getLogger().log( Level.SEVERE, 
+                                 "Could not create protorabbit directory to record stats. Message was " +
+                                 e.getLocalizedMessage() );
                 canRecordStats = false;
                 return null; 
             }
@@ -154,7 +161,7 @@ public class DefaultStatRecorder implements IStatRecorder {
     }
 
     public synchronized void recordStatItem(IStat stat) {
-        if ( !canRecordStats ) {
+        if ( !canRecordStats || !recordStats ) {
             return;
         }
         try {
@@ -164,12 +171,14 @@ public class DefaultStatRecorder implements IStatRecorder {
                 out.write( json.serialize(stat).toString() + ",\n" );
                 out.flush();
             } else {
-                getLogger().log( Level.SEVERE, "Could not write to stats file. The writer was null." );
+                getLogger().log( Level.SEVERE,
+                                 "Could not write to stats file. The writer was not available." );
                 canRecordStats = false;
                 return;
             }
         } catch (IOException e) {
-            getLogger().log( Level.SEVERE, "Could not write to stats file." );
+            getLogger().log( Level.SEVERE,
+                             "Could not write to stats file. Message was " + e.getLocalizedMessage() );
             canRecordStats = false;
         }
 
@@ -195,13 +204,15 @@ public class DefaultStatRecorder implements IStatRecorder {
     }
 
     public void updateDailySummary() {
-        long start = System.currentTimeMillis();
-        getLogger().info("Updating daily summary.");
-        String fileName = getBaseFileName() + "-summary.json";
-        Map<String, Object> stats = loadStats( getCurrentStatsFile() );
-        archiveStats(fileName, stats);
-        long end = System.currentTimeMillis();
-        getLogger().info("Daily summary complete. Time : " + ( end - start ) + "ms" );
+        if ( recordStats ) {
+            long start = System.currentTimeMillis();
+            getLogger().info("Updating daily summary.");
+            String fileName = getBaseFileName() + "-summary.json";
+            Map<String, Object> stats = loadStats( getCurrentStatsFile() );
+            archiveStats( fileName, stats );
+            long end = System.currentTimeMillis();
+            getLogger().info("Daily summary complete. Time : " + ( end - start ) + "ms" );
+        }
     }
 
     public Object loadSummary( File f ) {
@@ -209,14 +220,13 @@ public class DefaultStatRecorder implements IStatRecorder {
         Object stats = null;
         try {
             fis = new FileInputStream(f);
-            StringBuffer buff = IOUtil.loadStringFromInputStream(fis, "UTF-8");
+            StringBuffer buff = IOUtil.loadStringFromInputStream( fis, "UTF-8" );
             stats =  json.genericDeserialize( buff.toString() );
         } catch (FileNotFoundException e) {
-            getLogger().log( Level.SEVERE, "Could deserialize file.", e );
+            getLogger().log( Level.SEVERE, "Could load summary file.", e );
         } catch (IOException e) {
-            getLogger().log( Level.SEVERE, "Could deserialize file.", e );
+            getLogger().log( Level.SEVERE, "Could load summary file.", e );
         }
-
         return stats;
     }
 
@@ -393,7 +403,7 @@ public class DefaultStatRecorder implements IStatRecorder {
             getLogger().log( Level.SEVERE, "Error combining lists.", e );
          }
     }
-    
+
     @SuppressWarnings("unchecked")
     public List<Object> condenseList( List<Object> tItems, long r ) {
         LinkedHashMap<Long,Object> jBuckets = new LinkedHashMap<Long,Object>();
@@ -413,20 +423,20 @@ public class DefaultStatRecorder implements IStatRecorder {
         rvals.addAll(jBuckets.values());
         return rvals;
     }
-    
+
     private void combineSummaries( Map<String, Object> src, Map<String, Object> target, Resolution r ) {
         // append views->values
-        combineLists(src,target, "view", r);
+        combineLists( src,target, "view", r );
         // append json->values
-        combineLists(src,target, "json", r);
+        combineLists( src,target, "json", r );
         // averageJSONProcessingTime->values
-        combineLists(src,target, "averageViewProcessingTime", r);
+        combineLists( src,target, "averageViewProcessingTime", r );
         // averageJSONPayload->values
-        combineLists(src,target, "averageViewPayload", r);
+        combineLists( src,target, "averageViewPayload", r );
         // averageJSONProcessingTime->values
-        combineLists(src,target, "averageJSONProcessingTime", r);
+        combineLists( src,target, "averageJSONProcessingTime", r );
         // averageJSONPayload->values
-        combineLists(src,target, "averageJSONPayload", r);
+        combineLists( src,target, "averageJSONPayload", r );
         // pageStats->text/html pageStats->application/json (in each get key work out averageContentLength, averageProcessingTime, accessCount, totalProcessingTime, totalContentLength
         combinePageStats( src, target );
     }
@@ -434,7 +444,7 @@ public class DefaultStatRecorder implements IStatRecorder {
     @SuppressWarnings("unchecked")
     public Object loadSummarySinceDate( long timestamp, Resolution r ) {
         Map<String, Object> summaries = null;
-        if (statsDirectory != null) {
+        if (statsDirectory != null ) {
 
             List<Long> times = getSummaryTimestamps();
 
@@ -782,6 +792,14 @@ public class DefaultStatRecorder implements IStatRecorder {
 
     public boolean canRecordStats() {
         return canRecordStats;
+    }
+
+    public void enableRecording(boolean enable) {
+        recordStats = enable;
+    }
+
+    public boolean isEnabled() {
+        return recordStats;
     }
 
 }

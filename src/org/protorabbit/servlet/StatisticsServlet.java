@@ -2,7 +2,9 @@ package org.protorabbit.servlet;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import javax.servlet.ServletConfig;
@@ -212,12 +214,57 @@ public class StatisticsServlet extends HttpServlet {
            Object jo = json.serialize( data );
            response.getWriter().write( jo.toString() );
            return;
+       } else if (command.startsWith("/configuration") ) {
+           JSONResponse jr = new JSONResponse();
+           Map<String,Object> configuration = new HashMap<String,Object>();
+           configuration.put( "canRecordStats", statsManager.canRecordStats() );
+           configuration.put( "statsRecordingEnabled", statsManager.isStatsRecordingEnabled() );
+           jr.setData( configuration);
+           Object jo = json.serialize( jr );
+           response.getWriter().write( jo.toString() );
+           return;
+      } else if (command.startsWith("/configure") ) {
+          String configCommand = getLastPathItem( command );
+          JSONResponse jr = new JSONResponse();
+          if ( configCommand != null ) {
+              String configValue = request.getParameter( "value" );
+              if ( "enableRecording".equals( configCommand )) {
+                  if ( configValue != null) {
+                      Boolean enabled = null;
+                      if ( "true".equals(configValue) ) {
+                          enabled = true;
+                      } else if ( "false".equals(configValue)) {
+                          enabled = false;
+                      }
+                      if ( enabled != null) {
+                          statsManager.enableStatsRecording( enabled.booleanValue() );
+                          jr.setData( ((enabled == Boolean.TRUE) ? "Enabled" : "Disabled ") + " stats recording" );
+                      } else {
+                          ArrayList<String> errors = new ArrayList<String>();
+                          errors.add( "Bad query paramaters. A value property is required." );
+                          jr.setErrors( errors );
+                      }
+                  } else {
+                      ArrayList<String> errors = new ArrayList<String>();
+                      errors.add( "Unknown command " + configCommand );
+                      jr.setErrors( errors );
+                  }
+              }
+          } else {
+              ArrayList<String> errors = new ArrayList<String>();
+              errors.add( "Command not provided as last part of url." );
+              jr.setErrors( errors );
+          }
+          Object jo = json.serialize( jr );
+          response.getWriter().write( jo.toString() );
+          return;
       }  else {
-                String commands = "Commands are : all, " +
+                String commands = "Options are : all, " +
                 "summary/[timestamp]," +
                 "stats/[timestamp], " + 
                 "archiveTimestamps, " + 
-                "summaryTimestamps";
+                "summaryTimestamps, " +
+                "configure";
                 Object data = createJSONError( commands );
                 response.setHeader( "pragma", "NO-CACHE");
                 response.setHeader( "Cache-Control", "no-cache" );

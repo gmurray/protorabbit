@@ -493,4 +493,15 @@ public class StatsManager  implements ServletContextListener {
         sr.init( ctx );
     }
 
+    public void enableStatsRecording( boolean enable ) {
+        sr.enableRecording( enable );
+    }
+
+    public boolean isStatsRecordingEnabled() {
+        return sr.isEnabled();
+    }
+
+    public boolean canRecordStats() {
+        return sr.canRecordStats();
+    }
 }

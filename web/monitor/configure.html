@@ -1,0 +1,73 @@
+<html>
+ <head>
+  <title>Protorabbit Monitor Configuration</title>
+  <script type="text/javascript" src="resources/jmaki/jmaki-full.js"></script>
+  <script type="text/javascript" src="resources/js/monitor.js"></script>
+  <script>
+      function enableStatsMonitoring( _enable ) {
+          ajax( {
+               url :  "../stats/configure/enableRecording?value=" + _enable,
+               onsuccess : function( message ) {
+                   loadStatus();
+               },
+               onerror : function( message) {
+                   alert( message.errors.join(",") );
+               }
+          } )
+      }
+      function loadStatus() {
+          ajax( {
+               url :  "../stats/configuration",
+               onsuccess : function( message ) {
+                   var canRecord = document.getElementById( "canRecordStats" );
+                   canRecord.innerHTML = message.data.canRecordStats;
+                   var statsRecordingEnabled = document.getElementById( "statsRecordingEnabled" );
+                   statsRecordingEnabled.innerHTML = ( message.data.statsRecordingEnabled === true ) ? "Enabled" : "Disabled";
+                   var statsRecordingCommand = document.getElementById("statsRecordingCommand");
+                   if ( message.data.statsRecordingEnabled === false) {
+                       statsRecordingCommand.innerHTML = '<a href="javascript:void(0)" onclick="enableStatsMonitoring(true)">enable</a>';
+                   } else {
+                       statsRecordingCommand.innerHTML = '<a href="javascript:void(0)" onclick="enableStatsMonitoring(false)">disable</a>';
+                   }
+               },
+               onerror : function( message) {
+                   alert( message.errors.join(",") );
+               }
+          } )
+      }
+      jmaki.subscribe("/jmaki/runtime/loadComplete", loadStatus);
+  </script>
+  <style>
+  .pmenu {
+    padding:3px;
+    height:40px;
+    font-size:2em;
+    background:#333;
+    color:#fff
+  }
+
+  .pmenu a {
+    color : #fff;
+    font-size:0.4em;
+  }
+
+  .pmenu a:visited {
+     color : #fff;
+  }
+  </style>
+ </head>
+ <body>
+  <div class="pmenu">
+   <div style="float:left">Protorabbit Monitor Configuration</div>
+    <div style="float:right">
+    <a href="components.html">Components</a>
+    <a href="resources.html">Resources</a>
+    <a href="statistics-archive.html">Statistics</a>
+    <a href="../"> Home</a>
+   </div>
+  </div>
+   <p> Can Record Stats : <span id="canRecordStats"></span></p>
+   <p> Stats Recording : <span id="statsRecordingEnabled"></span> (<span id="statsRecordingCommand"> </span>)</p>
+
+ </body>
+</html>

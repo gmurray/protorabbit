@@ -48,7 +48,7 @@ public class Config {
    public static final String EPISODE_POSTER = "resources/episodes-viewer.js";
    public static final String EPISODE = "org.protorabbit.profile.episode";
    public static final String START_TIME = "org.protorabbit.START_TIME";
-   public static final String DEFAULT_EPISODE_PROCESS = "org.protorabbit.profile.episode.DEFAULT_PROCESS";;
+   public static final String DEFAULT_EPISODE_PROCESS = "org.protorabbit.profile.episode.DEFAULT_PROCESS";
 
    public static final int UNKNOWN = 0;
    public static final int SCRIPT = 1;
