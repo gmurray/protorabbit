@@ -106,6 +106,9 @@ public class IncludeCommand extends BaseCommand {
                 baseDir = property.getBaseURI();
             }
 
+        } else {
+            getLogger().log( Level.SEVERE, "Unable to find template " + tid );
+            return;
         }
 
         StringBuffer buff = new StringBuffer("");

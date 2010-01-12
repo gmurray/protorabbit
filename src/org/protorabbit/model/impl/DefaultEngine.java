@@ -50,7 +50,6 @@ public class DefaultEngine implements IEngine {
         }
         return logger;
     }
-
     public synchronized void renderTemplate( String tid, IContext ctx, OutputStream out ) {
 
         Config cfg = ctx.getConfig();
@@ -58,6 +57,10 @@ public class DefaultEngine implements IEngine {
         ITemplate template = cfg.getTemplate( tid, ctx );
         ctx.setTemplate( template );
         ctx.setTemplateId( tid );
+        renderTemplate( template, ctx, out );
+    }
+
+    public static synchronized void renderTemplate( ITemplate template, IContext ctx, OutputStream out ) {
 
         if (template != null) {
             DocumentContext dc = null;
@@ -83,11 +86,11 @@ public class DefaultEngine implements IEngine {
                 }
             }
         } else {
-            getLogger().info("Unable to find template " + tid );
+            getLogger().info("Unable to find template." );
         }
     }
 
-    private DocumentContext getDocumentContext(ITemplate template, IContext ctx) {
+    private static DocumentContext getDocumentContext(ITemplate template, IContext ctx) {
         DocumentContext dc = null;
         boolean requiresRefresh = false;
         if (template.getDocumentContext() != null) {
@@ -122,7 +125,7 @@ public class DefaultEngine implements IEngine {
         return dc;
     }
 
-    private void resetCommands(List<ICommand> cmds) {
+    private static void resetCommands(List<ICommand> cmds) {
         if (cmds == null) {
             return;
         }
@@ -136,10 +139,10 @@ public class DefaultEngine implements IEngine {
     }
 
     @SuppressWarnings("unchecked")
-    public List<ICommand> gatherCommands(StringBuffer buff, IContext ctx, DocumentContext dc) {
+    public static List<ICommand> gatherCommands(StringBuffer buff, IContext ctx, DocumentContext dc) {
         List<ICommand> cmds = null; 
         try {
-              cmds = getCommands(ctx.getConfig(), buff);
+              cmds = getDocumentCommands(ctx.getConfig(), buff);
               dc.setAllCommands(cmds);
               List<ICommand> firstCmds = null;
               List<ICommand> lastCmds = (List<ICommand>)ctx.getAttribute(LAST_COMMAND_LIST);
@@ -175,14 +178,20 @@ public class DefaultEngine implements IEngine {
                   }
               }
           } catch (Exception e) {
-              getLogger().log(Level.SEVERE, "Error gathering commands ", e);
+              getLogger().log(Level.SEVERE, "Error gathering commands.", e );
           }
           return cmds;
     }
 
-     public void renderCommands(List<ICommand> cmds, StringBuffer buff, IContext ctx, OutputStream out) {
+     public static void renderCommands( List<ICommand> cmds, StringBuffer buff, IContext ctx, OutputStream out ) {
          if (cmds == null) {
-             getLogger().warning("List<ICommand passed in as null");
+             if (buff != null) {
+                 try {
+                     out.write( buff.toString().getBytes() );
+                 } catch (IOException iox ) {
+                     getLogger().log(Level.SEVERE, "Error rendering content.", iox );
+                 }
+             }
              return;
          }
          try {
@@ -247,7 +256,7 @@ public class DefaultEngine implements IEngine {
            // now write everything after the last command
            if (cmds.size() > 0) {
                ICommand lc = cmds.get(cmds.size() -1);
-               out.write(buff.substring(lc.getEndIndex()).getBytes());
+               out.write( buff.substring(lc.getEndIndex()).getBytes() );
            }
 
         } catch (Exception e) {
@@ -255,7 +264,7 @@ public class DefaultEngine implements IEngine {
         }
     }
 
-    void processCommands(IContext ctx,
+    static void processCommands(IContext ctx,
                          List<ICommand> cmds) {
         if (cmds == null) {
             return;
@@ -276,6 +285,9 @@ public class DefaultEngine implements IEngine {
         }
     }
 
+    public List<ICommand> getCommands( Config cfg, StringBuffer doc ) {
+        return getDocumentCommands( cfg, doc );
+    }
     /*
      * A command looks like 
      * 
@@ -283,14 +295,14 @@ public class DefaultEngine implements IEngine {
      * <^ insert("bar") ^>
      * 
      */
-    public List<ICommand> getCommands(Config cfg, StringBuffer doc) {
+    public static List<ICommand> getDocumentCommands( Config cfg, StringBuffer doc ) {
 
         List<ICommand> commands = new ArrayList<ICommand>();
-        if (doc == null) return  null;
+        if ( doc == null ) return null;
         int index = 0;
         int len = doc.length();
 
-        while(index < len) {
+        while( index < len ) {
             index = doc.indexOf("<^", index);
             int end = doc.indexOf("^>", index);
 
@@ -305,12 +317,12 @@ public class DefaultEngine implements IEngine {
             int paramStart = exp.indexOf("(");
             int paramEnd = exp.lastIndexOf(")");
 
-            if (paramStart != -1 && paramEnd != -1 && paramEnd > paramStart) {
+            if ( paramStart != -1 && paramEnd != -1 && paramEnd > paramStart ) {
 
                // get commandType
                 String commandTypeString = exp.substring(0,paramStart).trim();
 
-                ICommand cmd = cfg.getCommand(commandTypeString);
+                ICommand cmd = cfg.getCommand( commandTypeString );
 
                 if (cmd != null) {
                     // get the params
@@ -325,17 +337,17 @@ public class DefaultEngine implements IEngine {
                     cmd.setStartIndex(index);
                     cmd.setEndIndex(end + 2);
 
-                    if ("include".equals(commandTypeString) && params.length > 0) {
-                        if ("scripts".equals(params[0]) ||
-                            "styles".equals(params[0])) {
-                            cmd.setType(ICommand.INCLUDE_RESOURCES);
+                    if ( "include".equals(commandTypeString) && params.length > 0 ) {
+                        if ( "scripts".equals(params[0] ) ||
+                            "styles".equals(params[0]) ) {
+                            cmd.setType( ICommand.INCLUDE_RESOURCES );
                         } else {
-                            cmd.setType(ICommand.INCLUDE);
+                            cmd.setType( ICommand.INCLUDE );
                         }
                     } else if ("insert".equals(commandTypeString)) {
-                        cmd.setType(ICommand.INSERT);
+                        cmd.setType( ICommand.INSERT );
                     } else {
-                        cmd.setType(ICommand.CUSTOM);
+                        cmd.setType( ICommand.CUSTOM );
                     }
                     commands.add(cmd);
                 }

@@ -15,7 +15,7 @@
       <mkdir dir="${build.dir}/classes" />
       <javac srcdir="src"
           destdir="${build.classes}"
-          classpath="${build.classes}:lib/servlet-api-2.4.jar:web/WEB-INF/lib/org.json-0.0.3.jar"
+          classpath="${build.classes}:lib/servlet-api-2.4.jar:lib/org.json-0.0.3.jar"
           source="1.5"
           target="1.5"
           debug="on">

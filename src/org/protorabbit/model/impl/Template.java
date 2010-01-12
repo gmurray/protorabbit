@@ -151,8 +151,8 @@ public class Template implements ITemplate {
      * Look locally for the property then at all the ancestors
      */
     protected IProperty getProperty(String id, IContext ctx, List<String> _ancestors,  Map<String,IProperty> _properties) {
- 
-        if ( _properties.containsKey(id)) {
+
+        if ( _properties != null && _properties.containsKey(id)) {
            IProperty prop = _properties.get(id);
            // only return if it matches the uaTest (or doesn't have test)
            if (includeResource(prop,ctx)) {
@@ -168,11 +168,11 @@ public class Template implements ITemplate {
         while (it.hasNext()) {
             ITemplate t = config.getTemplate(it.next(), ctx);
             IProperty p = t.getProperty(id, ctx);
-            if (p != null) {
+            if ( p != null) {
                 // add property to the local cache
-                _properties.put(id, p);
+                t.setProperty( id, p );
                 // only return if it matches the uaTest (or doesn't have test)
-                if (includeResource(p,ctx)) {
+                if ( includeResource(p,ctx) ) {
                     return p;
                 }
                 return null;
@@ -445,6 +445,9 @@ public class Template implements ITemplate {
     }
 
     public void setProperty( String id, IProperty property ) {
+        if ( properties == null ) {
+            properties = new HashMap<String,IProperty>();
+        }
         properties.put(id, property);
     }
 
