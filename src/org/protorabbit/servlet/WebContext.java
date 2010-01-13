@@ -395,4 +395,9 @@ public class WebContext extends BaseContext {
         matchedUAScriptTests = null;
         matchedUAStyleTests = null;
     }
+
+    public StringBuffer getVersionedResource(String name, String verion)
+            throws IOException {
+        return null;
+    }
 }

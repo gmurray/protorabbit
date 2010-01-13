@@ -18,6 +18,8 @@ public interface IProperty extends ITestable {
 
     public String getTest();
     public String getId();
+    public String getVersion();
+    public void setVersion(String versionId);
     public void setId(String id);
     public void setTest(String test);
     public String getBaseURI();

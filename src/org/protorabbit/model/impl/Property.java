@@ -27,7 +27,16 @@ public class Property implements IProperty {
     private StringBuffer deferContent = null;
     private String uaTest = null;
     private String id = null;
+    private String versionId = null;
 
+    public Property(String key, String value, String version, int type, String baseURI, String originalTemplate) {
+        this.key = key;
+        this.value = value;
+        this.versionId = version;
+        this.type = type;
+        this.baseURI = baseURI;
+        this.originalTemplate = originalTemplate;
+    }
     public Property(String key, String value, int type, String baseURI, String originalTemplate) {
         this.key = key;
         this.value = value;
@@ -39,7 +48,7 @@ public class Property implements IProperty {
     public void setId(String id) {
         this.id = id;
     }
-    
+
     public String getId() {
         return id;
     }
@@ -106,5 +115,13 @@ public class Property implements IProperty {
 
     public void setUATest(String test) {
         this.uaTest = test;
+    }
+
+    public String getVersion() {
+        return versionId;
+    }
+
+    public void setVersion( String versionId ) {
+        this.versionId = versionId;
     }
 }

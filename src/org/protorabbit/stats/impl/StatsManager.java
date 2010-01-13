@@ -22,7 +22,7 @@ import org.protorabbit.stats.IResourceStat;
 import org.protorabbit.stats.IStat;
 import org.protorabbit.stats.IStatRecorder;
 
-public class StatsManager  implements ServletContextListener {
+public class StatsManager implements ServletContextListener {
 
     public static final String STATS_MANAGER = "org.protorabbit.STATS_MANAGER";
     public static final String CLIENT_ID_GENERATOR = "prt-client-id-generator-class";
