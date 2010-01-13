@@ -60,6 +60,21 @@ public class DefaultEngine implements IEngine {
         renderTemplate( template, ctx, out );
     }
 
+    /*
+     * Assumes that the document content is set to properly work.
+     */
+    public static List<ICommand> getCommands( ITemplate template, IContext ctx ) {
+        if (template != null) {
+            DocumentContext dc = getDocumentContext( template, ctx );
+            if ( dc != null ) {
+                StringBuffer buff = dc.getDocument();
+                gatherCommands( buff, ctx, dc );
+                return dc.getAllCommands();
+            }
+        }
+        return null;
+    }
+
     public static synchronized void renderTemplate( ITemplate template, IContext ctx, OutputStream out ) {
 
         if (template != null) {
