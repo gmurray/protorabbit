@@ -484,6 +484,76 @@ public class DefaultStatRecorder implements IStatRecorder {
     /*
      * Find a range of detailed stats (Resolution.SECOND)
      */
+    public List<IStat> loadArchivedStatsItemsForRange( long statTimestamp, long endTimestamp ) {
+        if (statsDirectory == null) { 
+            return null;
+        }
+
+        List<IStat>returnList = new ArrayList<IStat>();
+        List<Long> times = getArchiveTimestamps();
+        Collections.sort( times );
+
+        getLogger().info( "Loading stats for date range " + statTimestamp + " to " + endTimestamp + " file count is " + times.size() + " files are " + times );
+        if ( times.size() > 0) {
+
+            for (Long l : times) {
+                long startDay =getDay( statTimestamp );
+                long endDay = getDay( endTimestamp );
+                getLogger().info( "Start day=" + startDay + " endDay=" + endDay );
+
+                // look at stats file and add a day to make sure partials get picked up
+                if ( (startDay == l.longValue()) || (l.longValue() == endDay) ) {
+ 
+                    try { 
+                        FileReader fis = null;
+                        File f = getStatsFileForDate( l.longValue() );
+                        getLogger().info( "Loading starts from " + f.getName() );
+                        fis = new FileReader(f);
+                        // read 1000 lines and process
+
+                            BufferedReader in = new BufferedReader( fis );
+                            StringBuffer buff = new StringBuffer();
+                            String line = null;
+                            int lineCount = 0;
+                            while ((line = in.readLine()) != null) {
+                                buff.append( line );
+                                lineCount++;
+                                if ( lineCount % 1000 == 0) {
+                                    List<IStat> litems = processBuffer( buff );
+                                    for ( IStat i : litems ) {
+                                        if ( i.getTimestamp() >= statTimestamp && i.getTimestamp() <= endTimestamp) {
+                                            returnList.add( i );
+                                        }
+                                    }
+                                    buff = new StringBuffer();
+                                }
+                            }
+                            // cleanup the rest of the buffer
+                            if ( buff.length() > 0 ) {
+                                List<IStat> litems = processBuffer( buff );
+                                for ( IStat i : litems ) {
+                                    if ( i.getTimestamp() >= statTimestamp && i.getTimestamp() <= endTimestamp) {
+                                        returnList.add( i );
+                                    }
+                                }
+                            }
+                            getLogger().info("Read in " + f.getName() + " lines : " + lineCount + " total stat count : " + returnList.size() );
+                            in.close();
+
+                    } catch (FileNotFoundException e) {
+                        getLogger().log( Level.SEVERE, "Could deserialize file.", e );
+                    } catch (IOException e) {
+                        getLogger().log( Level.SEVERE, "Could deserialize file.", e );
+                    }
+                }
+            }
+        }
+        return returnList;
+    }
+
+    /*
+     * Find a range of detailed stats (Resolution.SECOND)
+     */
     public Object loadArchivedStatsForRange( long statTimestamp, long endTimestamp, Resolution r ) {
         if (statsDirectory == null) { 
             return null;

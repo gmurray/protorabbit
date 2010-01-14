@@ -7,7 +7,6 @@ import javax.servlet.ServletContext;
 
 import org.protorabbit.stats.impl.StatsManager.Resolution;
 
-
 public interface IStatRecorder {
     public void enableRecording( boolean enable );
     public void init( ServletContext ctx);
@@ -23,4 +22,5 @@ public interface IStatRecorder {
     public Object loadSummarySinceDate( long timestamp, Resolution r );
     public void updateDailySummary();
     public Object loadArchivedStatsForRange( long statTimestamp, long endTimestamp, Resolution r );
+    public List<IStat> loadArchivedStatsItemsForRange( long statTimestamp, long endTimestamp );
 }

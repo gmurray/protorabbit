@@ -466,7 +466,7 @@ function loadPageViews(_runonce) {
 
 function updateResolution() {
     resolution =  document.getElementById("resolution").value;
-    loadPageViews(true);
+    loadPageViews( true );
 }
 
 function formatPageViews(items) {
@@ -522,7 +522,6 @@ function formatErrors(items) {
          s3table.addRow( _row );
      }
     document.getElementById("errorsPanel").innerHTML = s3table;
-
  }
 
 function formatActiveClients(items) {
@@ -591,7 +590,7 @@ function formatPageStatCharts( stats ) {
 }
 
 function toggleRunning() {
-    var control = document.getElementById("runControl");
+    var control = document.getElementById( "runControl" );
     var controlStatus = document.getElementById("runControlStatus");
     if (window.polling === false) {
         window.polling = true;
@@ -621,6 +620,10 @@ jmaki.subscribe("/jmaki/charting/line/zoomOut", function(args) {
     } else if ( args.widgetId === "responseTimeChart" ) {
         jmaki.getWidget( "realtimeStats" ).zoomOut();
     }
+    var _start = args.ranges.xaxis.min.toFixed(0);
+    var _end = args.ranges.xaxis.max.toFixed(0);
+    window.minorRange = { start : _start, end : _end };
+    getLogDetails ();
 });
 
 jmaki.subscribe("/jmaki/charting/line/zoomIn", function(args) {
@@ -633,47 +636,67 @@ jmaki.subscribe("/jmaki/charting/line/zoomIn", function(args) {
     if (window.polling === true) { 
         toggleRunning();
     }
+
+    var _start = args.ranges.xaxis.min.toFixed(0);
+    var _end = args.ranges.xaxis.max.toFixed(0);
+    window.minorRange = { start : _start, end : _end };
+    getLogDetails ();
 });
+
+function log( message ) {
+    if ( console.log ) {
+        console.log( message );
+    }
+}
 
 jmaki.subscribe("/jmaki/charting/line/selectRange", function(args) {
-
+log("selected " + jmaki.inspect( args, -1 ));
     if (args.widgetId === "summaryChart") {
-        resolution =  document.getElementById("resolution").value;
-        var start = args.ranges.xaxis.min.toFixed(0);
-        var end = args.ranges.xaxis.max.toFixed(0);
-        window.lbm.addLightbox( {
-            id : "loadStatus",
-            label : "Loading",
-            content : "<div style='padding:15px'><img style='float:left;padding:5px' src='resources/images/wait-spinner.gif'/>" +
-                       "<div style='padding:10px'>Loading stats for " + formatTimestamp( new Number(start) ) +
-                      " - " + formatTimestamp( new Number(end) ) + "</div></div>",
-            startWidth : 500,
-            startHeight : 175
-        });
-        window.pageRequest = new ajax({ 
-            url : "../stats/archivedStats?start=" + start + "&end=" + end + "&resolution=" + resolution,
-            callback : function(req) {
-                var model = eval("(" + req.responseText + ")");
-                if ( model != null) {
-                    renderPageView( model );
-                    if ( document.getElementById("displayStatus") ) {
-                        document.getElementById( "displayStatus" ).innerHTML = "Displaying " + formatTimestamp( new Number(start) ) + " - " + formatTimestamp( new Number(end) );
-                    }
-                } else {
-                    if ( document.getElementById("displayStatus") ) {
-                        document.getElementById( "displayStatus" ).innerHTML = "No details for range " + formatTimestamp( new Number(start) ) + " - " + formatTimestamp( new Number(end) );
-                    }
+        window.selectedRange = args;
+        getSummaryDetails();
+    }
+});
+
+function getSummaryDetails() {
+    if ( ! window.selectedRange ) {
+        log( "No range selected." );
+        return;
+    }
+    resolution =  document.getElementById("resolution").value;
+    var start = window.selectedRange.ranges.xaxis.min.toFixed(0);
+    var end = window.selectedRange.ranges.xaxis.max.toFixed(0);
+    window.lbm.addLightbox( {
+        id : "loadStatus",
+        label : "Loading",
+        content : "<div style='padding:15px'><img style='float:left;padding:5px' src='resources/images/wait-spinner.gif'/>" +
+                   "<div style='padding:10px'>Loading stats for " + formatTimestamp( new Number(start) ) +
+                  " - " + formatTimestamp( new Number(end) ) + "</div></div>",
+        startWidth : 500,
+        startHeight : 145,
+        resizable : false
+    });
+    window.pageRequest = new ajax({ 
+        url : "../stats/archivedStats?start=" + start + "&end=" + end + "&resolution=" + resolution,
+        callback : function(req) {
+            var model = eval("(" + req.responseText + ")");
+            if ( model != null) {
+                renderPageView( model );
+                if ( document.getElementById("displayStatus") ) {
+                    document.getElementById( "displayStatus" ).innerHTML = "Displaying " + formatTimestamp( new Number(start) ) + " - " + formatTimestamp( new Number(end) );
                 }
-                window.lbm.removeLightbox( { targetId : "loadStatus" });
-                window.pageRequest = null;
-                if (window.polling === true) { 
-                        toggleRunning();
+            } else {
+                if ( document.getElementById("displayStatus") ) {
+                    document.getElementById( "displayStatus" ).innerHTML = "No details for range " + formatTimestamp( new Number(start) ) + " - " + formatTimestamp( new Number(end) );
                 }
             }
-        });
-    }
-
-});
+            window.lbm.removeLightbox( { targetId : "loadStatus" });
+            window.pageRequest = null;
+            if (window.polling === true) { 
+                    toggleRunning();
+            }
+        }
+    });
+}
 
 var summaryResolutions = {
         'ONE_DAY' : 1000 * 60 * 60 * 25, /* give one extra hour */
@@ -702,3 +725,108 @@ function updateSummary() {
     });
 }
 
+function getLogDetails() {
+    if ( !window.minorRange ) {
+        return;
+    }
+    var checked = document.getElementById("showLogs");
+    if ( checked !== null ) {
+        if ( checked.checked === true ) {
+            log(" getting details for range " + window.minorRange.start + " to " + window.minorRange.end );
+            var start = window.minorRange.start;
+            var end = window.minorRange.end;
+            window.lbm.addLightbox( {
+                id : "loadStatus",
+                label : "Loading",
+                content : "<div style='padding:15px'><img style='float:left;padding:5px' src='resources/images/wait-spinner.gif'/>" +
+                           "<div style='padding:10px'>Loading stat items for " + formatTimestamp( new Number(start) ) +
+                          " - " + formatTimestamp( new Number(end) ) + "</div></div>",
+                startWidth : 500,
+                startHeight : 145,
+                resizable : false
+            });
+            window.pageRequest = new ajax({ 
+                url : "../stats/archivedStatItems?start=" + start + "&end=" + end,
+                callback : function(req) {
+                    var model = eval("(" + req.responseText + ")");
+                    if ( model != null) {
+                        window.statsItems = model;
+                        renderStatItems();
+                        if ( document.getElementById("displayItemsStatus") ) {
+                            document.getElementById( "displayItemsStatus" ).innerHTML = "Displaying " + formatTimestamp( new Number(start) ) + " - " + formatTimestamp( new Number(end) );
+                        }
+                    } else {
+                        if ( document.getElementById("displayItemsStatus") ) {
+                            document.getElementById( "displayItemsStatus" ).innerHTML = "No details for range " + formatTimestamp( new Number(start) ) + " - " + formatTimestamp( new Number(end) );
+                        }
+                    }
+                    window.lbm.removeLightbox( { targetId : "loadStatus" });
+                    window.pageRequest = null;
+                }
+            });
+            
+        }
+    }
+    
+}
+
+function checkItem( item, filter ) {
+    var regex = new RegExp(filter);
+    for ( var i in item ) {
+        if ( item.hasOwnProperty( i ) ) {
+            if (regex.test( item[i] ) === true ) {
+                log("match on " + i + " " + item[i])
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+function renderStatItems( ) {
+    var items = window.statsItems;
+    var statItemPane = document.getElementById("statItemPane");
+    var filter = null;
+    if ( document.getElementById("filter").value !== "") {
+        filter = document.getElementById("filter").value;
+    }
+    if ( statItemPane ) {
+        statItemPane.style.display = "block";
+    } else {
+        return;
+    }
+    if (items === null || (items !== null && items.length === 0)) {
+        document.getElementById("statItems").innerHTML = "N/A";
+        return;
+    }
+     var s3table = new tablebuilder("blockTable");
+     s3table.setHeader([  "Timestamp", "URI", "Client Id", "Content-Type", "Content-Length", "Error(s)"]);
+     var listCount = 0;
+     // put everything in buckets
+     for ( var i=0; i < items.length; i+=1 ) {
+
+         var _row = [];
+         var _item = items[i];
+         // add the time now so we can do a filter match on it
+         _item.time = formatTimestamp( _item.timestamp );
+         if ( filter !== null ) {
+             if ( checkItem( _item, filter ) === false ) {
+                 continue;
+             }
+         }
+         listCount+=1;
+         _row.push( _item.time );
+         _row.push( _item.path );
+         _row.push( _item.remoteClient );
+         _row.push( _item.contentType );
+         _row.push( _item.contentLength );
+         if ( _item.errors !== null) {
+             _row.push( _item.errors.join(",") );
+         } else {
+             _row.push( "" );
+         }
+         s3table.addRow( _row );
+     }
+    document.getElementById("statItems").innerHTML = s3table;
+    document.getElementById("displayItemsCount").innerHTML = " (" + listCount + " of " + items.length + " items)";
+}

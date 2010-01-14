@@ -124,7 +124,36 @@ public class StatisticsServlet extends HttpServlet {
             Object jo = json.serialize( data );
             response.getWriter().write( jo.toString() );
             return;
-
+        } else if ( "/archivedStatItems".equals( command ) ) {
+            String startDateString = request.getParameter( "start" );
+            long startTimestamp = -1;
+            if ( startDateString != null ) {
+                try {
+                    startTimestamp = Long.parseLong( startDateString );
+                } catch ( NumberFormatException nfe ) {
+                    getLogger().warning( "Error with timestamp parameter : " + nfe.getMessage() );
+                }
+            }
+            String endDateString = request.getParameter( "end" );
+            long endTimestamp = -1;
+            if ( endDateString != null ) {
+                try {
+                    endTimestamp = Long.parseLong( endDateString );
+                } catch ( NumberFormatException nfe ) {
+                    getLogger().warning( "Error with timestamp parameter : " + nfe.getMessage() );
+                }
+            }
+            Object data = null;
+            if ( startTimestamp != -1 && endTimestamp != -1) {
+                data = statsManager.loadArchivedStatsItemsForRange( startTimestamp, endTimestamp );
+            } else {
+                data = createJSONError( "A start and end timestamp is required." );
+            }
+            response.setHeader( "pragma", "NO-CACHE");
+            response.setHeader( "Cache-Control", "no-cache" );
+            Object jo = json.serialize( data );
+            response.getWriter().write( jo.toString() );
+            return;
         } else if ( "/archivedStats".equals( command ) ) {
                 String startDateString = request.getParameter( "start" );
                 long startTimestamp = -1;

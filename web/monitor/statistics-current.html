@@ -9,14 +9,18 @@
   <script type="text/javascript" src="resources/jmaki/lightbox/extension.js"></script>
   <script type="text/javascript" src="resources/js/monitor.js"></script>
   <script>
-   jmaki.config =  {}
+   jmaki.config =  {
+       forceActiveXXHR : true,
+       logLevel : 'off'
+   }
    
    jmaki.subscribe("/jmaki/extensions/widgetFactory/loadComplete", function() {
        window.lbm = jmaki.loadExtension( { name : "jmaki.lightbox",
            widgetDir : 'resources/jmaki/lightbox/',
            args : { theme : 'gray'}
        });
-
+   
+       toggleRunning();
        updateSummary();
        //update the summary ever 2.5 minutes
        var updater = setInterval( updateSummary, 150000 );
@@ -42,7 +46,7 @@
    <div style="padding-top:5px">
    <div class="title">Statistics</div>
      <div class="titleItem">
-      <div class="titleArrow">&#8688;</div>
+      <div class="titleArrow">&nbsp;</div>
       <div class="subTitle"><a href="statistics-archive.html">Archive</a></div>
      </div>
      <div class="titleItem">
@@ -50,7 +54,7 @@
      <div class="subTitle"><a href="statistics-clients.html">Clients</a></div>
      </div>
      <div class="titleItem">
-      <div class="titleArrow">&nbsp;</div>
+      <div class="titleArrow">&#8688;</div>
       <div class="subTitle"><a href="statistics-current.html">Current</a></div>
      </div>
      <div class="titleItem">
@@ -64,19 +68,34 @@
    </div>
    <div style="clear:both;height:10px"></div>
    <fieldset>
-    <legend>Details</legend>
+    <legend>Updates</legend>
+    <div class="titleItem">
+    <span class="subTitle">Status :&nbsp;</span>
+    <span id="runControlStatus"></span>
+    <span>&nbsp;&nbsp;</span>
+    <span>
+       <a id="runControl" href="javascript:void(0)" onclick="toggleRunning()">Initializing...</a>
+    </span>
+    </div>
+    <div class="titleItem">
+    <span class="subTitle">Duration :&nbsp;</span>
+     <select id="timespan" onchange="loadPageViews(true)">
+       <option value="60">Last Minute</option>
+       <option value="300">Last 5 Minutes</option>
+       <option value="600">Last 10 Minutes</option>
+       <option value="1200">Last 20 Minutes</option>
+       <option value="1800">Last 40 Minutes</option>
+       <option value="3600">Last Hour</option>
+     </select>
+    </div>
     <div class="titleItem">
      <span class="subTitle"> Resolution :&nbsp;</span>
-     <select id="resolution" onchange="getSummaryDetails()">
+     <select id="resolution" onchange="updateResolution()">
        <option value="SECOND">Second</option>
        <option value="MINUTE">Minute</option>
        <option value="FIVE_MINUTES">Five Minutes</option>
        <option value="HOUR">Hour</option>
      </select>
-    </div>
-    <div class="titleItem">
-     <span class="subTitle"> Display Requests :&nbsp;</span>
-     <input id="showLogs" type="checkbox" onchange="getLogDetails()" />
     </div>
     </fieldset>
     <div style="height:10px"></div>
@@ -208,18 +227,6 @@
           </div>
    </fieldset>
 <!--  end current -->
-  <fieldset id="statItemPane" class="pane" style="display:none">
-    <legend><span id="displayItemsStatus"></span><span id="displayItemsCount"></span></legend>
-    <div id="statItems" style="height:450px;overflow-y:auto">
-       N/A
-    </div>
-    <div style="height:5px"></div>
-    
-    <div><form onsubmit="renderStatItems();return false;">
-    <span>Filter : </span><span><input id="filter" type="text" style="width:200px" /> <input type="SUBMIT" value="Apply" /></span>
-    </form>
-    </div>
-   </fieldset>
  </div>
  </body>
 </html>

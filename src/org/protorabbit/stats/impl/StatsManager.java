@@ -406,6 +406,13 @@ public class StatsManager implements ServletContextListener {
         return null;
     }
 
+    public List<IStat> loadArchivedStatsItemsForRange( long start, long end ) {
+        if ( sr != null ) {
+            return sr.loadArchivedStatsItemsForRange( start, end );
+        }
+        return null;
+    }
+
     private static  void addPayloadsAndProcessingTime( Map<Long,TimeChartItem> jBuckets, Map<String, Object> envelope, String label, String type ) {
         List<TimeChartItem> averageJsonProcessingTimes = new ArrayList<TimeChartItem>();
         List<TimeChartItem> averageJsonPayloads = new ArrayList<TimeChartItem>();
