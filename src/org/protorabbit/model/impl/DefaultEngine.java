@@ -42,6 +42,9 @@ import org.protorabbit.profile.Episode;
  */
 public class DefaultEngine implements IEngine {
 
+    public static String COMMAND_START = "<^";
+    public static String COMMAND_END = "^>";
+    
     private static Logger logger = null;
 
     static final Logger getLogger() {
@@ -50,6 +53,7 @@ public class DefaultEngine implements IEngine {
         }
         return logger;
     }
+
     public synchronized void renderTemplate( String tid, IContext ctx, OutputStream out ) {
 
         Config cfg = ctx.getConfig();
@@ -94,7 +98,19 @@ public class DefaultEngine implements IEngine {
                 if (dc.getAfterCommands() != null) {
                     processCommands( ctx, dc.getAfterCommands());
                 }
-                renderCommands( dc.getAllCommands(), dc.getDocument(), ctx, out );
+                List<ICommand> cmds = dc.getAllCommands();
+                if (cmds == null || ( cmds != null && cmds.size() == 0) ) {
+                    StringBuffer buff = dc.getDocument();
+                    if (buff != null) {
+                        try {
+                            out.write( buff.toString().getBytes() );
+                        } catch (IOException iox ) {
+                            getLogger().log(Level.SEVERE, "Error rendering content.", iox );
+                        }
+                    }
+                } else {
+                    renderCommands( dc.getAllCommands(), dc.getDocument(), ctx, out );
+                }
             } finally {
                 if ( dc != null ) {
                     resetCommands( dc.getAllCommands() );
@@ -199,23 +215,15 @@ public class DefaultEngine implements IEngine {
     }
 
      public static void renderCommands( List<ICommand> cmds, StringBuffer buff, IContext ctx, OutputStream out ) {
-         if (cmds == null) {
-             if (buff != null) {
-                 try {
-                     out.write( buff.toString().getBytes() );
-                 } catch (IOException iox ) {
-                     getLogger().log(Level.SEVERE, "Error rendering content.", iox );
-                 }
-             }
-             return;
+         if (cmds == null ) {
+             getLogger().log(Level.SEVERE, "Error rendering content." );
          }
          try {
              int index = 0;
-
              for (ICommand c : cmds) {
                     // output everything before the first command
                     // include profiler episodes.js
-                    if (ctx.getConfig().profile()) {
+                    if ( ctx.getConfig().profile() ) {
                         String preText =  buff.substring(index, c.getStartIndex());
                         int headStart = preText.indexOf("<head>");
                         if (headStart != -1) {
@@ -247,8 +255,7 @@ public class DefaultEngine implements IEngine {
                         IDocumentContext dc = c.getDocumentContext();
 
                         if (dc != null) {
-                                if (
-                                        (dc.getAllCommands() == null ||
+                                if ( (dc.getAllCommands() == null ||
                                     (dc.getAllCommands() != null && 
                                     dc.getAllCommands().size() == 0)) /* && 
                                         dc.getDocument() != null */) {
@@ -318,8 +325,8 @@ public class DefaultEngine implements IEngine {
         int len = doc.length();
 
         while( index < len ) {
-            index = doc.indexOf("<^", index);
-            int end = doc.indexOf("^>", index);
+            index = doc.indexOf( COMMAND_START, index);
+            int end = doc.indexOf( COMMAND_END, index);
 
             if (index == -1 || end == -1) {
                 break;
