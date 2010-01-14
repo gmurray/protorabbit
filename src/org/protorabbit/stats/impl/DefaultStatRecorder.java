@@ -424,6 +424,7 @@ public class DefaultStatRecorder implements IStatRecorder {
         return rvals;
     }
 
+    @SuppressWarnings("unchecked")
     private void combineSummaries( Map<String, Object> src, Map<String, Object> target, Resolution r ) {
         // append views->values
         combineLists( src,target, "view", r );
@@ -439,6 +440,20 @@ public class DefaultStatRecorder implements IStatRecorder {
         combineLists( src,target, "averageJSONPayload", r );
         // pageStats->text/html pageStats->application/json (in each get key work out averageContentLength, averageProcessingTime, accessCount, totalProcessingTime, totalContentLength
         combinePageStats( src, target );
+        // combine the errors in range
+        List<Object> sErrors = (List<Object>) src.get("errors");
+        List<Object> tErrors = (List<Object>) target.get("errors");
+        tErrors.addAll( sErrors );
+        // combine the client maps
+        Map<String,Object> sClients = (Map<String,Object>) src.get("clients");
+        Map<String,Object> tClients = (Map<String,Object>) target.get("clients");
+        Iterator<String> it = sClients.keySet().iterator();
+        while (it != null && it.hasNext() ) {
+            String key = it.next();
+            if ( !tClients.containsKey(key) ) {
+                tClients.put(key, sClients.get(key) );
+            }
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -702,14 +717,14 @@ public class DefaultStatRecorder implements IStatRecorder {
                     List<IStat> items = processBuffer( buff );
                     totalCount += items.size();
                     StatsManager.addStats( duration, resolution, items, vBuckets, jBuckets,
-                            lclients, pageStats,  errors,
+                            lclients, pageStats, errors,
                             threshold ) ;
                 }
                 getLogger().info("Read in " + f.getName() + " lines : " + lineCount + " total stat count : " + totalCount );
                 in.close();
 
                 return StatsManager.createStatsEnvelope( vBuckets, jBuckets,
-                        lclients, pageStats,  errors,
+                        lclients, pageStats, errors,
                         threshold,  totalCount );
         } catch (FileNotFoundException e) {
             getLogger().log( Level.SEVERE, "Could deserialize file.", e );

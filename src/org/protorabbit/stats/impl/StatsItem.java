@@ -101,7 +101,11 @@ public class StatsItem implements IStat {
     }
 
     public boolean hasErrors() {
-        return hasErrors;
+        if ( errors != null && errors.size() > 0 ) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public void setHasErrors(boolean hasErrors) {

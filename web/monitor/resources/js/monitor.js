@@ -418,10 +418,12 @@ function createChart( model ) {
 }
 
 function renderPageView( model ) {
+
     formatPageViews( model );
     formatPageStatCharts( model.pageStats );
 
     var _count = formatActiveClients( model.clients );
+
     var cTitle = document.getElementById("clientsTitle");
     if (cTitle) {
         cTitle.innerHTML = "Clients&nbsp;(" + _count + ")";
@@ -430,7 +432,13 @@ function renderPageView( model ) {
     if ( clientStatus ) {
         clientStatus.innerHTML = _count;
     }
-    formatErrors( model.errors );
+    if ( document.getElementById("errorsPanel") === null ) {
+        window.errors = model.errors;
+    } else {
+        var errorPanel = formatErrors( model.errors);
+        document.getElementById("errorsPanel").innerHTML = errorPanel;
+    }
+
     var _count = 0;
     if ( model !== null && model.errors.length > 0 ) {
         _count = model.errors.length;
@@ -500,14 +508,12 @@ function formatPageViews(items) {
 
 }
 
-function formatErrors(items) {
-    if ( document.getElementById("errorsPanel") === null ) {
-        return;
+function formatErrors( items ) {
+
+    if ( (typeof items === "undefined") || items === null || (items !== null && items.length === 0)) {
+        return "N/A";
     }
-    if (items === null || (items !== null && items.length === 0)) {
-        document.getElementById("errorsPanel").innerHTML = "N/A";
-        return;
-    }
+
      var s3table = new tablebuilder("blockTable");
      s3table.setHeader(["URI",  "Timestamp", "Client Id", "Error(s)"]);
 
@@ -521,22 +527,12 @@ function formatErrors(items) {
          _row.push( _item.errors.join(",") );
          s3table.addRow( _row );
      }
-    document.getElementById("errorsPanel").innerHTML = s3table;
+     return s3table;
  }
 
-function formatActiveClients(items) {
-    var _count = 0;
-    var tDiv = document.getElementById("clientsPanel");
-    if ( tDiv === null ) {
-        for ( var i in items ) {
-            if ( items.hasOwnProperty(i) ) {
-                _count++;
-            }
-        }
-        return _count;
-    }
-
+function getActiveClientsPanel( items ) {
     var s3table = new tablebuilder("blockTable");
+    var _count = 0;
     s3table.setHeader(["Client Id", "JSON Count", "View Count", "Error Count", "Last Access"]);
     // put everything in buckets
     for ( var i in items ) {
@@ -552,12 +548,30 @@ function formatActiveClients(items) {
              s3table.addRow( _row );
          }
      }
-     if (_count > 0) {
-         tDiv.innerHTML = s3table;
-     } else {
-         tDiv.innerHTML = "N/A";
-     }
-    return _count;
+
+     return { count : _count, table : s3table };
+}
+
+function formatActiveClients(items) {
+    var _count = 0;
+    var tDiv = document.getElementById("clientsPanel");
+    if ( tDiv === null ) {
+        for ( var i in items ) {
+            if ( items.hasOwnProperty(i) ) {
+                _count++;
+            }
+        }
+        window.activeClients = items;
+        return _count;
+    }
+    var panel = getActiveClientsPanel( items );
+    if ( panel.count > 0) {
+        tDiv.innerHTML = panel.table;
+    } else {
+        tDiv.innerHTML = "N/A";
+    }
+
+    return panel.count;
 }
 
 function formatPageStatCharts( stats ) {
@@ -623,7 +637,7 @@ jmaki.subscribe("/jmaki/charting/line/zoomOut", function(args) {
     var _start = args.ranges.xaxis.min.toFixed(0);
     var _end = args.ranges.xaxis.max.toFixed(0);
     window.minorRange = { start : _start, end : _end };
-    getLogDetails ();
+    getLogDetails();
 });
 
 jmaki.subscribe("/jmaki/charting/line/zoomIn", function(args) {
@@ -800,7 +814,7 @@ function renderStatItems( ) {
         return;
     }
      var s3table = new tablebuilder("blockTable");
-     s3table.setHeader([  "Timestamp", "URI", "Client Id", "Content-Type", "Content-Length", "Error(s)"]);
+     s3table.setHeader([  "Timestamp", "URI", "Client Id", "Content-Type", "Content-Length", "Process Time (ms)", "Error(s)"]);
      var listCount = 0;
      // put everything in buckets
      for ( var i=0; i < items.length; i+=1 ) {
@@ -820,6 +834,7 @@ function renderStatItems( ) {
          _row.push( _item.remoteClient );
          _row.push( _item.contentType );
          _row.push( _item.contentLength );
+         _row.push( _item.processTime );
          if ( _item.errors !== null) {
              _row.push( _item.errors.join(",") );
          } else {
@@ -830,3 +845,57 @@ function renderStatItems( ) {
     document.getElementById("statItems").innerHTML = s3table;
     document.getElementById("displayItemsCount").innerHTML = " (" + listCount + " of " + items.length + " items)";
 }
+
+function showErrors() {
+
+    var errorsPanel = formatErrors( window.errors);
+    window.lbm.addLightbox( {
+        id : "errors",
+        label : "Errors",
+        content : "<div id='errorContent' style='padding:15px;height:540px;overflow-y:auto'>" +
+                    errorsPanel +
+               "</div>",
+        startWidth : 900,
+        startHeight : 645,
+        showCloseButton : true,
+        onresize : function( size ) {
+
+          var errorContent = document.getElementById("errorContent");
+          if (errorContent) {
+              errorContent.style.height = size.h - 15 + "px";
+          }
+        }
+    });
+
+}
+
+function showActiveClients() {
+
+    var panel = getActiveClientsPanel( window.activeClients);
+    var clientsPanel = "";
+    if ( panel.count > 0) {
+        clientsPanel = panel.table;
+    } else {
+        clientsPanel = "N/A";
+    }
+    window.lbm.addLightbox( {
+        id : "clients",
+        label : "Clients",
+        content : "<div id='clientContent' style='padding:15px;height:540px;overflow-y:auto'>" +
+                clientsPanel +
+               "</div>",
+        startWidth : 900,
+        startHeight : 645,
+        showCloseButton : true,
+        onresize : function( size ) {
+
+          var errorContent = document.getElementById("clientContent");
+          if (errorContent) {
+              errorContent.style.height = size.h - 15 + "px";
+          }
+        }
+    });
+
+}
+
+
