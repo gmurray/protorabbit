@@ -19,7 +19,7 @@ public class Engine {
         d1.setTimeout( TWO_MINUTES );
         d1.setExpectedMinContentLength( 4591 );
         d1.setExpectedMaxContentLength( 4591 );
-        d1.setUrl( "http://localhost:9090/protorabbit/welcome.prt" );
+        d1.setUrl( "http://localhost:8080/protorabbit/welcome.prt" );
         d1.setId( "R1" );
         dlist.add( d1 );
 
@@ -29,7 +29,7 @@ public class Engine {
         d2.setExpectedMaxContentLength( 3464 );
         d2.setId( "R2" );
         d2.setTimeout( FOUR_MINUTES );
-        d2.setUrl( "http://localhost:9090/protorabbit/about.prt" );
+        d2.setUrl( "http://localhost:8080/protorabbit/about.prt" );
         dlist.add( d2 );
 
         ClientDetails d3 = new ClientDetails();
@@ -38,7 +38,7 @@ public class Engine {
         d3.setExpectedMinContentLength( 7758 );
         d3.setExpectedMaxContentLength( 7758 );
         d3.setTimeout( 60000 );
-        d3.setUrl( "http://localhost:9090/protorabbit/private.prt" );
+        d3.setUrl( "http://localhost:8080/protorabbit/private.prt" );
         dlist.add( d3 );
 
         ClientDetails p1 = new ClientDetails();
@@ -46,7 +46,7 @@ public class Engine {
         p1.setId( "P1" );
         p1.setExpectedMinContentLength( 91 );
         p1.setExpectedMaxContentLength( 124 );
-        p1.setUrl( "http://localhost:9090/protorabbit/secure/testPoller!doFoo.hop?name=5.2&json={blah:1}" );
+        p1.setUrl( "http://localhost:8080/protorabbit/secure/testPoller!doFoo.hop?name=5.2&json={blah:1}" );
         p1.setTimeout( 15000 );
         dlist.add( p1 );
 
@@ -55,7 +55,7 @@ public class Engine {
         p2.setId( "P2" );
         p2.setExpectedMinContentLength( 91 );
         p2.setExpectedMaxContentLength( 124 );
-        p2.setUrl( "http://localhost:9090/protorabbit/secure/testLongPoller!doFoo.hop?name=5.2&json={blah:1}" );
+        p2.setUrl( "http://localhost:8080/protorabbit/secure/testLongPoller!doFoo.hop?name=5.2&json={blah:1}" );
         p2.setTimeout( 15000 );
         dlist.add( p2 );
 
@@ -64,7 +64,7 @@ public class Engine {
         d4.setId( "R4" );
         d4.setExpectedMinContentLength( 91 );
         d4.setExpectedMaxContentLength( 124 );
-        d4.setUrl( "http://localhost:9090/protorabbit/secure/testNamespace!doFoo.hop?name=5.2&json={blah:1}" );
+        d4.setUrl( "http://localhost:8080/protorabbit/secure/testNamespace!doFoo.hop?name=5.2&json={blah:1}" );
         d4.setTimeout( 15000 );
         dlist.add( d4 );
 
@@ -74,7 +74,7 @@ public class Engine {
         d5.setExpectedMinContentLength( 83 );
         d5.setExpectedMaxContentLength( 124 );
         d5.setId( "R5" );
-        d5.setUrl( "http://localhost:9090/protorabbit/secure2/test!doFoo.hop?name=5.2&json={blah:1}" );
+        d5.setUrl( "http://localhost:8080/protorabbit/secure2/test!doFoo.hop?name=5.2&json={blah:1}" );
         dlist.add( d5 );
 
         int tcount = dlist.size();

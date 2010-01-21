@@ -19,6 +19,7 @@ import org.protorabbit.model.IProperty;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class InsertCommand extends BaseCommand {
@@ -55,7 +56,9 @@ public class InsertCommand extends BaseCommand {
             if (p != null) {
                 value = p.getValue();
             } else {
-                getLogger().warning("Non fatal error : null property " + id + " processing template " + ctx.getTemplateId());
+                if ( getLogger().isLoggable( Level.FINEST) ) {
+                    getLogger().warning("Non fatal error : null property " + id + " processing template " + ctx.getTemplateId());
+                }
                 return;
             }
         }

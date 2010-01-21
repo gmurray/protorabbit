@@ -124,9 +124,11 @@ public class ProtoRabbitServlet extends HttpServlet {
             String handlerName = ctx.getInitParameter( "prt-handler-name" );
             Properties p = new Properties();
             InputStream is = getClass().getResourceAsStream("/org/protorabbit/resources/default.properties");
+            String buildDate = "N/A";
             try {
                 p.load(is);
-                version = p.getProperty("version");
+                version = p.getProperty( "version" );
+                buildDate = p.getProperty( "buildDate" );
                 cleanupTimeout = Long.parseLong((p.getProperty("cleanupTimeout")));
                 maxAge = Long.parseLong((p.getProperty("maxAge")));
                 maxTries = Integer.parseInt((p.getProperty("maxTries")));
@@ -143,7 +145,8 @@ public class ProtoRabbitServlet extends HttpServlet {
             // set the lastCleanup to current
             lastCleanup = (new Date()).getTime();
 
-            getLogger().info("Protorabbit version : " + version);
+            getLogger().info( "Protorabbit version : " + version );
+            getLogger().info( "Protorabbit build date : " + buildDate );
             lastUpdated = new HashMap<String, Long>();
 
             if (ctx.getInitParameter("prt-dev-mode") != null) {

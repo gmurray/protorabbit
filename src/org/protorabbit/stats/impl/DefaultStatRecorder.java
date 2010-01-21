@@ -51,8 +51,8 @@ public class DefaultStatRecorder implements IStatRecorder {
     private File statsDirectory = null;
     private String host = "localhost";
     private JSONSerializer json = null;
-    private long today = -1;
-    private BufferedWriter writer = null;
+    private int today = -1;
+    private BufferedWriter _writer = null;
     public static DateFormat df = new SimpleDateFormat("yyy-MM-dd");
 
     static final Logger getLogger() {
@@ -104,47 +104,59 @@ public class DefaultStatRecorder implements IStatRecorder {
         json = factory.getInstance();
     }
 
+    private int getDayInYear( long timestamp ) {
+        Calendar c = Calendar.getInstance();
+        c.setTimeInMillis( timestamp );
+        return c.get(Calendar.DAY_OF_YEAR);
+    }
+    
     private BufferedWriter getWriter() {
-
-        long now = getTime( System.currentTimeMillis(), ONE_DAY );
-        if ( now != today || writer == null) {
+        long now = System.currentTimeMillis();
+        int day = getDayInYear( now );
+        if ( day != today || _writer == null ) {
             // if we already have an open writer close it
-            if ( now != today && writer != null ) {
-                updateDailySummary();
+            if ( day != today && _writer != null ) {
+                getLogger().info( "The date has changed. Rolling over file.");
+                Calendar c = Calendar.getInstance();
+                c.setTimeInMillis( now );
+                c.add(Calendar.DAY_OF_YEAR, -1 );
+                updateDailySummary( c.getTimeInMillis() );
                 close();
             }
-            File currentStatsFile = getCurrentStatsFile();
+            File currentStatsFile = getCurrentStatsFile( now );
             if ( currentStatsFile == null) {
                 getLogger().log( Level.SEVERE, "Could not record stats." );
                 canRecordStats = false;
                 return null;
             }
             try {
-                writer = new BufferedWriter( new FileWriter( currentStatsFile, true ) );
-                today = now;
-                return writer;
+                _writer = new BufferedWriter( new FileWriter( currentStatsFile, true ) );
+                today = day;
+                return _writer;
             } catch (IOException e) {
                 getLogger().log( Level.SEVERE, "Could not create protorabbit directory to record stats." );
                 canRecordStats = false;
                 return null; 
             }
+        } else {
+            return _writer;
         }
-        return writer;
     }
 
     private void close() {
-        if ( writer != null ) {
+        if ( _writer != null ) {
             try {
-                writer.close();
+                _writer.close();
+                _writer = null;
             } catch (IOException e) {
                 getLogger().log( Level.SEVERE, "Could not create protorabbit directory to record stats." );
             }
         }
     }
 
-    private File getCurrentStatsFile() {
+    private File getCurrentStatsFile( long timestamp  ) {
 
-        String hName = getBaseFileName() + ".json";
+        String hName = getBaseFileName( timestamp ) + ".json";
         File currentStatsFile = new File( statsDirectory, hName );
         if ( !currentStatsFile.exists() ) {
             try {
@@ -192,10 +204,9 @@ public class DefaultStatRecorder implements IStatRecorder {
         return null;
     }
 
-    private String getBaseFileName() {
-        Date d = new Date();
+    private String getBaseFileName( long timestamp) {
         Calendar c = Calendar.getInstance();
-        c.setTime( d );
+        c.setTimeInMillis( timestamp );
         String fName = host + "." +
                        c.get( Calendar.YEAR) + "-" +
                        (c.get( Calendar.MONTH ) + 1) + "-" +
@@ -203,16 +214,20 @@ public class DefaultStatRecorder implements IStatRecorder {
         return fName;
     }
 
-    public void updateDailySummary() {
+    public void updateDailySummary( long timestamp) {
         if ( recordStats ) {
             long start = System.currentTimeMillis();
-            getLogger().info("Updating daily summary.");
-            String fileName = getBaseFileName() + "-summary.json";
-            Map<String, Object> stats = loadStats( getCurrentStatsFile() );
+            getLogger().info("Updating daily summary. " + new Date( timestamp ) );
+            String fileName = getBaseFileName( timestamp ) + "-summary.json";
+            Map<String, Object> stats = loadStats( getCurrentStatsFile( timestamp ) );
             archiveStats( fileName, stats );
             long end = System.currentTimeMillis();
             getLogger().info("Daily summary complete. Time : " + ( end - start ) + "ms" );
         }
+    }
+
+    public void updateDailySummary() {
+        updateDailySummary( System.currentTimeMillis() );
     }
 
     public Object loadSummary( File f ) {
@@ -720,7 +735,7 @@ public class DefaultStatRecorder implements IStatRecorder {
                             lclients, pageStats, errors,
                             threshold ) ;
                 }
-                getLogger().info("Read in " + f.getName() + " lines : " + lineCount + " total stat count : " + totalCount );
+                getLogger().info("Loaded stats from file : " + f.getAbsolutePath() + " lines : " + lineCount + " total stat count : " + totalCount + " file size : " + f.length() + " bytes." );
                 in.close();
 
                 return StatsManager.createStatsEnvelope( vBuckets, jBuckets,
@@ -810,7 +825,7 @@ public class DefaultStatRecorder implements IStatRecorder {
     public List<Long> getArchiveTimestamps() {
         List<Long> fileNames = new ArrayList<Long>();
         if ( statsDirectory != null ) {
- 
+
             File[] files = statsDirectory.listFiles();
             if ( files != null && files.length > 0 ) {
                 for ( File f : files ) {
