@@ -13,7 +13,7 @@
       <description> Template Definitions - Order only matters in that the templates further
        to the left will override properties defined to those to the right.</description>
       <param-name>prt-templates</param-name>
-      <param-value>/WEB-INF/last.json, /WEB-INF/templates.json,/resources/blueprint/blueprint-templates.json,/resources/yahoo/yahoo-templates.json, /WEB-INF/private/private-template.json</param-value>
+      <param-value>/WEB-INF/st-templates.json, /WEB-INF/last.json, /WEB-INF/templates.json,/resources/blueprint/blueprint-templates.json,/resources/yahoo/yahoo-templates.json, /WEB-INF/private/private-template.json</param-value>
     </context-param>
 
         <context-param>

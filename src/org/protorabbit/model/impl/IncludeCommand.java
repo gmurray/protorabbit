@@ -170,7 +170,8 @@ public class IncludeCommand extends BaseCommand {
             if (parseIncludeFile) {
                 IDocumentContext document = new DocumentContext();
                 setDocumentContext(document);
-                IEngine engine = cfg.getEngine();
+                // assume this path uses the default engine
+                DefaultEngine engine = (DefaultEngine)cfg.getEngine();
                 StringBuffer doc = inc.getContent();
                 List<ICommand> cmds = engine.getCommands(cfg, doc);
                 document.setAllCommands(cmds);

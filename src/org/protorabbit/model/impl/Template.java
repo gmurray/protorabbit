@@ -125,6 +125,10 @@ public class Template implements ITemplate {
         return id;
     }
 
+    public void setId( String id ) {
+        this.id = id;
+    }
+
     public List<ICommand> getCommands() {
         return commands;
     }

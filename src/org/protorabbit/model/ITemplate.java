@@ -56,6 +56,7 @@ public interface ITemplate {
     public long getAccessCount();
     public void incrementAccessCount();
 
+    public void setId( String id );
     public void setURINamespace(String namespace);
     public void setDocumentContext(DocumentContext dc);
     public void setAttributes( Map<String, Object>attributes);

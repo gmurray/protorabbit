@@ -1,9 +1,6 @@
 package org.protorabbit.model;
 
 import java.io.OutputStream;
-import java.util.List;
-
-import org.protorabbit.Config;
 
 public interface IEngine {
 
@@ -15,6 +12,5 @@ public interface IEngine {
      * Render a template with the id tid, context, and given outputsteam
      */
     public void renderTemplate(String tid, IContext ctx,  OutputStream out);
-    public List<ICommand> getCommands(Config cfg, StringBuffer doc);
 
 }

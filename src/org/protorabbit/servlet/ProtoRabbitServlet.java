@@ -60,6 +60,7 @@ import org.protorabbit.stats.IClientIdGenerator;
 import org.protorabbit.stats.IStat;
 import org.protorabbit.stats.impl.StatsItem;
 import org.protorabbit.stats.impl.StatsManager;
+import org.protorabbit.stringtemplate.StringTemplateEngine;
 import org.protorabbit.util.IOUtil;
 import java.util.Properties;
 
@@ -750,7 +751,13 @@ public class ProtoRabbitServlet extends HttpServlet {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
-
+        // set the template engine
+        IEngine renderEngine = null;
+        if ( t.getTemplateURI(wc).getFullURI().endsWith(".st") ) {
+            renderEngine = new StringTemplateEngine();
+        } else {
+            renderEngine = engine;
+        }
         // buffer the output stream
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
@@ -772,9 +779,8 @@ public class ProtoRabbitServlet extends HttpServlet {
                 resp.setHeader("Vary", "Accept-Encoding");
                 resp.setHeader("Content-Encoding", "gzip");
             }
-
             // headers after this point do not get written
-            engine.renderTemplate(id, wc, bos);
+            renderEngine.renderTemplate(id, wc, bos);
 
             String content = bos.toString(jcfg.getEncoding());
             String hash = IOUtil.generateHash(content);
@@ -863,7 +869,7 @@ public class ProtoRabbitServlet extends HttpServlet {
         } else {
             OutputStream out = resp.getOutputStream();
           //  t.getTemplateResource().incrementAccessCount();
-            engine.renderTemplate(id, wc, bos);
+            renderEngine.renderTemplate(id, wc, bos);
             bytesServed = bos.size();
             out.write(bos.toByteArray());
         }
