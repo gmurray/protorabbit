@@ -1,0 +1,1 @@
+<div style="text-align:center">(c) 2010</div>

@@ -1,0 +1,8 @@
+{
+  "templates" : [
+    {
+     "id" : "st-welcome",
+     "template" : "/st/base.st"
+    }
+  ]
+}
