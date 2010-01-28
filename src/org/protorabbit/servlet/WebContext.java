@@ -144,7 +144,6 @@ public class WebContext extends BaseContext {
                 }
 
         } else {
-System.out.println("$$$$$$$$$$$$$resourceName=" + resourceName);
             InputStream is = sctx.getResourceAsStream(resourceName);
             if (is != null) {
                 StringBuffer contents = IOUtil.loadStringFromInputStream(is, cfg.getEncoding());

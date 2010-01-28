@@ -679,6 +679,9 @@ public class DefaultStatRecorder implements IStatRecorder {
     
     @SuppressWarnings({ "unchecked" })
     private List<IStat> processBuffer( StringBuffer buff ) {
+        if ( buff == null) {
+            return null;
+        }
         buff.insert(0, "[");
         // remove the last comma
         buff.replace(buff.length() -1, buff.length(), "" );
@@ -720,10 +723,12 @@ public class DefaultStatRecorder implements IStatRecorder {
                     lineCount++;
                     if ( lineCount % 1000 == 0) {
                         List<IStat> items = processBuffer( buff );
-                        totalCount += items.size();
-                        StatsManager.addStats( duration, resolution, items, vBuckets, jBuckets,
-                                lclients, pageStats, errors,
-                                threshold ) ;
+                        if (items != null ) {
+                            totalCount += items.size();
+                            StatsManager.addStats( duration, resolution, items, vBuckets, jBuckets,
+                                    lclients, pageStats, errors,
+                                    threshold ) ;
+                        }
                         buff = new StringBuffer();
                     }
                 }

@@ -13,7 +13,6 @@ public class STGroupDynamic extends StringTemplateGroup {
 
    public STGroupDynamic( IContext ctx, String prefix) {
        super( prefix );
-       System.out.println("Group loader for String template");
        this.ctx = ctx;
        this.prefix = prefix;
    }
@@ -26,8 +25,6 @@ public class STGroupDynamic extends StringTemplateGroup {
        try {
            
            if ( buff.toString().trim().startsWith("group")) {
-             System.out.println("we are a group " + name);
-            // Use the constructor that accepts a Reader
                 StringTemplateGroup group = new StringTemplateGroup(new StringReader( buff.toString() ));
                 StringTemplate t = group.getInstanceOf( name );
                 return t;
@@ -47,23 +44,22 @@ public class STGroupDynamic extends StringTemplateGroup {
    }
    
    public StringTemplate loadTemplate( String name) {
-       System.out.println("#Request for prefix " + prefix + " name " + name);
+
        StringBuffer buff = null;
        StringTemplate template = null;
        try {
-           System.out.println("trying for " + prefix + name + ".st" );
+
            buff = ctx.getResource( prefix, name + ".st");
-           System.out.println("buff=====" + buff );
+
            if ( buff == null || (buff != null && buff.length() == 0) ) {
-               System.out.println("trying for " +  name );
+
                if ( name.endsWith( ".st") ) {
                    name = name.substring(0, name.length() -3 );
                }
                buff = ctx.getVersionedResource(name, "1" );
            }
            if ( buff != null && buff.toString().trim().startsWith("group")) {
-             System.out.println("we are a group " + name);
-            // Use the constructor that accepts a Reader
+
                 StringTemplateGroup group = new StringTemplateGroup(new StringReader( buff.toString() ));
                 StringTemplate t = group.getInstanceOf( name );
                 return t;
@@ -81,14 +77,12 @@ public class STGroupDynamic extends StringTemplateGroup {
        } catch (Exception e) {
            e.printStackTrace();
        }
-       System.out.println("returning null for name " + name );
        return template;
    }
 
    public synchronized StringTemplate lookupTemplate(StringTemplate enclosingInstance,
            String name) {
-       System.out.println("lookup template called for " + name );
-        //System.out.println("lookup found "+st.getGroup().getName()+"::"+st.getName());
+
         return loadTemplate( name);
   }
 
