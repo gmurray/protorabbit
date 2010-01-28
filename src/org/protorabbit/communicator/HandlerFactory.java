@@ -219,7 +219,11 @@ public class HandlerFactory {
             stat.setType( StatsItem.types.JSON );
             stat.setRequestURI( request.getRequestURI() );
             stat.setContentLength( new Long(bytesServed) );
-            stat.setContentType( "application/json" );
+            if ( result != BaseJSONHandler.BINARY ) {
+                stat.setContentType( "application/json" );
+            } else {
+                stat.setContentType( response.getContentType() );
+            }
             if ( (thandler.getErrors() != null && thandler.getErrors().size() > 0) ) {
                 stat.setHasErrors( true );
                 stat.setErrors( thandler.getErrors() );
@@ -269,17 +273,24 @@ public class HandlerFactory {
         } else {
             jr.setResult(result);
         }
-
+        int bytesServed = 0;
         // get the model
         jr.setData( h.getModel() );
-
-        response.setHeader("Content-Type", "application/json");
-        response.setHeader("Cache-Control", "no-cache");
-        response.setHeader("pragma", "NO-CACHE");
-        // now that we have the json object print out the string
-        Object responseObject = jsonSerializer.serialize(jr);
-        response.getWriter().write(responseObject.toString());
-        return responseObject.toString().getBytes().length;
+        if ( result != BaseJSONHandler.BINARY ) {
+            response.setHeader("Content-Type", "application/json");
+            response.setHeader("Cache-Control", "no-cache");
+            response.setHeader("pragma", "NO-CACHE");
+            // now that we have the json object print out the string
+            Object responseObject = jsonSerializer.serialize(jr);
+            response.getWriter().write(responseObject.toString());
+            bytesServed = responseObject.toString().getBytes().length;
+        } else {
+            Integer bs = (Integer)request.getAttribute( "org.protorabbit.BYTES_SERVED");
+            if ( bs != null ) {
+                bytesServed = bs.intValue();
+            }
+        }
+        return bytesServed;
     }
 
 }

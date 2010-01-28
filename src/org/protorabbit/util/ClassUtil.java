@@ -53,18 +53,17 @@ public class ClassUtil {
     public static boolean mapParam(List<Method> methods, String param, String value, Object targetObject) {
 
          for (Method m : methods) {
-             
 
                  Class<?>[] paramTypes = m.getParameterTypes();
                  Object[] args = new Object[1];
  
                  Class<?>  p1 = paramTypes[0];
 
-                 if (Long.class.isAssignableFrom(p1) || p1 == long.class) {
+                 if (Long.class.isAssignableFrom(p1) || p1 == long.class && !"".equals(value) ) {
                      args[0] =  new Long(Long.parseLong(value));
-                 } else if (Double.class.isAssignableFrom(p1) || p1 == double.class) {
+                 } else if (Double.class.isAssignableFrom(p1) || p1 == double.class && !"".equals(value) ) {
                      args[0] = new Double(Double.parseDouble(value));
-                 } else if (Integer.class.isAssignableFrom(p1) || p1 == int.class) {
+                 } else if (Integer.class.isAssignableFrom(p1) || p1 == int.class && !"".equals(value) ) {
                      args[0] = new Integer(Integer.parseInt(value));
                  } else if (Enum.class.isAssignableFrom(p1)) {
                      args[0] = Enum.valueOf((Class<? extends Enum>)p1, value);
@@ -73,12 +72,10 @@ public class ClassUtil {
                  } else if (Boolean.class.isAssignableFrom(p1) || p1 == boolean.class) {
                      args[0] =  new Boolean(Boolean.parseBoolean(value));
                  } else {
-                     throw new RuntimeException("Unssupported argument type : " + p1);
+                     throw new RuntimeException("Unssupported argument type : " + p1 + " with value " + value );
                 }
                 try {
-
                     if (m != null && args[0] != null) {
-
                         m.invoke(targetObject, args);
                     }
                     return true;

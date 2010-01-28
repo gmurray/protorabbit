@@ -16,6 +16,8 @@ public class BaseJSONHandler implements Handler {
     public static final String DEFAULT_MODEL = "model";
     public static final String ERROR = "error";
     public static final String SUCCESS = "success";
+    public static final String JSON = "json";
+    public static final String BINARY = "binary";
 
     protected ServletContext ctx = null;
     protected HttpServletRequest request;
