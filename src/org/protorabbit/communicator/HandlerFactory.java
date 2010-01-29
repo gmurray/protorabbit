@@ -1,6 +1,9 @@
 package org.protorabbit.communicator;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -49,6 +52,28 @@ public class HandlerFactory {
         }
         return logger;
     }
+
+    /*
+     * Printout a stacktrace until the desired class method if stopAt is provided
+     * For example java.lang.Method.invoke
+     * 
+     * This allows for more readable relevant stack trace messages.
+     * 
+     */
+    public static String getStackTraceAsString( Throwable t, String stopAt ) {
+        String out = "";
+        for ( StackTraceElement te : t.getCause().getStackTrace() ) {
+
+            if ( stopAt != null ) {
+                String methodName = te.getClassName() + "." + te.getMethodName();
+                if ( methodName.equals( stopAt ) ) {
+                    break;
+                }
+            }
+            out += " " + te.toString() + "\n";
+        }
+        return out;
+      }
 
     public void addSearchPackage(String p) {
         searchPackages.add(p);
@@ -147,12 +172,12 @@ public class HandlerFactory {
                                     result = (String)m.invoke(target, args);
                                 } catch (SecurityException e) {
                                     getLogger().log(Level.WARNING, "SecurityException invoking Handler " + handlerMethod);
-                                    response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getLocalizedMessage());
+                                    response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, getStackTraceAsString( e, klass.getName() + "." + handlerMethod ) );
                                     return;
                                 } catch (InvocationTargetException e) {
-                                    getLogger().log( Level.SEVERE, "InvocationTargetException invoking Handler " + handlerMethod, e );
-                                    request.setAttribute( "javax.servlet.error.exception", e );
-                                    return;
+                                    // TODO : consider unwinding a few of the top layers to get the core exception
+                                    getLogger().log( Level.SEVERE, "Error invoking Handler " + handlerMethod, e );
+                                    thandler.addActionError( "Error invoking " + m.getName() + " : " + getStackTraceAsString( e, klass.getName() + "." + handlerMethod ) );
                                 }
                             } else {
                                 getLogger().log(Level.WARNING, "Handler " + handlerMethod + " must return a String");

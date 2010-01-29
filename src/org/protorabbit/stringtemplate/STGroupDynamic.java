@@ -5,6 +5,8 @@ import org.antlr.stringtemplate.StringTemplate;
 import org.antlr.stringtemplate.StringTemplateGroup;
 
 import java.io.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class STGroupDynamic extends StringTemplateGroup {
 
@@ -15,6 +17,15 @@ public class STGroupDynamic extends StringTemplateGroup {
        super( prefix );
        this.ctx = ctx;
        this.prefix = prefix;
+   }
+
+   private static Logger logger = null;
+
+   static final Logger getLogger() {
+       if ( logger == null ) {
+           logger = Logger.getLogger( "org.protrabbit" );
+       }
+       return logger;
    }
 
    public StringTemplate loadTemplate( String name, StringBuffer buff ) {
@@ -48,8 +59,11 @@ public class STGroupDynamic extends StringTemplateGroup {
        StringBuffer buff = null;
        StringTemplate template = null;
        try {
-
-           buff = ctx.getResource( prefix, name + ".st");
+           try {
+               buff = ctx.getResource( prefix, name + ".st");
+           } catch ( IOException iox) {
+               getLogger().log( Level.WARNING, " Could not find template " + name + ".st" );
+           }
 
            if ( buff == null || (buff != null && buff.length() == 0) ) {
 
@@ -70,7 +84,7 @@ public class STGroupDynamic extends StringTemplateGroup {
            ByteArrayInputStream bis = new ByteArrayInputStream( buff.toString().getBytes() );
            InputStreamReader isr = getInputStreamReader(bis);
            BufferedReader br = new BufferedReader(isr);
-           template = loadTemplate(name, br);
+           template = loadTemplate( name, br );
            br.close();
            br = null;
            return template;

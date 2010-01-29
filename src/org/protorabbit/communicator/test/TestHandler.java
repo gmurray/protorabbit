@@ -36,6 +36,6 @@ public class TestHandler extends BaseJSONHandler{
             Thread.currentThread().sleep(2);
         } catch (InterruptedException e) {
         }
-        return SUCCESS;
+        return JSON;
     }
 }
