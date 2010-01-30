@@ -1,9 +1,6 @@
 package org.protorabbit.communicator;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -61,7 +58,7 @@ public class HandlerFactory {
      * 
      */
     public static String getStackTraceAsString( Throwable t, String stopAt ) {
-        String out = "";
+        String out =  t.getCause().toString() + "\n";
         for ( StackTraceElement te : t.getCause().getStackTrace() ) {
 
             if ( stopAt != null ) {
@@ -171,13 +168,13 @@ public class HandlerFactory {
                                 try {
                                     result = (String)m.invoke(target, args);
                                 } catch (SecurityException e) {
-                                    getLogger().log(Level.WARNING, "SecurityException invoking Handler " + handlerMethod);
-                                    response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, getStackTraceAsString( e, klass.getName() + "." + handlerMethod ) );
-                                    return;
+                                    String _message = getStackTraceAsString( e, klass.getName() + "." + handlerMethod );
+                                    getLogger().log( Level.SEVERE, "SecurityException invoking Handler " + handlerMethod + "\n" + _message );
+                                    thandler.addActionError( "SecurityException invoking " + m.getName() + " : " + _message );
                                 } catch (InvocationTargetException e) {
-                                    // TODO : consider unwinding a few of the top layers to get the core exception
-                                    getLogger().log( Level.SEVERE, "Error invoking Handler " + handlerMethod, e );
-                                    thandler.addActionError( "Error invoking " + m.getName() + " : " + getStackTraceAsString( e, klass.getName() + "." + handlerMethod ) );
+                                    String _message = getStackTraceAsString( e, klass.getName() + "." + handlerMethod );
+                                    getLogger().log( Level.SEVERE, "Error invoking Handler " + handlerMethod + "\n" + _message );
+                                    thandler.addActionError( "Error invoking " + m.getName() + " : " + _message );
                                 }
                             } else {
                                 getLogger().log(Level.WARNING, "Handler " + handlerMethod + " must return a String");
