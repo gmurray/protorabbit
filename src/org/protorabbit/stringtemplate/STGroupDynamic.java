@@ -5,6 +5,10 @@ import org.antlr.stringtemplate.StringTemplate;
 import org.antlr.stringtemplate.StringTemplateGroup;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -34,7 +38,7 @@ public class STGroupDynamic extends StringTemplateGroup {
        }
        StringTemplate template = null;
        try {
-           
+
            if ( buff.toString().trim().startsWith("group")) {
                 StringTemplateGroup group = new StringTemplateGroup(new StringReader( buff.toString() ));
                 StringTemplate t = group.getInstanceOf( name );
@@ -53,18 +57,28 @@ public class STGroupDynamic extends StringTemplateGroup {
        }
        return template;
    }
-   
-   public StringTemplate loadTemplate( String name) {
+
+   public StringTemplate loadTemplateFromStringBuffer( String tname, StringBuffer buff ) throws IOException {
+       StringTemplate template = null;
+       ByteArrayInputStream bis = new ByteArrayInputStream( buff.toString().getBytes() );
+       InputStreamReader isr = getInputStreamReader(bis);
+       BufferedReader br = new BufferedReader(isr);
+       template = loadTemplate( tname, br );
+       br.close();
+       br = null;
+       return template;
+   }
+
+   public StringTemplate loadTemplate( String name ) {
 
        StringBuffer buff = null;
-       StringTemplate template = null;
        try {
            try {
                buff = ctx.getResource( prefix, name + ".st");
+               System.out.println("buff is " + buff );
            } catch ( IOException iox) {
                getLogger().log( Level.WARNING, " Could not find template " + name + ".st" );
            }
-
            if ( buff == null || (buff != null && buff.length() == 0) ) {
 
                if ( name.endsWith( ".st") ) {
@@ -77,27 +91,40 @@ public class STGroupDynamic extends StringTemplateGroup {
                 StringTemplateGroup group = new StringTemplateGroup(new StringReader( buff.toString() ));
                 StringTemplate t = group.getInstanceOf( name );
                 return t;
+           } else if ( buff == null ) {
+               return null;
            }
-           if ( buff == null) {
-               buff = new StringBuffer( name + " not found. " );
-           }
-           ByteArrayInputStream bis = new ByteArrayInputStream( buff.toString().getBytes() );
-           InputStreamReader isr = getInputStreamReader(bis);
-           BufferedReader br = new BufferedReader(isr);
-           template = loadTemplate( name, br );
-           br.close();
-           br = null;
-           return template;
+           return loadTemplateFromStringBuffer( name, buff );
        } catch (Exception e) {
            e.printStackTrace();
        }
-       return template;
-   }
+       return null;
+    }
 
-   public synchronized StringTemplate lookupTemplate(StringTemplate enclosingInstance,
-           String name) {
+    @SuppressWarnings("unchecked")
+    public synchronized StringTemplate lookupTemplate(StringTemplate enclosingInstance,
+           String name ) {
 
-        return loadTemplate( name);
-  }
+       StringTemplate st = loadTemplate( name );
+       if ( st == null) {
+
+           if ( enclosingInstance != null ) {
+               Map<String,Object> meta = enclosingInstance.getPostProcessMetaData();
+               List missing = (List)meta.get( "missingTemplates" );
+               if ( missing == null ) {
+                   missing = new ArrayList<String>();
+                   meta.put( "missingTemplates", missing );
+               }
+               missing.add( name );
+
+           }
+           try {
+               st = loadTemplateFromStringBuffer( name, new StringBuffer( " << " + name + " >>") );
+            } catch (IOException e) {
+                getLogger().log( Level.SEVERE, "Error loading template " + name, e );
+            }
+       }
+       return st;
+    }
 
 }

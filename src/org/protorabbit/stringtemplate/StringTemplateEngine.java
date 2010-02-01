@@ -37,7 +37,7 @@ public class StringTemplateEngine implements IEngine {
     }
 
     public static void renderTemplate( ITemplate t,  IContext ctx,  OutputStream out ) {
-        renderTemplate( t, ctx,  out, false );
+        renderTemplate( t, ctx,  out, true );
     }
 
     public static Map<Object,Object> getMetaData( ITemplate t, IContext ctx ) {

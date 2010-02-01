@@ -6,5 +6,5 @@ $foobers$
 The main category is here.
 *$FFFFFFFFFFfoo$ the bar*
 
-$foobles()$
+$foobles([title,f2])$
 </div>
