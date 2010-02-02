@@ -54,6 +54,9 @@ public class StringTemplateEngine implements IEngine {
         } else {
             baseURI = t.getId();
         }
+        if ( baseURI == null ) {
+            throw new RuntimeException( "A templateId or templateURI is required for a tempalte to be rendered." );
+        }
         String prefix = "";
         String baseTemplate = null;
         if ( t.getDocumentContext() != null ) {
@@ -117,11 +120,13 @@ public class StringTemplateEngine implements IEngine {
                         continue;
                     }
                     StringTemplate _st = st2.getGroup().getInstanceOf( templateName );
-                    // mixin attribute set
-                    _st.setAttributes( atts );
-                    _st.toString();
-                    Map<String, Object> _meta = _st.getPostProcessMetaData() ;
-                    subtemplates.put( templateName, _meta );
+                    if ( _st != null ) {
+                        // mixin attribute set
+                        _st.setAttributes( atts );
+                        _st.toString();
+                        Map<String, Object> _meta = _st.getPostProcessMetaData() ;
+                        subtemplates.put( templateName, _meta );
+                    }
                 }
             }
             if ( out != null ) {
