@@ -6,7 +6,6 @@ import org.antlr.stringtemplate.StringTemplateGroup;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -75,7 +74,6 @@ public class STGroupDynamic extends StringTemplateGroup {
        try {
            try {
                buff = ctx.getResource( prefix, name + ".st");
-               System.out.println("buff is " + buff );
            } catch ( IOException iox) {
                getLogger().log( Level.WARNING, " Could not find template " + name + ".st" );
            }
