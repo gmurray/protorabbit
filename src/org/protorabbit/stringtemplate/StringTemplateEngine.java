@@ -67,9 +67,7 @@ public class StringTemplateEngine implements IEngine {
             } else {
                 baseTemplate = baseURI;
             }
-
         } else {
-
             int lastPath = baseURI.lastIndexOf("/");
             if ( lastPath != -1 ) {
                 prefix = baseURI.substring(0, lastPath + 1 );
@@ -77,6 +75,11 @@ public class StringTemplateEngine implements IEngine {
             } else {
                 baseTemplate = baseURI;
             }
+        }
+        // bail out for empty docs.
+        if ( t.getDocumentContext().getDocument() == null || 
+             t.getDocumentContext().getDocument().length() == 0 ) {
+            return null;
         }
         if ( baseTemplate.endsWith(".st") ) {
             baseTemplate = baseTemplate.substring(0, baseTemplate.length() - 3 );
