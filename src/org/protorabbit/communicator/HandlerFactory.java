@@ -138,10 +138,19 @@ public class HandlerFactory {
                     thandler.setRequest(request);
                     thandler.setResponse(response);
 
+                    boolean hasPrepErrors = false;
                     // map parameters to the setters
-                    mapParameters(thandler,request);
+                    try { 
+                        mapParameters(thandler,request);
+                    } catch (java.lang.NumberFormatException e) {
+                        hasPrepErrors = true;
+                        thandler.addActionError( "Number Format Error preparing handler " + klassName + ". Error : " + e  );
+                    }catch (Exception e) {
+                        hasPrepErrors = true;
+                        thandler.addActionError( "Error preparing handler " + klassName + ". Error : " + e );
+                    }
 
-                    if (handlerMethod != null) {
+                    if (handlerMethod != null && !hasPrepErrors) {
                         // check for the Namespace
                         if (klass.isAnnotationPresent(Namespace.class)) {
                             Namespace n = (Namespace) klass.getAnnotation(Namespace.class);
@@ -163,7 +172,7 @@ public class HandlerFactory {
                             Object [] args = {};
                             Class<?> [] cargs = {};
                             Method m = thandler.getClass().getMethod(handlerMethod, cargs);
-                            
+
                             if (m.getReturnType() == String.class) {
                                 try {
                                     result = (String)m.invoke(target, args);
@@ -172,6 +181,7 @@ public class HandlerFactory {
                                     getLogger().log( Level.SEVERE, "SecurityException invoking Handler " + handlerMethod + "\n" + _message );
                                     thandler.addActionError( "SecurityException invoking " + m.getName() + " : " + _message );
                                 } catch (InvocationTargetException e) {
+                                    e.printStackTrace();
                                     String _message = getStackTraceAsString( e, klass.getName() + "." + handlerMethod );
                                     getLogger().log( Level.SEVERE, "Error invoking Handler " + handlerMethod + "\n" + _message );
                                     thandler.addActionError( "Error invoking " + m.getName() + " : " + _message );
@@ -187,6 +197,8 @@ public class HandlerFactory {
                             response.sendError(HttpServletResponse.SC_NOT_FOUND);
                             return;
                         } catch (IllegalArgumentException e) {
+                            String _message = getStackTraceAsString( e, klass.getName() + "." + handlerMethod );
+                            thandler.addActionError( "Error invoking request : " + _message );
                             getLogger().log( Level.WARNING, e.getLocalizedMessage() );
                         }
                         // invoke default handler
@@ -271,7 +283,7 @@ public class HandlerFactory {
             // get a list of possible methods that are setters for this param
             List<Method> methods = ClassUtil.getMethods(h, param, true);
             // populate the values
-            ClassUtil.mapParam(methods, param, request.getParameter(param), h);
+            ClassUtil.mapParam( methods, param, request.getParameter(param), h);
         }
     }
 

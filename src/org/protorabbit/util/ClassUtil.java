@@ -60,11 +60,23 @@ public class ClassUtil {
                  Class<?>  p1 = paramTypes[0];
 
                  if (Long.class.isAssignableFrom(p1) || p1 == long.class && !"".equals(value) ) {
-                     args[0] =  new Long(Long.parseLong(value));
+                     try {
+                         args[0] =  new Long(Long.parseLong(value));
+                     } catch ( NumberFormatException nfe ) {
+                         throw new RuntimeException("Number format error converting value " + value + " to a long / Long on method " + m.getName() );
+                     }
                  } else if (Double.class.isAssignableFrom(p1) || p1 == double.class && !"".equals(value) ) {
-                     args[0] = new Double(Double.parseDouble(value));
+                     try {
+                         args[0] = new Double(Double.parseDouble(value));
+                     } catch ( NumberFormatException nfe ) {
+                         throw new RuntimeException("Number format error converting value " + value + " to a double / Double on method " + m.getName() );
+                     }
                  } else if (Integer.class.isAssignableFrom(p1) || p1 == int.class && !"".equals(value) ) {
-                     args[0] = new Integer(Integer.parseInt(value));
+                     try {
+                         args[0] = new Integer(Integer.parseInt(value));
+                     } catch ( NumberFormatException nfe ) {
+                         throw new RuntimeException("Number format error converting value " + value + " to a int / Integer on method " + m.getName() );
+                     }
                  } else if (Enum.class.isAssignableFrom(p1)) {
                      args[0] = Enum.valueOf((Class<? extends Enum>)p1, value);
                  } else if (String.class.isAssignableFrom(p1) || p1 == String.class) {
@@ -72,7 +84,7 @@ public class ClassUtil {
                  } else if (Boolean.class.isAssignableFrom(p1) || p1 == boolean.class) {
                      args[0] =  new Boolean(Boolean.parseBoolean(value));
                  } else {
-                     throw new RuntimeException("Unssupported argument type : " + p1 + " with value " + value );
+                     throw new RuntimeException("Unsupported argument type : " + p1 + " with value " + value );
                 }
                 try {
                     if (m != null && args[0] != null) {
@@ -80,13 +92,13 @@ public class ClassUtil {
                     }
                     return true;
                 } catch (SecurityException e) {
-                    e.printStackTrace();
+                    throw new RuntimeException("SecurityException : " + p1 + " with value " + value );
                 } catch (IllegalArgumentException e) {
-                    e.printStackTrace();
+                    throw new RuntimeException("IllegalArgumentException with argument type : " + p1 + " with value " + value );
                 } catch (IllegalAccessException e) {
-                    e.printStackTrace();
+                    throw new RuntimeException("IllegalAccessException with argument type : " + p1 + " with value " + value );
                 } catch (InvocationTargetException e) {
-                    e.printStackTrace();
+                    throw new RuntimeException("InvocationTargetException with argument type : " + p1 + " with value " + value );
                 }
 
         }
