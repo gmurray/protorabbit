@@ -311,7 +311,7 @@ public class HandlerFactory {
         // get the model
         jr.setData( h.getModel() );
         if ( result != BaseJSONHandler.BINARY ) {
-            response.setHeader("Content-Type", "application/json");
+            response.setHeader("Content-Type", "application/json;charset=UTF-8");
             response.setHeader("Cache-Control", "no-cache");
             response.setHeader("pragma", "NO-CACHE");
             // now that we have the json object print out the string
