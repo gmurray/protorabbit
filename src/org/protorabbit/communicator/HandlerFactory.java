@@ -310,7 +310,13 @@ public class HandlerFactory {
         int bytesServed = 0;
         // get the model
         jr.setData( h.getModel() );
-        if ( result != BaseJSONHandler.BINARY ) {
+        if ( result == BaseJSONHandler.HTML ) {
+            response.setHeader("Content-Type", "text/html;charset=UTF-8");
+            Integer bs = (Integer)request.getAttribute( "org.protorabbit.BYTES_SERVED");
+            if ( bs != null ) {
+                bytesServed = bs.intValue();
+            }
+        } else if ( result != BaseJSONHandler.BINARY ) {
             response.setHeader("Content-Type", "application/json;charset=UTF-8");
             response.setHeader("Cache-Control", "no-cache");
             response.setHeader("pragma", "NO-CACHE");

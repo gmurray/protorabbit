@@ -59,15 +59,17 @@ public class IOUtil {
         return gzippedContent;
     }
 
-    public static void writeBinaryResource(InputStream in, OutputStream out) throws IOException {
+    public static long writeBinaryResource(InputStream in, OutputStream out) throws IOException {
         byte[] bytes = new byte[1024];
-
-          int read = 0;
-          while ((read = in.read(bytes)) > 0) {
-               out.write(bytes, 0, read);
-          }
-          in.close();
-          out.close();
+        long wrote = 0;
+        int read = 0;
+        while ((read = in.read(bytes)) > 0) {
+              out.write(bytes, 0, read);
+              wrote += read;
+        }
+        in.close();
+        out.close();
+        return wrote;
     }
     
     public static String generateHash(String target) {
@@ -175,7 +177,7 @@ public class IOUtil {
                 out.write(buffer, 0, read);
             }
         } catch (Exception e) {
-            System.out.println("JSONUtil: error reading in json " + e);
+            System.out.println("IOUtil: error saving : " + e);
             e.printStackTrace();
         } finally {
             try {
