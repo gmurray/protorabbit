@@ -1,6 +1,7 @@
 package org.protorabbit.communicator;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -224,7 +226,7 @@ public class HandlerFactory {
                     if (thandler != null ) {
                         thandler.addActionError( e.getLocalizedMessage() );
                     }
-                    getLogger().log(Level.SEVERE, "Error processing function: ", e);
+                    getLogger().log(Level.SEVERE, "Error processing handler : ", e);
                 }
         }
         int bytesServed = 0;
@@ -287,7 +289,7 @@ public class HandlerFactory {
         }
     }
 
-    protected int processHandler(Handler h, String result,
+    protected int processHandler( Handler h, String result,
                                   HttpServletRequest request,
                                   HttpServletResponse response) throws IOException {
 
@@ -302,24 +304,55 @@ public class HandlerFactory {
         }
 
         if (h.getErrors() != null) {
-            jr.setResult("error");
-            jr.setErrors(h.getErrors());
+            jr.setErrors( h.getErrors() );
         } else {
-            jr.setResult(result);
+            jr.setResult( result );
         }
         int bytesServed = 0;
         // get the model
         jr.setData( h.getModel() );
-        if ( result == BaseJSONHandler.HTML ) {
-            response.setHeader("Content-Type", "text/html;charset=UTF-8");
-            Integer bs = (Integer)request.getAttribute( "org.protorabbit.BYTES_SERVED");
-            if ( bs != null ) {
-                bytesServed = bs.intValue();
+        boolean acceptJSON = false;
+        if ( request.getHeader("accept") != null &&
+             request.getHeader("accept").contains("application/json") ) {
+            acceptJSON = true;
+        }
+        // display JSON errors unless we explictly asked for json
+        if ( result == BaseJSONHandler.HTML || ( result == null && acceptJSON == false ) ) {
+            if (h.getErrors() != null) {
+                ServletContext sctx = request.getSession(false).getServletContext();
+                if ( sctx.getAttribute("org.protorabbit.ERROR_REDIRECT") == null ) {
+                    response.setHeader("Content-Type", "text/html;charset=UTF-8");
+                    String errorText = "<h2>Server Error</h2>";
+                    for ( String e : h.getErrors() ) {
+                        errorText += e + "<br/><br/>";
+                    }
+                    PrintWriter writer = response.getWriter();
+                    writer.print( errorText );
+                } else {
+                    request.setAttribute("org.protorabbit.EXCEPTIONS", h.getErrors() );
+                    String path = (String)sctx.getAttribute("org.protorabbit.ERROR_REDIRECT");
+                    try {
+                        sctx.getRequestDispatcher( path ).forward( request, response );
+                        return 0;
+                    } catch (ServletException e) {
+                        e.printStackTrace();
+                        return 0;
+                    }
+                }
+            } else {
+                response.setHeader("Content-Type", "text/html;charset=UTF-8");
+                Integer bs = (Integer)request.getAttribute( "org.protorabbit.BYTES_SERVED");
+                if ( bs != null ) {
+                    bytesServed = bs.intValue();
+                }
             }
         } else if ( result != BaseJSONHandler.BINARY ) {
             response.setHeader("Content-Type", "application/json;charset=UTF-8");
             response.setHeader("Cache-Control", "no-cache");
             response.setHeader("pragma", "NO-CACHE");
+            if (h.getErrors() != null) {
+                jr.setResult( "error" );
+            }
             // now that we have the json object print out the string
             Object responseObject = jsonSerializer.serialize(jr);
             response.getWriter().write(responseObject.toString());
