@@ -217,7 +217,9 @@ public class DefaultSerializer implements JSONSerializer {
                      Class<?> tparam =  paramTypes[0];
                      boolean allowNull = false;
                      try {
-                         if (Long.class.isAssignableFrom(tparam) || tparam == long.class ) {
+                         if ( jo.isNull(key)) {
+                             // do nothing because param is already null : lets us not null on other types
+                         } else if (Long.class.isAssignableFrom(tparam) || tparam == long.class ) {
                              param = new Long(jo.getLong(key));
                          } else if (Double.class.isAssignableFrom(tparam) || tparam == double.class ) {
                              param = new Double(jo.getDouble(key));
