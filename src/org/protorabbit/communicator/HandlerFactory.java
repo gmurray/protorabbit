@@ -312,8 +312,8 @@ public class HandlerFactory {
         // get the model
         jr.setData( h.getModel() );
         boolean acceptJSON = false;
-        if ( request.getHeader("accept") != null &&
-             request.getHeader("accept").contains("application/json") ) {
+        if ( request.getHeader("Accept") != null &&
+             request.getHeader("Accept").contains("application/json") ) {
             acceptJSON = true;
         }
         // display JSON errors unless we explictly asked for json
