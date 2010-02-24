@@ -60,12 +60,20 @@ public class HandlerFactory {
      * 
      */
     public static String getStackTraceAsString( Throwable t, String stopAt ) {
-        String out =  t.getCause().toString() + "\n";
-        for ( StackTraceElement te : t.getCause().getStackTrace() ) {
+        String out =  t.toString() + "\n";
+        StackTraceElement[] st =  null;
+        if ( t.getCause() != null && t.getCause().getStackTrace() != null &&
+             t.getCause().getStackTrace().length != 0 ) {
+            st = t.getCause().getStackTrace();
+        } else {
+            st = t.getStackTrace();
+        }
+        for ( StackTraceElement te : st ) {
 
             if ( stopAt != null ) {
                 String methodName = te.getClassName() + "." + te.getMethodName();
                 if ( methodName.equals( stopAt ) ) {
+                    out += " " + te.toString() + "\n";
                     break;
                 }
             }
@@ -205,6 +213,7 @@ public class HandlerFactory {
                         }
                         // invoke default handler
                     } else {
+                        handlerMethod = "doExecute";
                         result = thandler.doExecute();
                     }
                 } catch (InstantiationException e) {
@@ -223,10 +232,9 @@ public class HandlerFactory {
                     return;
                     // all other errors end in a error message
                 } catch (Throwable e) {
-                    if (thandler != null ) {
-                        thandler.addActionError( e.getLocalizedMessage() );
-                    }
-                    getLogger().log(Level.SEVERE, "Error processing handler : ", e);
+                    String _message = getStackTraceAsString( e, klass.getName() + "." + handlerMethod );
+                    thandler.addActionError( "Error invoking request : " + _message );
+                    getLogger().log( Level.WARNING, e.getLocalizedMessage() );
                 }
         }
         int bytesServed = 0;
@@ -324,7 +332,7 @@ public class HandlerFactory {
                     response.setHeader("Content-Type", "text/html;charset=UTF-8");
                     String errorText = "<h2>Server Error</h2>";
                     for ( String e : h.getErrors() ) {
-                        errorText += e + "<br/><br/>";
+                        errorText += "<pre>" + e + "</pre>" + "<br/><br/>";
                     }
                     PrintWriter writer = response.getWriter();
                     writer.print( errorText );
