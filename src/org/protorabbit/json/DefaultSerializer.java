@@ -26,7 +26,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
-import org.protorabbit.json.Serialize;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -245,14 +244,45 @@ public class DefaultSerializer implements JSONSerializer {
 
                                          List<String> ls = new ArrayList<String>();
                                          JSONArray ja = jo.optJSONArray( key );
-
                                          if ( ja != null) {
                                              for (int j=0; j < ja.length(); j++) {
                                                  ls.add( ja.getString(j) );
                                              }
                                          }
                                          param = ls;
-                                     } else {// TODO : Add general object processing
+                                     } else if ( tv.getActualTypeArguments().length == 1 ) {
+                                         ParameterizedType type = (ParameterizedType) tv.getActualTypeArguments()[0];
+                                         Class itemClass= (Class)type.getRawType();
+                                         if ( itemClass == Map.class && type.getActualTypeArguments().length == 2 &&
+                                                 type.getActualTypeArguments()[0] == String.class &&
+                                                 type.getActualTypeArguments()[1] == Object.class ) {
+
+                                             List<Map<String,Object>> ls = new ArrayList<Map<String,Object>>();
+
+                                             JSONArray ja = jo.optJSONArray( key );
+                                             if ( ja != null) {
+                                                 for (int j=0; j < ja.length(); j++) {
+                                                     Map<String,Object> map = new HashMap<String,Object>();
+                                                     JSONObject mo = ja.getJSONObject( j );
+                                                     Iterator<String> keys = mo.keys();
+                                                     while ( keys.hasNext() ) {
+                                                         String okey = keys.next();
+                                                         Object ovalue = null;
+                                                         // make sure we don't get JSONObject$Null
+                                                         if (! mo.isNull(okey)) {
+                                                             ovalue = mo.get( okey );
+                                                         }
+                                                         map.put( okey, ovalue );
+                                                     }
+                                                     ls.add( map );
+                                                 }
+                                             }
+                                             param = ls;
+                                         } else {
+                                             getLogger().warning("Don't know how to handle Collection of type : " + itemClass );
+                                         }
+
+                                     } else {
                                          getLogger().warning("Don't know how to handle Collection of type : " + tv.getActualTypeArguments()[0] );
                                      }
                                  }

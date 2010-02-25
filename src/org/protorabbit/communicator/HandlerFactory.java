@@ -90,7 +90,6 @@ public class HandlerFactory {
 
         // find the suitable action
         String path = request.getServletPath();
-
         String handler = null;
         String handlerMethod = null;
         String handlerNameSpace = null;
@@ -106,7 +105,7 @@ public class HandlerFactory {
 
         int startHandlerMethod = path.indexOf("!");
         int endHandler = path.lastIndexOf(".");
-        
+
         if (startHandlerMethod != -1 && endHandler != -1) {
             handlerMethod = path.substring(startHandlerMethod +1, endHandler);
             handler = path.substring(namespace, startHandlerMethod);
@@ -118,7 +117,8 @@ public class HandlerFactory {
         String result = null;
 
         // send a 404
-        if (handler == null) {
+        if  (handler == null ) {
+            getLogger().warning("Handler not found with path " + path );
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
@@ -135,6 +135,7 @@ public class HandlerFactory {
                 // do nothing 
             }
         }
+
         // if we have the class invoke it
         if ( klass == null) {
             getLogger().log(Level.WARNING, "Handler " + klassName + " not found in search packages.");
@@ -182,7 +183,6 @@ public class HandlerFactory {
                             Object [] args = {};
                             Class<?> [] cargs = {};
                             Method m = thandler.getClass().getMethod(handlerMethod, cargs);
-
                             if (m.getReturnType() == String.class) {
                                 try {
                                     result = (String)m.invoke(target, args);
@@ -191,7 +191,6 @@ public class HandlerFactory {
                                     getLogger().log( Level.SEVERE, "SecurityException invoking Handler " + handlerMethod + "\n" + _message );
                                     thandler.addActionError( "SecurityException invoking " + m.getName() + " : " + _message );
                                 } catch (InvocationTargetException e) {
-                                    e.printStackTrace();
                                     String _message = getStackTraceAsString( e, klass.getName() + "." + handlerMethod );
                                     getLogger().log( Level.SEVERE, "Error invoking Handler " + handlerMethod + "\n" + _message );
                                     thandler.addActionError( "Error invoking " + m.getName() + " : " + _message );
@@ -215,6 +214,7 @@ public class HandlerFactory {
                     } else {
                         handlerMethod = "doExecute";
                         result = thandler.doExecute();
+
                     }
                 } catch (InstantiationException e) {
                     getLogger().log(Level.WARNING, "InstantiationException creating Handler " + handlerMethod);
@@ -239,7 +239,7 @@ public class HandlerFactory {
         }
         int bytesServed = 0;
         if (thandler == null) {
-            getLogger().info("Could not find a handler with name " + klassName + " in any of the search packages.");
+            getLogger().log( Level.WARNING, "Could not find a handler with name " + klassName + " in any of the search packages.");
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
