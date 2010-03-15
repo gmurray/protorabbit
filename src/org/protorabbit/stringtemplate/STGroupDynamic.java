@@ -82,9 +82,9 @@ public class STGroupDynamic extends StringTemplateGroup {
                if ( name.endsWith( ".st") ) {
                    name = name.substring(0, name.length() -3 );
                }
-               buff = ctx.getVersionedResource(name, "1" );
+               buff = ctx.getResource( name );
            }
-           if ( buff != null && buff.toString().trim().startsWith("group")) {
+           if ( buff != null && buff.toString().trim().startsWith( "group" )) {
 
                 StringTemplateGroup group = new StringTemplateGroup(new StringReader( buff.toString() ));
                 StringTemplate t = group.getInstanceOf( name );

@@ -43,9 +43,7 @@ public interface IContext {
 
     public void setTemplateId(String templateId);
 
-    public StringBuffer getVersionedResource( String name, String version) throws IOException;
-
-    public StringBuffer getResource( String baseDir, String name ) throws IOException;
+    public StringBuffer getResource( Object... args) throws IOException;
 
     public Object parseExpression( String expression); 
 

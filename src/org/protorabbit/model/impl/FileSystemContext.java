@@ -33,11 +33,9 @@ public class FileSystemContext extends BaseContext {
         return cfg;
     }
 
-    public StringBuffer getVersionedResource( String baseDir, String name ) throws IOException {
-        return null;
-    }
-
-    public StringBuffer getResource( String baseDir, String name ) throws IOException {
+    public StringBuffer getResource( Object... args ) throws IOException {
+        String baseDir = (String) args[0];
+        String name = (String) args[1];
         // / signifies the base directory
         if (name.startsWith("/")) {
             name = name.substring(1);

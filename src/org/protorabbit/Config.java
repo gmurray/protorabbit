@@ -302,15 +302,11 @@ public class Config {
                    includeFiles.put(includeFile, inc);
                    return inc;
                }
-               if (inc == null || (inc != null && inc.isStale(ctx))) {
+               if ( inc == null || (inc != null && inc.isStale(ctx)) ) {
 
                    StringBuffer buff = null;
-                   // if we are a versioned resource use that API otherwise load the normal way
-                   if ( prop.getVersion() != null ) {
-                       buff = ctx.getVersionedResource(includeFile, prop.getVersion() );
-                   } else {
-                       buff = ctx.getResource(tBase, includeFile);
-                   }
+                   buff = ctx.getResource( tBase, includeFile );
+
                    if (inc == null) {
                        inc = new IncludeFile(uri, buff);
                        if (inc.getTimeout() != null) {

@@ -233,7 +233,11 @@ public class HandlerFactory {
                     // all other errors end in a error message
                 } catch (Throwable e) {
                     String _message = getStackTraceAsString( e, klass.getName() + "." + handlerMethod );
-                    thandler.addActionError( "Error invoking request : " + _message );
+                    if ( thandler != null ) {
+                        thandler.addActionError( "Error invoking request : " + _message );
+                    } else {
+                        getLogger().log( Level.WARNING, _message );
+                    }
                     getLogger().log( Level.WARNING, e.getLocalizedMessage() );
                 }
         }
@@ -320,8 +324,9 @@ public class HandlerFactory {
         // get the model
         jr.setData( h.getModel() );
         boolean acceptJSON = false;
-        if ( request.getHeader("Accept") != null &&
-             request.getHeader("Accept").contains("application/json") ) {
+        String acceptHeader = request.getHeader("Accept");
+        if ( acceptHeader!= null &&
+             acceptHeader.contains("application/json") ) {
             acceptJSON = true;
         }
         // display JSON errors unless we explictly asked for json

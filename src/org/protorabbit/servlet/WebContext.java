@@ -114,8 +114,9 @@ public class WebContext extends BaseContext {
         return -1;
     }
 
-    public StringBuffer getResource(String baseDir, String name) throws IOException {
-
+    public StringBuffer getResource( Object...args ) throws IOException {
+        String baseDir = (String) args[0];
+        String name = (String) args[1];
         String resourceName = null;
 
         if (name.startsWith("/")) {
@@ -395,8 +396,4 @@ public class WebContext extends BaseContext {
         matchedUAStyleTests = null;
     }
 
-    public StringBuffer getVersionedResource(String name, String verion)
-            throws IOException {
-        return null;
-    }
 }
