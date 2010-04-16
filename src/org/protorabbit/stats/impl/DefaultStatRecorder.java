@@ -719,15 +719,23 @@ public class DefaultStatRecorder implements IStatRecorder {
                 String line = null;
                 int lineCount = 0;
                 while ((line = in.readLine()) != null) {
-                    buff.append( line );
-                    lineCount++;
+                    if ( line.startsWith("{") && line.endsWith("},") ) {
+                        buff.append( line );
+                        lineCount++;
+                    } else {
+                        getLogger().warning("Skipped malformed line " + lineCount + " : " + line );
+                    }
                     if ( lineCount % 1000 == 0) {
-                        List<IStat> items = processBuffer( buff );
-                        if (items != null ) {
-                            totalCount += items.size();
-                            StatsManager.addStats( duration, resolution, items, vBuckets, jBuckets,
-                                    lclients, pageStats, errors,
-                                    threshold ) ;
+                        try {
+                            List<IStat> items = processBuffer( buff );
+                            if (items != null ) {
+                                totalCount += items.size();
+                                StatsManager.addStats( duration, resolution, items, vBuckets, jBuckets,
+                                        lclients, pageStats, errors,
+                                        threshold ) ;
+                            }
+                        } catch ( Exception e ) {
+                            getLogger().warning( "Error processing stats. Possibly mangled file " + f.getName() + " renaming to prevent further problems " );
                         }
                         buff = new StringBuffer();
                     }

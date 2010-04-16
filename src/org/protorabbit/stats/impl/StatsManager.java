@@ -293,8 +293,10 @@ public class StatsManager implements ServletContextListener {
                 String contentKey = null;
                 if ( stat.isPoller() ) {
                     contentKey = JSON_POLLER;
-                } else {
+                } else if ( stat.getContentType() != null ){
                     contentKey = stat.getContentType();
+                } else {
+                    contentKey = "Unknown";
                 }
                  Map<String, IResourceStat> cstats = pageStats.get( contentKey );
                 if ( cstats == null ) {

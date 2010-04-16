@@ -77,8 +77,8 @@ public class StringTemplateEngine implements IEngine {
             }
         }
         // bail out for empty docs.
-        if ( t.getDocumentContext().getDocument() == null || 
-             t.getDocumentContext().getDocument().length() == 0 ) {
+        if ( (t != null && t.getDocumentContext() != null) && (t.getDocumentContext().getDocument() == null || 
+             t.getDocumentContext().getDocument().length() == 0) ) {
             return null;
         }
         if ( baseTemplate.endsWith(".st") ) {
@@ -86,6 +86,7 @@ public class StringTemplateEngine implements IEngine {
         }
         StringTemplate st2 = null;
         STGroupDynamic group = new STGroupDynamic( ctx, prefix );
+        group.registerRenderer(null, new DataRenderer());
         if ( t.getDocumentContext() != null ) { 
             if ( t.getDocumentContext().getDocument() != null ) {
                 st2 = group.loadTemplate( t.getId(), t.getDocumentContext().getDocument() );

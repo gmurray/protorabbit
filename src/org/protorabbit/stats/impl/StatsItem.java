@@ -16,7 +16,6 @@ public class StatsItem implements IStat {
     private String fullURL = null;
     private Long contentLength = null;
     private String contentType = null;
-    private boolean hasErrors = false;
     private Collection<String> errors = null;
     private boolean isPollStat = false;
 
@@ -106,10 +105,6 @@ public class StatsItem implements IStat {
         } else {
             return false;
         }
-    }
-
-    public void setHasErrors(boolean hasErrors) {
-        this.hasErrors = hasErrors;
     }
 
     public Collection<String> getErrors() {

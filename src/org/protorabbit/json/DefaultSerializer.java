@@ -442,7 +442,9 @@ public class DefaultSerializer implements JSONSerializer {
     }
 
     public Object deSerialize(String jsonText, Class<?> targetClass) {
-
+        if ( jsonText == null ) {
+            return null;
+        }
         // check for array
         jsonText = jsonText.trim();
         if (jsonText.startsWith("[")) {

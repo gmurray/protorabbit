@@ -12,6 +12,7 @@ import org.json.JSONObject;
 import org.protorabbit.Config;
 import org.protorabbit.json.JSONUtil;
 import org.protorabbit.model.IEngine;
+import org.protorabbit.stringtemplate.StringTemplateEngine;
 
 public class TextEngine {
 
@@ -81,8 +82,8 @@ public class TextEngine {
 
         getLogger().info("** Config Processing Time : " + (postConfigTime -  startTime) + "\n\n");
 
-        IEngine engine = new DefaultEngine();
-        for (int i=0; i < 1000; i++) { 
+        IEngine engine = new StringTemplateEngine();
+        for (int i=0; i < 1; i++) { 
             FileSystemContext ctx = new FileSystemContext(cfg, documentRoot);
             ctx.setAttribute("title", "foo " + i);
             engine.renderTemplate(targetTemplate, ctx, System.out);

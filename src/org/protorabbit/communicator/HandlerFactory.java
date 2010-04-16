@@ -273,7 +273,6 @@ public class HandlerFactory {
                 stat.setContentType( response.getContentType() );
             }
             if ( (thandler.getErrors() != null && thandler.getErrors().size() > 0) ) {
-                stat.setHasErrors( true );
                 stat.setErrors( thandler.getErrors() );
             }
             long endTime = System.currentTimeMillis();

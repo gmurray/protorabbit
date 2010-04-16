@@ -59,4 +59,30 @@
       </java>
   </target>
 
+
+  <target name="test-email" depends="compile">
+      <java classname="org.protorabbit.model.impl.TextEngine"
+          fork="true"
+          classpath="build/classes:lib/org.json-0.0.3.jar:lib/stringtemplate-3.3.jar:lib/antlr-2.7.7.jar">
+          <arg value="-templateDef"/>
+          <arg value="test/email/templates-st.json" />
+          <arg value="-documentRoot"/>
+          <arg value="test/email/"/>
+          <arg value="welcome" />
+      </java>
+  </target>
+
+
+  <target name="st-test" depends="compile">
+      <java classname="org.protorabbit.stringtemplate.BasicTest"
+          fork="true"
+          classpath="build/classes:lib/org.json-0.0.3.jar:lib/stringtemplate-3.3.jar:lib/antlr-2.7.7.jar">
+          <arg value="-templateDef"/>
+          <arg value="test/email/templates-st.json" />
+          <arg value="-documentRoot"/>
+          <arg value="test/email/"/>
+          <arg value="welcome" />
+      </java>
+  </target>
+
 </project>
