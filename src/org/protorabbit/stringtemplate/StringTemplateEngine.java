@@ -11,6 +11,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.antlr.stringtemplate.StringTemplate;
+import org.antlr.stringtemplate.StringTemplateErrorListener;
 import org.protorabbit.model.IContext;
 import org.protorabbit.model.IEngine;
 import org.protorabbit.model.ITemplate;
@@ -86,6 +87,9 @@ public class StringTemplateEngine implements IEngine {
         }
         StringTemplate st2 = null;
         STGroupDynamic group = new STGroupDynamic( ctx, prefix );
+        // attach an error listener
+        StringTemplateErrorListener setl = new STErrorProcessor();
+        group.setErrorListener( setl );
         group.registerRenderer(null, new DataRenderer());
         if ( t.getDocumentContext() != null ) { 
             if ( t.getDocumentContext().getDocument() != null ) {

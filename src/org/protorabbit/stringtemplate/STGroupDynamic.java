@@ -51,6 +51,8 @@ public class STGroupDynamic extends StringTemplateGroup {
                br.close();
                br = null;
            }
+       } catch ( StringTemplateParseException e ) {
+           throw e;
        } catch (Exception e) {
            e.printStackTrace();
        }
@@ -93,6 +95,8 @@ public class STGroupDynamic extends StringTemplateGroup {
                return null;
            }
            return loadTemplateFromStringBuffer( name, buff );
+       } catch ( StringTemplateParseException e ) {
+           throw e;
        } catch (Exception e) {
            e.printStackTrace();
        }
