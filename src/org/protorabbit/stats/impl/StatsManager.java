@@ -333,17 +333,20 @@ public class StatsManager implements ServletContextListener {
                 if ( stat.getTimestamp() > client.getLastAccess() ) {
                     client.setLastAccess( stat.getTimestamp() );
                 }
-                if ( stat.getContentType().equals( APPLICATION_JSON ) ) {
+                String contentType = "Unknown";
+                if ( stat.getContentType() != null ) {
+                    contentType = stat.getContentType();
+                }
+                if ( contentType.equals( APPLICATION_JSON ) ) {
                     client.incrementJSONCount();
-                } else if (stat.getContentType().equals( TEXT_HTML )){
+                } else if (contentType.equals( TEXT_HTML )){
                     client.incrementViewCount();
                 }
                 if ( stat.hasErrors() ){
                     errors.add( stat );
                     client.incrementErrorCount();
                 } 
-
-                if (TEXT_HTML.equals(stat.getContentType()) ) {
+                if (TEXT_HTML.equals( contentType ) ) {
                     TimeChartItem tci = vBuckets.get( bucketId );
                     if ( tci == null) {
                         tci = new TimeChartItem( bucketId );
@@ -352,7 +355,7 @@ public class StatsManager implements ServletContextListener {
                     tci.incrementValue();
                     tci.addContentLength( stat.getContentLength() );
                     tci.addProcessingTime( stat.getProcessTime() );
-                } else if (APPLICATION_JSON.equals(stat.getContentType()) ) {
+                } else if (APPLICATION_JSON.equals( contentType ) ) {
                     TimeChartItem tci = jBuckets.get( bucketId );
                     if ( tci == null) {
                         tci = new TimeChartItem( bucketId );
@@ -361,7 +364,6 @@ public class StatsManager implements ServletContextListener {
                     tci.incrementValue();
                     tci.addContentLength( stat.getContentLength() );
                     tci.addProcessingTime( stat.getProcessTime() );
-
                 }
                 // since we go backwards don't iterate if we have a stat already greater
             } else {

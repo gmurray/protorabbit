@@ -90,7 +90,6 @@ public class StringTemplateEngine implements IEngine {
         // attach an error listener
         StringTemplateErrorListener setl = new STErrorProcessor();
         group.setErrorListener( setl );
-        group.registerRenderer(null, new DataRenderer());
         if ( t.getDocumentContext() != null ) { 
             if ( t.getDocumentContext().getDocument() != null ) {
                 st2 = group.loadTemplate( t.getId(), t.getDocumentContext().getDocument() );
