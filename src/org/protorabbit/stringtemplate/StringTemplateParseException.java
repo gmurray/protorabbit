@@ -7,7 +7,11 @@ public class StringTemplateParseException extends RuntimeException {
 
     public StringTemplateParseException( String error, Throwable parent ) {
         super( error, parent );
-        this.errorMessage = parent.toString();
+        if ( parent != null ) {
+            this.errorMessage = parent.toString();
+        } else {
+            errorMessage = error;
+        }
     }
 
     public String getErrorMessage() {
