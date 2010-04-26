@@ -94,9 +94,9 @@ import org.protorabbit.model.impl.Header;
            try {
                if (isHttps) {
                     // Prevent unassigned ssl certificate SSLException / IOException exceptions 
-                   Security.addProvider(new com.sun.net.ssl.internal.ssl.Provider());
-                   System.setProperty("java.protocol.handler.pkgs", 
-                                      "com.sun.net.ssl.internal.www.protocol");
+//                   Security.addProvider(new com.sun.net.ssl.internal.ssl.Provider());
+//                   System.setProperty("java.protocol.handler.pkgs", 
+//                                      "com.sun.net.ssl.internal.www.protocol");
                }
                URL url = new URL(str);
                HttpURLConnection uc = (HttpURLConnection)url.openConnection();
