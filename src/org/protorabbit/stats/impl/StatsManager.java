@@ -25,6 +25,7 @@ import org.protorabbit.stats.IStatRecorder;
 public class StatsManager implements ServletContextListener {
 
     public static final String STATS_MANAGER = "org.protorabbit.STATS_MANAGER";
+    public static final String TIME_MONITOR_PRIORITY = "org.protorabbit.TIME_MONITOR_PRIORITY";
     public static final String CLIENT_ID_GENERATOR = "prt-client-id-generator-class";
 
     public static final Object APPLICATION_JSON = "application/json";
@@ -34,10 +35,12 @@ public class StatsManager implements ServletContextListener {
     private List<IStat> stats = null;
 
     private static TimeMonitor tm = null;
-
     private PollManager pollManager = null;
     private IStatRecorder sr = null;
     private ServletContext ctx = null;
+    private int monitorPriority = Thread.MIN_PRIORITY;
+    public static long FIVE_MINUTES_MILLIS = 300000;
+    public static long THIRTY_SECOND_MILLIS = 30000;
 
     public enum Resolution {
         SECOND ( 1000 ),
@@ -60,8 +63,6 @@ public class StatsManager implements ServletContextListener {
     public StatsManager() {
         PollManager.getInstance();
         stats =  new ArrayList<IStat>();
-        tm = new TimeMonitor( this );
-        tm.start();
     }
 
     private static Logger logger = null;
@@ -502,6 +503,25 @@ public class StatsManager implements ServletContextListener {
         ctx.setAttribute( STATS_MANAGER, this );
         sr = new DefaultStatRecorder( );
         sr.init( ctx );
+        String priorityString = ctx.getInitParameter( TIME_MONITOR_PRIORITY );
+        if ( priorityString != null) {
+            try {
+                monitorPriority = Integer.parseInt( priorityString );
+            } catch ( NumberFormatException nfe ) {
+                getLogger().log(Level.INFO, "Error parsing org.protorabbit.TIME_MONITOR_PRIORITY of " +
+                                priorityString + ". Defaulting to MINIMUM.");
+            }
+        }
+        synchronized( TimeMonitor.class ) {
+            if ( tm == null ) {
+                tm = new TimeMonitor( this );
+                tm.start();
+            }
+        }
+    }
+
+    public int getMonitorPriority() {
+        return monitorPriority;
     }
 
     public void enableStatsRecording( boolean enable ) {
