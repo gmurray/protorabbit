@@ -112,6 +112,8 @@ public class StringTemplateEngine implements IEngine {
                 }
             }
             st2.setAttributes( atts );
+            // register out customized date renderer
+            st2.registerRenderer( java.util.Date.class , new DateAttributeRenderer() );
             String result = st2.toString();
             // get the meta data
             if ( getMetaData ) {
