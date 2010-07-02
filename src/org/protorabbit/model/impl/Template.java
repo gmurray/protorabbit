@@ -2,9 +2,9 @@
  * Protorabbit
  *
  * Copyright (c) 2009 Greg Murray (protorabbit.org)
- * 
+ *
  * Licensed under the MIT License:
- * 
+ *
  *  http://www.opensource.org/licenses/mit-license.php
  *
  */
@@ -187,10 +187,10 @@ public class Template implements ITemplate {
 
     /**
      * Look locally for a property with a given id. If not found check all ancestors.
-     * 
+     *
      * This lets us abstract the properties that make up a template from the names used
      * internally for the templates.
-     * 
+     *
      */
     public IProperty getPropertyById(String id, IContext ctx){
         return getPropertyById( id, ctx, properties, getAncestors() );
@@ -370,11 +370,15 @@ public class Template implements ITemplate {
                 if (includeResource(ri,ctx)) {
                     // template can override
                     if ( existingRefs.containsKey(id) ) {
-                        _rlist.remove( existingRefs.get(id) );
+                        int idx = _rlist.indexOf( existingRefs.get(id ) );
+                        if ( idx > -1 ) {
+                            _rlist.set( idx, ri );
+                        }
+                    } else {
+                        _rlist.add(ri);
                     }
                     // reset the written flag
                     ri.setWritten( false );
-                    _rlist.add(ri);
                     existingRefs.put(id, ri);
                 }
             }
@@ -387,12 +391,12 @@ public class Template implements ITemplate {
     }
 
     public List<ResourceURI> getAllStyles( IContext ctx, List<String> _ancestors, List<ResourceURI> _styles ) {
-        return getAllResources( ctx, _ancestors, _styles, ResourceType.STYLE ); 
+        return getAllResources( ctx, _ancestors, _styles, ResourceType.STYLE );
     }
 
     /*
      *  Returns all scripts of this template and it's ancestors as ResourceURI objects
-     *  This method also insures that no duplicate references are returned and that 
+     *  This method also insures that no duplicate references are returned and that
      *  children take preference over the ancestors.
      *
      */
@@ -401,7 +405,7 @@ public class Template implements ITemplate {
     }
 
     public List<ResourceURI> getAllScripts( IContext ctx, List<String> _ancestors, List<ResourceURI> _scripts ) {
-        return getAllResources( ctx, _ancestors, _scripts, ResourceType.SCRIPT ); 
+        return getAllResources( ctx, _ancestors, _scripts, ResourceType.SCRIPT );
     }
 
     public synchronized void setAttribute( String key, Object value ) {
@@ -687,8 +691,8 @@ public class Template implements ITemplate {
         boolean _hasDependnencies = false;
         Set<String> keys = properties.keySet();
         for (String  key : keys) {
-            ITestable p = properties.get(key); 
-            if (p != null && 
+            ITestable p = properties.get(key);
+            if (p != null &&
                 p.getUATest() != null) {
                 ctx.addUAScriptTest(p.getUATest());
                 _hasDependnencies = true;
