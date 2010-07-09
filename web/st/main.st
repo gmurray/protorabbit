@@ -1,10 +1,8 @@
-$f2$
-$foobers$
-
 <div>
-<h3>$title$</h3> $title2$
+<h3>$title$</h3>
 The main category is here.
-*$FFFFFFFFFFfoo$ the bar*
 
-$foobles([title,f2])$
+You are running protorabbit $session.protorabbitVersion$
+The protorabbit build date is  $session.protorabbitBuildDate$
+
 </div>

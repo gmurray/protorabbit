@@ -34,6 +34,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -102,7 +103,7 @@ public class ProtoRabbitServlet extends HttpServlet {
     private long cleanupTimeout = 3600000;
     private long lastCleanup = -1;
     private boolean profile = false;
-
+    private String buildDate = "N/A";
     private String version = "null";
 
     // these file types will be provided with the default expires time if run
@@ -125,7 +126,7 @@ public class ProtoRabbitServlet extends HttpServlet {
             String handlerName = ctx.getInitParameter( "prt-handler-name" );
             Properties p = new Properties();
             InputStream is = getClass().getResourceAsStream("/org/protorabbit/resources/default.properties");
-            String buildDate = "N/A";
+
             try {
                 p.load(is);
                 version = p.getProperty( "version" );
@@ -755,6 +756,24 @@ public class ProtoRabbitServlet extends HttpServlet {
         IEngine renderEngine = null;
         if ( t.getTemplateURI(wc).getFullURI().endsWith(".st") ) {
             renderEngine = new StringTemplateEngine();
+            // build up a list of the session/reqeust attributes for string tempalte
+            Map<String,Object>sessionMap = new HashMap<String,Object>();
+            HttpSession hs = req.getSession();
+            Enumeration en = hs.getAttributeNames();
+            while ( en.hasMoreElements() ) {
+                String key = (String)en.nextElement();
+                sessionMap.put( key , hs.getAttribute( key ) );
+            }
+            Map<String,Object>requestMap = new HashMap<String,Object>();
+            Enumeration ren = req.getAttributeNames();
+            while ( ren.hasMoreElements() ) {
+                String key = (String)en.nextElement();
+                requestMap.put( key , req.getAttribute( key ) );
+            }
+            wc.setAttribute( "session", sessionMap );
+            req.getSession().setAttribute("protorabbitVersion", version );
+            req.getSession().setAttribute("protorabbitBuildDate", buildDate );
+            wc.setAttribute( "request", requestMap );
         } else {
             renderEngine = engine;
         }

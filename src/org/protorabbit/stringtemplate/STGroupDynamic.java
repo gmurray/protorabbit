@@ -78,6 +78,7 @@ public class STGroupDynamic extends StringTemplateGroup {
                buff = ctx.getResource( prefix, name + ".st");
            } catch ( IOException iox) {
                getLogger().log( Level.WARNING, " Could not find template " + name + ".st" );
+               return new StringTemplate( "Template " + name + " not found." );
            }
            if ( buff == null || (buff != null && buff.length() == 0) ) {
 
